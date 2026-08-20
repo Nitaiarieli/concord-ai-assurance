@@ -32,6 +32,41 @@ test("renders the bounded launch verdict and product positioning", async () => {
   assert.match(html, /Trust the state/);
   assert.match(html, /Design-partner staging only/i);
   assert.match(html, /Demo data/i);
+  assert.match(html, /href="\/pricing"/);
+  assert.match(html, /Connect your first app free/i);
+});
+
+for (const [path, expected] of [
+  ["/pricing", /Connect your first.*application for free/is],
+  ["/value", /Every financial number starts with a product event/i],
+  ["/intelligence", /Crunchbase access/i],
+]) {
+  test(`renders commercial route ${path}`, async () => {
+    const response = await fetchFromWorker(path, { headers: { accept: "text/html" } });
+    const html = await response.text();
+    assert.equal(response.status, 200);
+    assert.match(html, expected);
+  });
+}
+
+test("public pricing never exposes draft monetary rates", async () => {
+  const response = await fetchFromWorker("/api/pricing/public");
+  const body = await response.json();
+  assert.equal(response.status, 200);
+  assert.equal(body.firstApplicationFeeMinor, 0);
+  assert.equal(body.approvedRates, null);
+  assert.equal(body.status, "awaiting_founder_approval");
+});
+
+test("tenant-scoped mutation routes reject unauthenticated requests before database access", async () => {
+  for (const [path, method] of [["/api/applications", "POST"], ["/api/analytics", "POST"]]) {
+    const response = await fetchFromWorker(path, {
+      method,
+      headers: { "content-type": "application/json" },
+      body: "{}",
+    });
+    assert.equal(response.status, 401);
+  }
 });
 
 test("simulation API returns a safe, non-destructive plan", async () => {
