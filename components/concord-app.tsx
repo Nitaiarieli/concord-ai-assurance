@@ -7,6 +7,7 @@ import { cases, integrations, readinessReport } from "@/lib/concord";
 type IconName = "arrow" | "check" | "clock" | "code" | "layers" | "play" | "pulse" | "shield" | "terminal";
 type ApplicationName = "SharePoint" | "Entra" | "Pinecone" | "Redis" | "Slack" | "Confluence";
 type SystemObjectId = "source" | "vector" | "cache" | "memory" | "verification" | "evidence";
+type CinematicScene = "hero" | "problem" | "lineage" | "repair" | "renewal" | "integrations" | "verification" | "gates" | "stable";
 
 function Icon({ name, size = 20 }: { name: IconName; size?: number }) {
   const paths: Record<IconName, React.ReactNode> = {
@@ -43,6 +44,31 @@ function StatusPill({ status }: { status: AssuranceCase["status"] }) {
   return <span className={`status-pill status-${status.toLowerCase()}`}><i />{status}</span>;
 }
 
+const cinematicScenes: Record<CinematicScene, { paths: string[]; nodes: [number, number][] }> = {
+  hero: { paths: ["M-30 420 C120 330 205 440 350 330 S610 222 760 315 S930 220 1040 152", "M130 480 C222 396 270 390 348 330 M348 330 C404 250 458 240 520 188"], nodes: [[130,420],[350,330],[520,188],[760,315],[940,210]] },
+  problem: { paths: ["M-20 330 C150 288 238 304 420 260", "M578 258 C735 210 874 250 1040 170"], nodes: [[120,305],[318,282],[690,230],[888,238]] },
+  lineage: { paths: ["M-30 130 C180 112 238 280 420 260 S640 108 1030 145", "M420 260 C330 352 244 374 80 430", "M420 260 C570 350 710 412 970 430", "M420 260 C510 188 610 170 760 205"], nodes: [[112,122],[420,260],[80,430],[760,205],[970,430]] },
+  repair: { paths: ["M-30 392 C210 340 304 392 470 270 S760 190 1030 112", "M190 410 C284 314 342 310 470 270"], nodes: [[190,356],[470,270],[690,205],[902,140]] },
+  renewal: { paths: ["M-20 450 C170 430 240 342 382 372 S628 296 760 330 S920 220 1030 250", "M382 372 C360 268 312 214 232 150 M760 330 C786 224 840 168 920 120"], nodes: [[232,150],[382,372],[760,330],[920,120]] },
+  integrations: { paths: ["M500 260 C330 80 142 92 42 242 C120 458 328 455 500 260 C678 72 872 92 958 242 C888 442 684 464 500 260"], nodes: [[42,242],[210,118],[500,260],[790,118],[958,242],[780,408],[220,410]] },
+  verification: { paths: ["M-20 372 C172 320 258 352 420 286 S720 238 1020 142", "M420 286 C510 360 630 398 842 410"], nodes: [[124,340],[420,286],[650,232],[842,410],[930,170]] },
+  gates: { paths: ["M60 424 L250 340 L438 280 L628 206 L940 112"], nodes: [[60,424],[250,340],[438,280],[628,206],[940,112]] },
+  stable: { paths: ["M-30 352 C168 280 284 342 450 270 S760 232 1030 178", "M450 270 C516 188 590 164 684 142"], nodes: [[120,310],[450,270],[684,142],[900,205]] },
+};
+
+function CinematicEnvironment({ scene }: { scene: CinematicScene }) {
+  const spec = cinematicScenes[scene];
+  return <div className={`cinematic-environment cinema-${scene}`} aria-hidden="true">
+    <span className="cinema-light"/><span className="cinema-land cinema-land-a"/><span className="cinema-land cinema-land-b"/>
+    <svg className="cinema-network" viewBox="0 0 1000 520" preserveAspectRatio="none">
+      {spec.paths.map((path, index) => <path className={`cinema-route cinema-route-${index + 1}`} d={path} key={path}/>) }
+      {spec.nodes.map(([cx, cy], index) => <circle className={`cinema-node cinema-node-${index + 1}`} cx={cx} cy={cy} r="4" key={`${cx}-${cy}`}/>) }
+    </svg>
+    <span className="cinema-growth cinema-growth-a"/><span className="cinema-growth cinema-growth-b"/><span className="cinema-growth cinema-growth-c"/>
+    <i className="cinema-particle particle-a"/><i className="cinema-particle particle-b"/><i className="cinema-particle particle-c"/><i className="cinema-particle particle-d"/>
+  </div>;
+}
+
 function HeroAssuranceField() {
   const [focus, setFocus] = useState<"source" | "control" | "outcome">("control");
   const details = {
@@ -69,7 +95,8 @@ function HeroAssuranceField() {
 
 function ReadinessPanel() {
   return (
-    <section className="readiness-wrap" id="readiness" aria-labelledby="readiness-title">
+    <section className="readiness-wrap cinematic-host" id="readiness" aria-labelledby="readiness-title" data-motion-section="verification">
+      <CinematicEnvironment scene="verification"/>
       <div className="section-kicker dark-kicker"><span>06</span> Independent assessment</div>
       <div className="readiness-grid">
         <div><p className="eyebrow">Launch decision / 20 Aug 2026</p><h2 id="readiness-title">Ready to prove.<br/>Not ready to promise.</h2><p className="lead muted-light">The product boundaries are clearly defined. The implementation evidence is not yet strong enough to support a production safety claim.</p></div>
@@ -104,7 +131,8 @@ function ProductConsole() {
   }
 
   return (
-    <section className="product-section" id="product" aria-labelledby="product-title">
+    <section className="product-section cinematic-host" id="product" aria-labelledby="product-title" data-motion-section="repair">
+      <CinematicEnvironment scene="repair"/>
       <div className="product-copy"><div className="section-kicker"><span>03</span> Product experience</div><div><p className="eyebrow">The assurance control room</p><h2 id="product-title">Every claim earns its evidence.</h2></div><p className="lead">Concord does not treat a successful API response as proof. It shows what changed, what was in scope, what was repaired, and whether the final user experience was actually corrected.</p></div>
       <div className="console-shell">
         <aside className="console-sidebar"><ConcordMark compact/><nav aria-label="Product demo navigation"><button className={activeView === "cases" ? "nav-active" : ""} type="button" onClick={() => setActiveView("cases")} aria-label="Assurance cases"><Icon name="pulse"/></button><button className={activeView === "coverage" ? "nav-active" : ""} type="button" onClick={() => setActiveView("coverage")} aria-label="Coverage ledger"><Icon name="layers"/></button><button type="button" onClick={() => setSimOpen(true)} aria-label="Open simulation"><Icon name="terminal"/></button></nav><span className="avatar" aria-label="Demo workspace">DA</span></aside>
@@ -139,7 +167,8 @@ function LaunchGates() {
 }
 
 function ProblemLandscape() {
-  return <section className="rift-problem" id="problem" aria-labelledby="problem-title">
+  return <section className="rift-problem cinematic-host" id="problem" aria-labelledby="problem-title" data-motion-section="problem">
+    <CinematicEnvironment scene="problem"/>
     <div className="rift-problem-copy reveal-on-scroll">
       <p className="terrain-kicker"><span>01</span> The hidden failure</p>
       <h2 id="problem-title">Permissions change.<br/><em>AI copies do not.</em></h2>
@@ -190,7 +219,8 @@ function PropagationJourney() {
   }, []);
 
   const objectButton = (id: SystemObjectId, className: string, label: string, sublabel: string, icon: React.ReactNode) => <button className={`workflow-object ${className} ${selectedObject === id ? "object-selected" : ""}`} type="button" aria-pressed={selectedObject === id} onClick={() => setSelectedObject(id)}><span className="workflow-object-icon">{icon}</span><span><small>{sublabel}</small><strong>{label}</strong></span><em>Explore</em></button>;
-  return <section className="propagation-story" id="how-it-works" aria-labelledby="journey-title">
+  return <section className="propagation-story cinematic-host" id="how-it-works" aria-labelledby="journey-title" data-motion-section="lineage">
+    <CinematicEnvironment scene="lineage"/>
     <header className="journey-heading reveal-on-scroll">
       <p className="terrain-kicker"><span>02</span> How Concord works</p>
       <h2 id="journey-title">A living control path<br/><em>from change to proof.</em></h2>
@@ -219,7 +249,8 @@ function PropagationJourney() {
 }
 
 function CustomerValue() {
-  return <section className="outcome-landscape" id="outcomes" aria-labelledby="outcome-title">
+  return <section className="outcome-landscape cinematic-host" id="outcomes" aria-labelledby="outcome-title" data-motion-section="renewal">
+    <CinematicEnvironment scene="renewal"/>
     <div className="outcome-horizon" aria-hidden="true"/>
     <div className="outcome-intro reveal-on-scroll"><p className="terrain-kicker"><span>04</span> Customer value</p><h2 id="outcome-title">Less rebuilding.<br/><em>More certainty.</em></h2><p>For security, AI-platform, governance, and FinOps teams that need to operate enterprise AI without losing control of access, retention, or evidence.</p></div>
     <div className="outcome-grid">
@@ -236,29 +267,68 @@ export default function ConcordApp() {
     const root = document.documentElement;
     const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     let frame = 0;
+    let pointerFrame = 0;
+    let previousScroll = window.scrollY;
+    let previousTime = performance.now();
+    const motionSections = Array.from(document.querySelectorAll<HTMLElement>("[data-motion-section], .integration-section, .gates-section"));
     const updateScroll = () => {
-      if (frame || reduced) return;
+      if (frame) return;
       frame = window.requestAnimationFrame(() => {
+        const now = performance.now();
+        const elapsed = Math.max(now - previousTime, 16);
+        const delta = window.scrollY - previousScroll;
+        const velocity = Math.max(-1, Math.min(1, delta / elapsed / 1.4));
         root.style.setProperty("--terrain-scroll", String(Math.min(window.scrollY, 1200)));
+        root.style.setProperty("--scroll-velocity", reduced ? "0" : velocity.toFixed(3));
+        if (!reduced) motionSections.forEach((section) => {
+          const bounds = section.getBoundingClientRect();
+          const progress = Math.max(0, Math.min(1, (window.innerHeight - bounds.top) / (window.innerHeight + bounds.height)));
+          section.style.setProperty("--scene-progress", progress.toFixed(3));
+        });
+        previousScroll = window.scrollY;
+        previousTime = now;
         frame = 0;
+      });
+    };
+    const updatePointer = (event: PointerEvent) => {
+      if (reduced || pointerFrame) return;
+      pointerFrame = window.requestAnimationFrame(() => {
+        root.style.setProperty("--pointer-x", ((event.clientX / window.innerWidth) * 2 - 1).toFixed(3));
+        root.style.setProperty("--pointer-y", ((event.clientY / window.innerHeight) * 2 - 1).toFixed(3));
+        pointerFrame = 0;
       });
     };
     const observer = new IntersectionObserver((entries) => entries.forEach((entry) => {
       if (entry.isIntersecting) entry.target.classList.add("is-visible");
     }), { threshold: .14 });
+    const motionObserver = new IntersectionObserver((entries) => entries.forEach((entry) => {
+      (entry.target as HTMLElement).dataset.motionActive = entry.isIntersecting ? "true" : "false";
+    }), { rootMargin: "12% 0px 12%", threshold: .08 });
     document.querySelectorAll(".reveal-on-scroll").forEach((element) => observer.observe(element));
+    motionSections.forEach((section) => motionObserver.observe(section));
     updateScroll();
     window.addEventListener("scroll", updateScroll, { passive: true });
+    window.addEventListener("resize", updateScroll, { passive: true });
+    window.addEventListener("pointermove", updatePointer, { passive: true });
     return () => {
       window.removeEventListener("scroll", updateScroll);
+      window.removeEventListener("resize", updateScroll);
+      window.removeEventListener("pointermove", updatePointer);
       observer.disconnect();
+      motionObserver.disconnect();
       if (frame) window.cancelAnimationFrame(frame);
+      if (pointerFrame) window.cancelAnimationFrame(pointerFrame);
     };
   }, []);
 
   return <main className="immersive-home">
-    <section className="hero terrain-hero" id="top">
-      <nav className="site-nav" aria-label="Primary navigation"><a href="#top" aria-label="Concord home"><ConcordMark/></a><div className="nav-links"><a href="#how-it-works">How it works</a><a href="#product">Product</a><a href="/pricing">Pricing</a><a href="/value">Value</a></div><a className="nav-cta" href="/workspace">Open workspace <Icon name="arrow" size={16}/></a></nav>
+    <section className="hero terrain-hero cinematic-host" id="top" data-motion-section="hero">
+      <CinematicEnvironment scene="hero"/>
+      <nav className="site-nav" aria-label="Primary navigation">
+        <a href="#top" aria-label="Concord home"><ConcordMark/></a>
+        <div className="nav-links"><a href="#how-it-works">How it works</a><a href="#product">Product</a><a href="/pricing">Pricing</a><a href="/value">Value</a></div>
+        <div className="nav-actions"><button className="nav-contact" type="button" data-contact-trigger>Contact</button><a className="nav-cta" href="/workspace">Open workspace <Icon name="arrow" size={16}/></a></div>
+      </nav>
       <div className="hero-grid immersive-hero-grid"><div className="hero-copy"><div className="hero-chip"><span/>Independent assurance for AI-derived state</div><h1>Keep enterprise AI<br/><em>aligned with the truth.</em></h1><p>Concord detects when authoritative data changes, traces every registered AI artifact affected by that change, safely reconciles it, and verifies the result across connected systems.</p><div className="hero-actions"><a className="button button-amber" href="#how-it-works">Explore How Concord Works <Icon name="arrow" size={18}/></a></div><p className="hero-boundary-note"><Icon name="shield" size={17}/>Bounded consistency for registered artifacts and supported adapters.</p></div><HeroAssuranceField/></div>
       <a className="scroll-cue" href="#problem" aria-label="Scroll to understand the problem"><span>Scroll</span><i/></a>
     </section>
@@ -269,7 +339,12 @@ export default function ConcordApp() {
     <EnterpriseBoundary/>
     <ReadinessPanel/>
     <LaunchGates/>
-    <section className="final-cta terrain-final"><div><ConcordMark/><p>Start with one real control loop. Expand when the evidence is clear.</p></div><h2>Keep AI aligned<br/>with <em>the truth.</em></h2><a className="button button-amber" href="/workspace">Connect your first application free <Icon name="arrow" size={18}/></a></section>
+    <section className="final-cta terrain-final cinematic-host" data-motion-section="stable">
+      <CinematicEnvironment scene="stable"/>
+      <div className="final-cta-brand"><ConcordMark/><p>Start with one real control loop. Expand when the evidence is clear.</p></div>
+      <h2>Keep AI aligned<br/>with <em>the truth.</em></h2>
+      <div className="final-cta-actions"><a className="button button-amber" href="/workspace">Connect your first application free <Icon name="arrow" size={18}/></a><button className="button button-contact-light" type="button" data-contact-trigger>Contact the Ralph Team</button></div>
+    </section>
     <footer className="site-footer"><span>Concord · Enterprise AI Assurance</span><p>Product simulation · No external systems are modified</p><a href="#top">Back to top ↑</a></footer>
   </main>;
 }
