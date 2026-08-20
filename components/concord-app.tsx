@@ -97,7 +97,7 @@ function ReadinessPanel() {
   return (
     <section className="readiness-wrap cinematic-host" id="readiness" aria-labelledby="readiness-title" data-motion-section="verification">
       <CinematicEnvironment scene="verification"/>
-      <div className="section-kicker dark-kicker"><span>06</span> Independent assessment</div>
+      <div className="section-kicker dark-kicker"><span>006/</span> Evidence and readiness</div>
       <div className="readiness-grid">
         <div><p className="eyebrow">Launch decision / 20 Aug 2026</p><h2 id="readiness-title">Ready to prove.<br/>Not ready to promise.</h2><p className="lead muted-light">The product boundaries are clearly defined. The implementation evidence is not yet strong enough to support a production safety claim.</p></div>
         <div className="score-orbit" aria-label={`Production readiness ${readinessReport.score} percent`}><svg viewBox="0 0 160 160" role="img"><circle className="score-track" cx="80" cy="80" r="66"/><circle className="score-value" cx="80" cy="80" r="66" pathLength="100" strokeDasharray={`${readinessReport.score} 100`}/></svg><div><strong>{readinessReport.score}</strong><span>% ready</span></div></div>
@@ -133,7 +133,7 @@ function ProductConsole() {
   return (
     <section className="product-section cinematic-host" id="product" aria-labelledby="product-title" data-motion-section="repair">
       <CinematicEnvironment scene="repair"/>
-      <div className="product-copy"><div className="section-kicker"><span>03</span> Product experience</div><div><p className="eyebrow">The assurance control room</p><h2 id="product-title">Every claim earns its evidence.</h2></div><p className="lead">Concord does not treat a successful API response as proof. It shows what changed, what was in scope, what was repaired, and whether the final user experience was actually corrected.</p></div>
+      <div className="product-copy"><div className="section-kicker"><span>005/</span> Product control surface</div><div><p className="eyebrow">The assurance control room</p><h2 id="product-title">Every claim earns its evidence.</h2></div><p className="lead">Concord does not treat a successful API response as proof. It shows what changed, what was in scope, what was repaired, and whether the final user experience was actually corrected.</p></div>
       <div className="console-shell">
         <aside className="console-sidebar"><ConcordMark compact/><nav aria-label="Product demo navigation"><button className={activeView === "cases" ? "nav-active" : ""} type="button" onClick={() => setActiveView("cases")} aria-label="Assurance cases"><Icon name="pulse"/></button><button className={activeView === "coverage" ? "nav-active" : ""} type="button" onClick={() => setActiveView("coverage")} aria-label="Coverage ledger"><Icon name="layers"/></button><button type="button" onClick={() => setSimOpen(true)} aria-label="Open simulation"><Icon name="terminal"/></button></nav><span className="avatar" aria-label="Demo workspace">DA</span></aside>
         <div className="console-main">
@@ -158,19 +158,40 @@ function EnterpriseBoundary() {
     { name: "Slack", role: "Workflow", className: "chip-sl", state: "live" },
     { name: "Confluence", role: "Planned", className: "chip-cf", state: "planned" },
   ];
-  return <section className="integration-section" id="integrations" aria-labelledby="integrations-title"><div className="integration-copy"><div className="section-kicker"><span>05</span> Integration architecture</div><p className="eyebrow">Your enterprise graph, continuously assured</p><h2 id="integrations-title">One assurance layer.<br/>Every system stays in sync.</h2><p className="lead">Concord gives each application an explicit role—source of truth, identity authority, derivative system, cache, or workflow—then traces every change across the complete boundary.</p></div><div className="integration-orbit" aria-label="Concord assurance boundary and connected enterprise applications"><div className="orbit-field-label"><span/>Registered assurance boundary</div><div className="orbit-ring orbit-one"/><div className="orbit-ring orbit-two"/><div className="orbit-ring orbit-three"/><div className="orbit-center"><span className="brand-glyph" aria-hidden="true"><i/><i/><i/></span><strong>Concord</strong><small>Assurance plane</small><em>Continuously verified</em></div>{applications.map((application) => <div className={`orbit-chip ${application.className} ${application.state === "planned" ? "orbit-chip-planned" : ""}`} key={application.name}><span className="orbit-app-mark"><ApplicationIcon name={application.name}/></span><span>{application.name}<small>{application.role}</small></span><i className="orbit-status" aria-label={application.state === "live" ? "Connected" : "Planned"}/></div>)}</div><div className="contract-strip">{[["Authority", "Observe the source truth", "SharePoint + Entra"], ["Control", "Coordinate every change", "Concord workflow"], ["Derivative", "Quarantine and repair", "Pinecone + Redis"], ["Proof", "Verify the final experience", "Identity-aware probe"]].map(([title, detail, example], index) => <article key={title}><span>0{index + 1}</span><h3>{title}</h3><p>{detail}</p><small>{example}</small></article>)}</div></section>;
+  return <section className="integration-section cinematic-host" id="integrations" aria-labelledby="integrations-title" data-motion-section="integrations"><CinematicEnvironment scene="integrations"/><div className="integration-copy"><div className="section-kicker"><span>004/</span> Integration architecture</div><p className="eyebrow">Your registered enterprise boundary</p><h2 id="integrations-title">One assurance layer.<br/>Each system has a role.</h2><p className="lead">Concord defines each supported application as an authority, identity source, derivative store, cache, workflow, or proof endpoint—then follows a validity-changing event across that explicit boundary.</p></div><div className="integration-orbit" aria-label="Concord assurance boundary and connected enterprise applications"><div className="orbit-field-label"><span/>Registered assurance boundary</div><div className="orbit-ring orbit-one"/><div className="orbit-ring orbit-two"/><div className="orbit-ring orbit-three"/><div className="orbit-center"><span className="brand-glyph" aria-hidden="true"><i/><i/><i/></span><strong>Concord</strong><small>Assurance plane</small><em>Bounded and verified</em></div>{applications.map((application) => <div className={`orbit-chip ${application.className} ${application.state === "planned" ? "orbit-chip-planned" : ""}`} key={application.name}><span className="orbit-app-mark"><ApplicationIcon name={application.name}/></span><span>{application.name}<small>{application.role}</small></span><i className="orbit-status" aria-label={application.state === "live" ? "Connected" : "Planned"}/></div>)}</div><div className="contract-strip">{[["Authority", "Observe the source truth", "SharePoint + Entra"], ["Control", "Coordinate every change", "Concord workflow"], ["Derivative", "Quarantine and repair", "Pinecone + Redis"], ["Proof", "Verify the final experience", "Identity-aware probe"]].map(([title, detail, example], index) => <article key={title}><span>0{index + 1}</span><h3>{title}</h3><p>{detail}</p><small>{example}</small></article>)}</div></section>;
+}
+
+function AdapterRegistry() {
+  return <section className="adapter-registry cinematic-host" id="adapter-registry" aria-labelledby="adapter-registry-title" data-motion-section="gates">
+    <CinematicEnvironment scene="gates"/>
+    <div className="adapter-registry-heading">
+      <div className="section-kicker dark-kicker"><span>007/</span> Adapter registry</div>
+      <p className="eyebrow">Coverage is explicit</p>
+      <h2 id="adapter-registry-title">Supported, planned,<br/><em>or outside the claim.</em></h2>
+      <p>Every adapter publishes its operational role and current coverage state. Anything unregistered remains visible as unsupported instead of being silently treated as protected.</p>
+    </div>
+    <div className="adapter-list" role="list" aria-label="Concord adapter registry">
+      {integrations.map((integration, index) => <article role="listitem" key={integration.name}>
+        <span>{String(index + 1).padStart(2, "0")}</span>
+        <h3>{integration.name}</h3>
+        <p>{integration.role}</p>
+        <small><i className={integration.state === "Pilot contract" ? "adapter-live" : "adapter-planned"}/>{integration.state}</small>
+        <b>{integration.state === "Pilot contract" ? "Registered" : "Planned"}</b>
+      </article>)}
+    </div>
+  </section>;
 }
 
 function LaunchGates() {
   const icons: IconName[] = ["code", "pulse", "shield", "layers"];
-  return <section className="gates-section" id="architecture" aria-labelledby="gates-title"><div className="gates-copy"><div className="section-kicker dark-kicker"><span>07</span> Production path</div><p className="eyebrow">The next honest milestone</p><h2 id="gates-title">Four gates between a compelling demo and a safety claim.</h2><p>These gates are part of the product, not a footnote. Each one produces evidence for the next launch decision.</p></div><div className="gate-stack">{readinessReport.gates.map((gate, index) => <article key={gate}><span>{String(index + 1).padStart(2, "0")}</span><div><h3>{gate}</h3><p>{["Real authority event → complete registered lineage.", "Retry storm → one safe final state.", "Revoked identity → zero protected results.", "Failure → contained tenant and recoverable service."][index]}</p></div><Icon name={icons[index]}/></article>)}</div></section>;
+  return <section className="gates-section" id="architecture" aria-labelledby="gates-title"><div className="gates-copy"><div className="section-kicker dark-kicker"><span>008/</span> Production path</div><p className="eyebrow">The next honest milestone</p><h2 id="gates-title">Four gates between a compelling demo and a safety claim.</h2><p>These gates are part of the product, not a footnote. Each one produces evidence for the next launch decision.</p></div><div className="gate-stack">{readinessReport.gates.map((gate, index) => <article key={gate}><span>{String(index + 1).padStart(2, "0")}</span><div><h3>{gate}</h3><p>{["Real authority event → complete registered lineage.", "Retry storm → one safe final state.", "Revoked identity → zero protected results.", "Failure → contained tenant and recoverable service."][index]}</p></div><Icon name={icons[index]}/></article>)}</div></section>;
 }
 
 function ProblemLandscape() {
   return <section className="rift-problem cinematic-host" id="problem" aria-labelledby="problem-title" data-motion-section="problem">
     <CinematicEnvironment scene="problem"/>
     <div className="rift-problem-copy reveal-on-scroll">
-      <p className="terrain-kicker"><span>01</span> The hidden failure</p>
+      <p className="terrain-kicker"><span>001/</span> The hidden failure</p>
       <h2 id="problem-title">Permissions change.<br/><em>AI copies do not.</em></h2>
       <p>Enterprise AI creates indexes, embeddings, caches, summaries, and agent memory from trusted systems. When the source changes, those copies can keep serving information that is no longer valid.</p>
     </div>
@@ -222,7 +243,7 @@ function PropagationJourney() {
   return <section className="propagation-story cinematic-host" id="how-it-works" aria-labelledby="journey-title" data-motion-section="lineage">
     <CinematicEnvironment scene="lineage"/>
     <header className="journey-heading reveal-on-scroll">
-      <p className="terrain-kicker"><span>02</span> How Concord works</p>
+      <p className="terrain-kicker"><span>003/</span> How Concord works</p>
       <h2 id="journey-title">A living control path<br/><em>from change to proof.</em></h2>
       <p>Scroll through the workflow. Select any system object to inspect its risk, dependency, permitted action, verification method, and business value.</p>
     </header>
@@ -252,7 +273,7 @@ function CustomerValue() {
   return <section className="outcome-landscape cinematic-host" id="outcomes" aria-labelledby="outcome-title" data-motion-section="renewal">
     <CinematicEnvironment scene="renewal"/>
     <div className="outcome-horizon" aria-hidden="true"/>
-    <div className="outcome-intro reveal-on-scroll"><p className="terrain-kicker"><span>04</span> Customer value</p><h2 id="outcome-title">Less rebuilding.<br/><em>More certainty.</em></h2><p>For security, AI-platform, governance, and FinOps teams that need to operate enterprise AI without losing control of access, retention, or evidence.</p></div>
+    <div className="outcome-intro reveal-on-scroll"><p className="terrain-kicker"><span>002/</span> Value by role</p><h2 id="outcome-title">Less rebuilding.<br/><em>More certainty.</em></h2><p>For security, AI-platform, governance, and FinOps teams that need to operate enterprise AI without losing control of access, retention, or evidence.</p></div>
     <div className="outcome-grid">
       <article className="reveal-on-scroll"><span>01</span><h3>Reduce stale exposure</h3><p>Find invalid AI-derived data when the authority changes—not after someone reports it.</p><small>Security · Governance</small></article>
       <article className="reveal-on-scroll"><span>02</span><h3>Repair with precision</h3><p>Replace full re-indexing and broad synchronization with targeted, measurable repair.</p><small>AI Platform · FinOps</small></article>
@@ -290,20 +311,32 @@ export default function ConcordApp() {
   return <main className="immersive-home">
     <section className="hero terrain-hero cinematic-host" id="top" data-motion-section="hero">
       <CinematicEnvironment scene="hero"/>
+      <div className="hero-guides" aria-hidden="true"/>
+      <div className="hero-signal" aria-hidden="true"><span>LIVE / SOURCE TRUTH</span><i/><span>32.0853° N</span></div>
+      <div className="hero-orbit" aria-hidden="true"><span>CONCORD</span><b>∞</b></div>
       <nav className="site-nav" aria-label="Primary navigation">
         <a href="#top" aria-label="Concord home"><ConcordMark/></a>
         <div className="nav-links"><a href="#how-it-works">How it works</a><a href="#product">Product</a><a href="/pricing">Pricing</a><a href="/value">Value</a></div>
         <div className="nav-actions"><button className="nav-contact" type="button" data-contact-trigger>Contact</button><a className="nav-cta" href="/workspace">Open workspace <Icon name="arrow" size={16}/></a></div>
       </nav>
-      <div className="hero-grid immersive-hero-grid"><div className="hero-copy"><div className="hero-chip"><span/>Independent assurance for AI-derived state</div><h1>Keep enterprise AI<br/><em>aligned with the truth.</em></h1><p>Concord detects when authoritative data changes, traces every registered AI artifact affected by that change, safely reconciles it, and verifies the result across connected systems.</p><div className="hero-actions"><a className="button button-amber" href="#how-it-works">Explore How Concord Works <Icon name="arrow" size={18}/></a></div><p className="hero-boundary-note"><Icon name="shield" size={17}/>Bounded consistency for registered artifacts and supported adapters.</p></div><HeroAssuranceField/></div>
-      <a className="scroll-cue" href="#problem" aria-label="Scroll to understand the problem"><span>Scroll</span><i/></a>
+      <div className="hero-center merged-hero-center">
+        <p className="hero-chapter"><span>000/</span> Independent AI assurance</p>
+        <h1><span>Keep AI-derived state</span><span>aligned with the truth.</span></h1>
+        <p className="hero-promise">When authoritative access changes, Concord traces every registered downstream derivative, applies the policy-specific repair, and proves the real retrieval path is safe.</p>
+        <div className="hero-actions"><a href="#how-it-works">See how Concord works <i>↗</i></a><a href="#product">Open the control surface <i>↓</i></a></div>
+        <div className="hero-assurance-dock"><HeroAssuranceField/></div>
+        <p className="hero-boundary-note"><Icon name="shield" size={16}/>Bounded consistency for registered artifacts and supported adapters.</p>
+      </div>
+      <div className="hero-values" aria-label="Concord assurance principles"><span>Source truth</span><span>Registered lineage</span><span>Behavioral proof</span></div>
+      <a className="explore-link" href="#problem" aria-label="Scroll to understand the problem"><span>Explore</span><b>001</b><i>↓</i></a>
     </section>
     <ProblemLandscape/>
-    <PropagationJourney/>
-    <ProductConsole/>
     <CustomerValue/>
+    <PropagationJourney/>
     <EnterpriseBoundary/>
+    <ProductConsole/>
     <ReadinessPanel/>
+    <AdapterRegistry/>
     <LaunchGates/>
     <section className="final-cta terrain-final cinematic-host" data-motion-section="stable">
       <CinematicEnvironment scene="stable"/>

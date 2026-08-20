@@ -1,21 +1,23 @@
 # Concord UI/UX quality review
 
-Date: 2026-08-20  
-Direction: **The Warm Assurance Field**
+Date: 2026-08-21
+
+Direction: **The Concord Assurance Atlas**
+
 Score: **20/22** (acceptance threshold: 19/22; no zero scores)
 
 | Dimension | Score | Implementation evidence |
 | --- | ---: | --- |
-| Product clarity | 2 | The opening now uses one positioning statement, one outcome explanation, one CTA, and one interactive assurance visual. The bounded-coverage qualifier remains visible in the first viewport. |
-| Narrative structure | 2 | The page moves from the stale-state problem into a six-stage sequence: source change, detection, lineage, reconciliation, behavioral verification, and evidence. Cinematic sections continue into concrete product UI, value, integrations, and launch boundaries. |
-| Original art direction | 2 | Warm mineral materials and a living assurance field visualize Concord's bounded control path. The system is rooted in Concord's mechanism and does not reproduce the imagery, palette, composition, or signature scenes of the reference sites. |
-| Visual hierarchy | 2 | Warm neutrals, restrained copper and green, generous spacing, one focal system per scene, and reduced hero messaging make the page easier to scan without becoming generic. |
-| Purposeful motion | 2 | Gentle object weight, travelling control signals, progressive connection states, and scroll-activated workflow stages explain how impact moves through the registered dependency graph. |
-| Interaction usability | 2 | Hero states and six technical objects support hover, keyboard focus, click, and tap. Object panels explain risk, dependency, permitted action, verification, and value. Existing simulation, filters, forms, pricing, and navigation remain operational. |
-| Copy quality | 2 | Copy identifies Concord as an independent assurance and reconciliation plane, uses the defined remediation verbs, and visibly limits claims to registered artifacts and supported adapters. |
-| Responsive design | 1 | Dedicated mobile compositions replace the desktop spatial layout with stacked hero states and a two-column explorable object grid. Production CSS and build output were verified, but a new mobile-width browser rendering was not performed in this turn. |
-| Accessibility | 2 | Interactive objects use native buttons, `aria-pressed`, visible focus states, live regions, descriptive labels, touch-sized targets, and reduced-motion alternatives. |
-| Performance resilience | 1 | The new experience uses CSS transforms, SVG paths, Intersection Observer, and existing local assets rather than adding WebGL or new heavy media. Runtime animation performance was not separately profiled. |
-| Implementation integrity | 2 | Production build, lint, and all 15 automated tests pass; the route hierarchy, APIs, billing logic, product console, and commercial experience remain intact. |
+| Product clarity | 2 | The first viewport names the category, explains the authority-change → registered-derivative → verified-retrieval outcome, exposes the bounded-coverage qualifier, and gives direct routes to the workflow and control surface. |
+| Narrative structure | 2 | The old visual chapter rhythm now carries the latest story in one sequence: gap, value, method, integration boundary, product control surface, evidence, adapter registry, production gates, and contact. Duplicate sections were removed. |
+| Original art direction | 2 | The earlier Concord forest–desert identity is evolved through an architectural grid, editorial typography, technical coordinates, living lineage scenes, and embedded evidence surfaces. It remains recognizably Concord rather than a generic SaaS composition. |
+| Visual hierarchy | 2 | One large editorial idea leads each chapter. Fine grid lines, warm neutral fields, dark control scenes, lime verification states, generous spacing, and restrained metadata create a consistent reading order. |
+| Purposeful motion | 2 | Existing section-aware signals, roots, system states, repair transitions, and environmental movement are preserved and visually integrated with the grid. Reduced-motion rules remove continuous hero and decorative motion. |
+| Interaction usability | 2 | Product tabs, simulation, integration states, commercial routes, workspace navigation, pricing controls, filters, exports, and the contact flow remain intact. Browser QA verified correct contact links and Escape closing. |
+| Copy quality | 2 | Copy preserves the current product definition and the real operational sequence, avoids universal consistency claims, and makes supported, planned, and unregistered coverage explicit. |
+| Responsive design | 1 | Mobile rules replace the desktop editorial layout with left-aligned type, stacked actions and assurance controls, a simplified adapter registry, flat product surfaces, and reduced scene density. CSS and route output were verified; the available browser session could not create a true mobile viewport. |
+| Accessibility | 2 | Semantic landmarks, labelled sections, visible focus styles, native controls, dialog semantics, keyboard closing, focus restoration, readable contrast, touch-sized mobile controls, and reduced-motion handling are preserved. |
+| Performance resilience | 1 | The merge reuses the existing optimized local landscape, CSS/SVG scenes, transforms, and Intersection Observer rather than adding WebGL or new video payloads. No dedicated runtime profiling was performed. |
+| Implementation integrity | 2 | The production build and lint pass, all 15 automated tests pass, and desktop browser QA found zero horizontal overflow. Pricing, billing, FinOps, intelligence, workspace, simulation, APIs, contact, and D1-backed product logic remain present. |
 
-The refinement clears the skill's completion threshold. Production source, metadata, route rendering, billing logic, tenant guards, simulation behavior, and all 15 automated tests were verified. Dedicated responsive and reduced-motion compositions are implemented; a new browser-rendered desktop/mobile visual pass was not performed in this turn.
+The visual merge clears the completion threshold. Desktop QA covered the hero, workflow, adapter registry, contact dialog, and overflow. Browser console noise was limited to the test environment's own extension; no application-origin warnings or errors were observed.
