@@ -373,3 +373,33 @@ button { color: inherit; }
   .terrain-flow i,.rift-depth i,.journey-current i,.scroll-cue i { animation: none !important; }
   .reveal-on-scroll { opacity: 1; transform: none; transition: none; }
 }
+
+/* State Rift continuity across commercial and product routes */
+.commercial-page .commercial-header { min-height: 88px; color: #f4efe6; background: rgba(7,16,14,.94); border-color: rgba(255,255,255,.12); }
+.commercial-page .commercial-brand .brand-glyph,.commercial-page .commercial-workspace-link span { color: #f2b45f; }
+.commercial-page .commercial-header nav { color: #9da7a1; }
+.commercial-page .commercial-header nav a:hover,.commercial-page .commercial-header nav a.active { color: #fff9ed; border-color: #f2b45f; }
+.commercial-page .commercial-workspace-link { color: #e8e6de; }
+.commercial-page .commercial-header::after { content: "State assurance"; position: absolute; left: max(4vw,24px); bottom: 9px; color: rgba(255,255,255,.3); font-size: 7px; font-weight: 800; letter-spacing: .18em; text-transform: uppercase; }
+.commercial-page .commercial-footer { background: #07100e; }
+.commercial-page .commercial-eyebrow { color: #b96838; }
+.commercial-page .commercial-lead { font-size: clamp(20px,1.7vw,26px); }
+
+.commercial-page .pricing-hero,.commercial-page .value-hero,.commercial-page .intel-hero,.commercial-page .workspace-top { isolation: isolate; background: radial-gradient(circle at 78% 24%,rgba(210,116,62,.25),transparent 20%),linear-gradient(145deg,#07100e 0,#13271f 48%,#4f2e23 100%); }
+.commercial-page .pricing-hero::after,.commercial-page .value-hero::after,.commercial-page .intel-hero::after,.commercial-page .workspace-top::after { content: ""; position: absolute; z-index: -1; inset: 34% -8% -28% 34%; background: linear-gradient(155deg,#93583a,#2a2f26 53%,#07100e); clip-path: polygon(0 48%,15% 31%,29% 44%,44% 14%,60% 40%,74% 21%,100% 46%,100% 100%,0 100%); opacity: .72; pointer-events: none; }
+.commercial-page .value-hero,.commercial-page .intel-hero,.commercial-page .workspace-top { position: relative; overflow: hidden; }
+.commercial-page .value-hero > *,.commercial-page .intel-hero > *,.commercial-page .workspace-top > * { position: relative; z-index: 2; }
+.commercial-page .value-hero::before,.commercial-page .intel-hero::before,.commercial-page .workspace-top::before { content: ""; position: absolute; z-index: -1; right: 12%; top: 12%; width: clamp(170px,20vw,300px); aspect-ratio: 1; border-radius: 50%; background: radial-gradient(circle at 42% 38%,#f3bd70,#ce6f42 58%,#863f2c); box-shadow: 0 0 100px rgba(210,116,62,.3); opacity: .75; }
+.commercial-page .pricing-orb { border-radius: 47% 53% 39% 61%; border-color: rgba(242,180,95,.3); background: rgba(7,16,14,.55); backdrop-filter: blur(16px); box-shadow: 0 0 0 55px rgba(242,180,95,.026),0 0 0 110px rgba(242,180,95,.015),0 35px 90px rgba(0,0,0,.28); transform: rotate(-7deg); }
+.commercial-page .pricing-orb > * { transform: rotate(7deg); }
+.commercial-page .value-hero > aside,.commercial-page .intel-hero > aside,.commercial-page .workspace-top aside { border-radius: 42px 10px 10px 10px; border-color: rgba(242,180,95,.25); background: rgba(7,16,14,.7); backdrop-filter: blur(18px); }
+.commercial-page .pricing-definition article,.commercial-page .scope-strip article { min-height: 180px; }
+.commercial-page .calculator-intro h2,.commercial-page .package-title h2,.commercial-page .intel-title h2,.commercial-page .onboarding-steps h2 { letter-spacing: -.06em; }
+.commercial-page .calculator-shell,.commercial-page .value-chart,.commercial-page .efficiency-card,.commercial-page .trace-table,.commercial-page .onboarding-form,.commercial-page .workspace-apps { box-shadow: 0 26px 70px rgba(48,35,22,.09); }
+
+@media (max-width: 620px) {
+  .commercial-page .commercial-header { min-height: 74px; }
+  .commercial-page .commercial-header::after { display: none; }
+  .commercial-page .pricing-hero,.commercial-page .value-hero,.commercial-page .intel-hero { min-height: 650px; }
+  .commercial-page .pricing-hero::after,.commercial-page .value-hero::after,.commercial-page .intel-hero::after,.commercial-page .workspace-top::after { inset: 42% -35% -20% 2%; }
+}
