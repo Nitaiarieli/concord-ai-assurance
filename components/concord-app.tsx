@@ -101,9 +101,8 @@ function ProblemLandscape() {
       <p>Enterprise AI creates indexes, embeddings, caches, summaries, and agent memory from trusted systems. When the source changes, those copies can keep serving information that is no longer valid.</p>
     </div>
     <div className="rift-stage" aria-label="A source permission changes while derived AI data remains stale">
-      <div className="rift-stage-sun"/>
       <div className="rift-rock rift-rock-left"><span>Source system</span><strong>Access revoked</strong><small>SharePoint · 09:42:16</small></div>
-      <div className="rift-depth"><i/><i/><i/><i/></div>
+      <div className="rift-depth" aria-hidden="true"/>
       <div className="rift-rock rift-rock-right"><span>AI systems</span><strong>Still retrievable</strong><small>Vector · Cache · Agent memory</small></div>
       <div className="rift-warning"><span>!</span>Control gap</div>
     </div>
@@ -128,9 +127,8 @@ function PropagationJourney() {
     </header>
     <div className="journey-layout">
       <div className="journey-terrain" aria-hidden="true">
-        <div className="terrain-root terrain-root-one"/><div className="terrain-root terrain-root-two"/><div className="terrain-root terrain-root-three"/>
         <div className="journey-source"><span>Authority</span><strong>SharePoint</strong><i/></div>
-        <div className="journey-current"><i/><i/><i/><b>Concord</b></div>
+        <div className="journey-current"><i/><b>Concord</b></div>
         <div className="journey-derivatives"><span>Vector</span><span>Cache</span><span>Agent</span><span>Search</span></div>
         <div className="journey-proof"><b>✓</b><span>Revoked identity</span><strong>0 results</strong></div>
       </div>
@@ -141,7 +139,7 @@ function PropagationJourney() {
 
 function CustomerValue() {
   return <section className="outcome-landscape" id="outcomes" aria-labelledby="outcome-title">
-    <div className="outcome-horizon" aria-hidden="true"><i/><i/><i/></div>
+    <div className="outcome-horizon" aria-hidden="true"/>
     <div className="outcome-intro reveal-on-scroll"><p className="terrain-kicker"><span>04</span> Customer value</p><h2 id="outcome-title">Less rebuilding.<br/><em>More certainty.</em></h2><p>For security, AI-platform, governance, and FinOps teams that need to operate enterprise AI without losing control of access, retention, or evidence.</p></div>
     <div className="outcome-grid">
       <article className="reveal-on-scroll"><span>01</span><h3>Reduce stale exposure</h3><p>Find invalid AI-derived data when the authority changes—not after someone reports it.</p><small>Security · Governance</small></article>
@@ -160,14 +158,9 @@ export default function ConcordApp() {
     const updateScroll = () => {
       if (frame || reduced) return;
       frame = window.requestAnimationFrame(() => {
-        root.style.setProperty("--terrain-scroll", String(Math.min(window.scrollY, 1800)));
+        root.style.setProperty("--terrain-scroll", String(Math.min(window.scrollY, 1200)));
         frame = 0;
       });
-    };
-    const updatePointer = (event: PointerEvent) => {
-      if (reduced) return;
-      root.style.setProperty("--pointer-x", ((event.clientX / window.innerWidth) - .5).toFixed(3));
-      root.style.setProperty("--pointer-y", ((event.clientY / window.innerHeight) - .5).toFixed(3));
     };
     const observer = new IntersectionObserver((entries) => entries.forEach((entry) => {
       if (entry.isIntersecting) entry.target.classList.add("is-visible");
@@ -175,10 +168,8 @@ export default function ConcordApp() {
     document.querySelectorAll(".reveal-on-scroll").forEach((element) => observer.observe(element));
     updateScroll();
     window.addEventListener("scroll", updateScroll, { passive: true });
-    window.addEventListener("pointermove", updatePointer, { passive: true });
     return () => {
       window.removeEventListener("scroll", updateScroll);
-      window.removeEventListener("pointermove", updatePointer);
       observer.disconnect();
       if (frame) window.cancelAnimationFrame(frame);
     };
@@ -187,8 +178,8 @@ export default function ConcordApp() {
   return <main className="immersive-home">
     <section className="hero terrain-hero" id="top">
       <nav className="site-nav" aria-label="Primary navigation"><a href="#top" aria-label="Concord home"><ConcordMark/></a><div className="nav-links"><a href="#how-it-works">How it works</a><a href="#product">Product</a><a href="/pricing">Pricing</a><a href="/value">Value</a></div><a className="nav-cta" href="/workspace">Open workspace <Icon name="arrow" size={16}/></a></nav>
-      <div className="terrain-sky" aria-hidden="true"/><div className="terrain-stars" aria-hidden="true"/><div className="terrain-sun" aria-hidden="true"/>
-      <div className="terrain-world" aria-hidden="true"><Image className="terrain-image" src="/concord-hero.png" alt="" fill priority sizes="100vw"/><div className="terrain-shade"/><div className="terrain-canopy"><i/><i/><i/><i/><i/></div><div className="terrain-ridge terrain-ridge-back"/><div className="terrain-ridge terrain-ridge-front"/><div className="terrain-flow"><i/><i/><i/></div></div>
+      <div className="terrain-sky" aria-hidden="true"/><div className="terrain-sun" aria-hidden="true"/>
+      <div className="terrain-world" aria-hidden="true"><Image className="terrain-image" src="/concord-hero.png" alt="" fill priority unoptimized sizes="100vw"/><div className="terrain-shade"/><div className="terrain-flow"><i/></div></div>
       <div className="hero-grid immersive-hero-grid"><div className="hero-copy"><div className="hero-chip"><span/>Enterprise AI assurance</div><h1>When access changes,<br/><em>your AI should change</em><br/>with it.</h1><p>Concord helps security and AI-platform teams find, repair, and prove stale permissions and content across enterprise AI systems.</p><div className="hero-actions"><a className="button button-amber" href="/workspace">Connect your first application free <Icon name="arrow" size={18}/></a><a className="text-link" href="#how-it-works"><Icon name="play" size={16}/>See how it works</a></div></div><div className="hero-proof-path" aria-label="A permission change is repaired and verified across AI systems"><div><span>Source change</span><strong>Access revoked</strong><small>SharePoint</small></div><i/><div className="proof-path-core"><span className="brand-glyph"><i/><i/><i/></span><strong>Concord</strong><small>Trace · repair · prove</small></div><i/><div><span>Verified outcome</span><strong>0 protected results</strong><small>Vector · Cache · Agent</small></div></div></div>
       <div className="hero-bottom"><p>Independent assurance for enterprise AI</p><div><span>Source truth</span><span>Registered lineage</span><span>Identity-aware proof</span></div></div><a className="scroll-cue" href="#problem" aria-label="Scroll to understand the problem"><span>Scroll</span><i/></a>
     </section>
