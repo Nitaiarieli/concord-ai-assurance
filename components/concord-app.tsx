@@ -6,6 +6,7 @@ import type { AssuranceCase } from "@/lib/concord";
 import { cases, integrations, readinessReport } from "@/lib/concord";
 
 type IconName = "arrow" | "check" | "clock" | "code" | "layers" | "play" | "pulse" | "shield" | "terminal";
+type ApplicationName = "SharePoint" | "Entra" | "Pinecone" | "Redis" | "Slack" | "Confluence";
 
 function Icon({ name, size = 20 }: { name: IconName; size?: number }) {
   const paths: Record<IconName, React.ReactNode> = {
@@ -20,6 +21,18 @@ function Icon({ name, size = 20 }: { name: IconName; size?: number }) {
     terminal: <><path d="m5 7 4 4-4 4"/><path d="M11 17h8"/></>,
   };
   return <svg aria-hidden="true" viewBox="0 0 24 24" width={size} height={size} fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">{paths[name]}</svg>;
+}
+
+function ApplicationIcon({ name }: { name: ApplicationName }) {
+  const marks: Record<ApplicationName, React.ReactNode> = {
+    SharePoint: <><circle cx="20" cy="16" r="8" fill="#18A28B"/><circle cx="11" cy="16" r="7" fill="#087E6B"/><path d="M19 10h8.5A2.5 2.5 0 0 1 30 12.5v10a2.5 2.5 0 0 1-2.5 2.5H19z" fill="#0F6F61"/><path d="M6 10h11v14H6z" fill="#075B50"/><path d="M14.2 14.1c-.8-.5-1.7-.7-2.5-.7-1.1 0-1.7.4-1.7 1s.5.8 1.9 1.2c2 .5 3 1.4 3 3 0 1.9-1.5 3-3.8 3-1.2 0-2.5-.3-3.4-.9l.8-1.8c.8.5 1.8.8 2.7.8 1.1 0 1.7-.4 1.7-1s-.5-.8-1.9-1.2c-2-.5-3-1.5-3-3 0-1.8 1.5-3 3.7-3 1.1 0 2.2.3 3.1.8z" fill="white"/></>,
+    Entra: <><defs><linearGradient id="entra-a" x1="5" y1="5" x2="27" y2="27" gradientUnits="userSpaceOnUse"><stop stopColor="#7B5CFA"/><stop offset=".52" stopColor="#2F7DE1"/><stop offset="1" stopColor="#20B8C8"/></linearGradient></defs><path d="M16 3 27.7 9.8v12.4L16 29 4.3 22.2V9.8z" fill="url(#entra-a)"/><path d="m10.1 19.8 5.9-10 5.9 10-5.9-3.1z" fill="white" fillOpacity=".92"/></>,
+    Pinecone: <><circle cx="16" cy="16" r="4" fill="#121A17"/><g stroke="#18B89A" strokeWidth="2.4" strokeLinecap="round"><path d="M16 3v7M16 22v7M3 16h7M22 16h7M6.8 6.8l5 5M20.2 20.2l5 5M25.2 6.8l-5 5M11.8 20.2l-5 5"/></g><circle cx="16" cy="16" r="2" fill="#18B89A"/></>,
+    Redis: <><path d="m5 20 11 5 11-5-11-5z" fill="#A51F17"/><path d="m5 15 11 5 11-5-11-5z" fill="#D82C20"/><path d="m5 10 11 5 11-5-11-5z" fill="#F04438"/><path d="m11.5 9.8 4.5-2 4.5 2-4.5 2z" fill="white"/><circle cx="22.8" cy="11" r="1.2" fill="#FFE18B"/></>,
+    Slack: <><rect x="13" y="3" width="6" height="12" rx="3" fill="#36C5F0"/><rect x="17" y="13" width="12" height="6" rx="3" fill="#2EB67D"/><rect x="13" y="17" width="6" height="12" rx="3" fill="#ECB22E"/><rect x="3" y="13" width="12" height="6" rx="3" fill="#E01E5A"/><circle cx="10" cy="10" r="3" fill="#36C5F0"/><circle cx="22" cy="10" r="3" fill="#2EB67D"/><circle cx="22" cy="22" r="3" fill="#ECB22E"/><circle cx="10" cy="22" r="3" fill="#E01E5A"/></>,
+    Confluence: <><path d="M7.2 19.7c-.7 1.1-1.5 2.4-2.5 3.8-.4.6-.2 1.4.4 1.8l4.1 2.5c.6.4 1.4.2 1.8-.4 2.8-4.3 5.1-3.6 10.1-1.2l2.1 1c.7.3 1.4 0 1.7-.7l2-4.4c.3-.7 0-1.5-.7-1.8-1.4-.7-2.8-1.4-4.2-2-6.4-3-10.7-4.8-14.8 1.4z" fill="#1868DB"/><path d="M24.8 12.3c.7-1.1 1.5-2.4 2.5-3.8.4-.6.2-1.4-.4-1.8l-4.1-2.5c-.6-.4-1.4-.2-1.8.4-2.8 4.3-5.1 3.6-10.1 1.2l-2.1-1c-.7-.3-1.4 0-1.7.7l-2 4.4c-.3.7 0 1.5.7 1.8 1.4.7 2.8 1.4 4.2 2 6.4 3 10.7 4.8 14.8-1.4z" fill="#2684FF"/></>,
+  };
+  return <svg className="application-icon" aria-hidden="true" viewBox="0 0 32 32">{marks[name]}</svg>;
 }
 
 function ConcordMark({ compact = false }: { compact?: boolean }) {
@@ -85,7 +98,15 @@ function ProductConsole() {
 }
 
 function EnterpriseBoundary() {
-  return <section className="integration-section" id="integrations" aria-labelledby="integrations-title"><div className="integration-copy"><div className="section-kicker"><span>05</span> Integration architecture</div><p className="eyebrow">Built for the enterprise graph</p><h2 id="integrations-title">One boundary.<br/>Every system knows its role.</h2><p className="lead">Standard enterprise tools connect through explicit contracts for source events, identity context, derivative actions, proof probes, and workflow notifications.</p></div><div className="integration-orbit" aria-label="Enterprise integration model"><div className="orbit-ring orbit-one"/><div className="orbit-ring orbit-two"/><div className="orbit-ring orbit-three"/><div className="orbit-center"><span className="brand-glyph" aria-hidden="true"><i/><i/><i/></span><strong>Concord</strong><small>Assurance plane</small></div><div className="orbit-chip chip-sp"><b>SP</b><span>SharePoint<small>Authority</small></span></div><div className="orbit-chip chip-en"><b>EN</b><span>Entra<small>Identity</small></span></div><div className="orbit-chip chip-pc"><b>PC</b><span>Pinecone<small>Derivative</small></span></div><div className="orbit-chip chip-rd"><b>RD</b><span>Redis<small>Cache</small></span></div><div className="orbit-chip chip-sl"><b>SL</b><span>Slack<small>Workflow</small></span></div><div className="orbit-chip chip-cf"><b>CF</b><span>Confluence<small>Planned</small></span></div></div><div className="contract-strip">{[["Authority", "Observe the source truth", "SharePoint + Entra"], ["Control", "Plan and coordinate safely", "Concord workflow"], ["Derivative", "Quarantine and repair", "Pinecone + Redis"], ["Proof", "Read back and retrieve", "Customer API"]].map(([title, detail, example], index) => <article key={title}><span>0{index + 1}</span><h3>{title}</h3><p>{detail}</p><small>{example}</small></article>)}</div></section>;
+  const applications: { name: ApplicationName; role: string; className: string; state: "live" | "planned" }[] = [
+    { name: "SharePoint", role: "Authority", className: "chip-sp", state: "live" },
+    { name: "Entra", role: "Identity", className: "chip-en", state: "live" },
+    { name: "Pinecone", role: "Derivative", className: "chip-pc", state: "live" },
+    { name: "Redis", role: "Cache", className: "chip-rd", state: "live" },
+    { name: "Slack", role: "Workflow", className: "chip-sl", state: "live" },
+    { name: "Confluence", role: "Planned", className: "chip-cf", state: "planned" },
+  ];
+  return <section className="integration-section" id="integrations" aria-labelledby="integrations-title"><div className="integration-copy"><div className="section-kicker"><span>05</span> Integration architecture</div><p className="eyebrow">Your enterprise graph, continuously assured</p><h2 id="integrations-title">One assurance layer.<br/>Every system stays in sync.</h2><p className="lead">Concord gives each application an explicit role—source of truth, identity authority, derivative system, cache, or workflow—then traces every change across the complete boundary.</p></div><div className="integration-orbit" aria-label="Concord assurance boundary and connected enterprise applications"><div className="orbit-field-label"><span/>Registered assurance boundary</div><div className="orbit-ring orbit-one"/><div className="orbit-ring orbit-two"/><div className="orbit-ring orbit-three"/><div className="orbit-center"><span className="brand-glyph" aria-hidden="true"><i/><i/><i/></span><strong>Concord</strong><small>Assurance plane</small><em>Continuously verified</em></div>{applications.map((application) => <div className={`orbit-chip ${application.className} ${application.state === "planned" ? "orbit-chip-planned" : ""}`} key={application.name}><span className="orbit-app-mark"><ApplicationIcon name={application.name}/></span><span>{application.name}<small>{application.role}</small></span><i className="orbit-status" aria-label={application.state === "live" ? "Connected" : "Planned"}/></div>)}</div><div className="contract-strip">{[["Authority", "Observe the source truth", "SharePoint + Entra"], ["Control", "Coordinate every change", "Concord workflow"], ["Derivative", "Quarantine and repair", "Pinecone + Redis"], ["Proof", "Verify the final experience", "Identity-aware probe"]].map(([title, detail, example], index) => <article key={title}><span>0{index + 1}</span><h3>{title}</h3><p>{detail}</p><small>{example}</small></article>)}</div></section>;
 }
 
 function LaunchGates() {
