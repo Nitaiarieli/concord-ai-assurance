@@ -1,6 +1,6 @@
 "use client";
 
-import { FormEvent, useMemo, useState } from "react";
+import { FormEvent, useEffect, useMemo, useState } from "react";
 import Image from "next/image";
 import type { AssuranceCase } from "@/lib/concord";
 import { cases, integrations, readinessReport } from "@/lib/concord";
@@ -33,9 +33,9 @@ function StatusPill({ status }: { status: AssuranceCase["status"] }) {
 function ReadinessPanel() {
   return (
     <section className="readiness-wrap" id="readiness" aria-labelledby="readiness-title">
-      <div className="section-kicker dark-kicker"><span>01</span> Independent assessment</div>
+      <div className="section-kicker dark-kicker"><span>06</span> Independent assessment</div>
       <div className="readiness-grid">
-        <div><p className="eyebrow">Launch decision / 20 Aug 2026</p><h2 id="readiness-title">Ready to prove.<br/>Not ready to promise.</h2><p className="lead muted-light">The product definition is unusually disciplined. The implementation evidence is not yet strong enough for a production safety claim.</p></div>
+        <div><p className="eyebrow">Launch decision / 20 Aug 2026</p><h2 id="readiness-title">Ready to prove.<br/>Not ready to promise.</h2><p className="lead muted-light">The product boundaries are clearly defined. The implementation evidence is not yet strong enough to support a production safety claim.</p></div>
         <div className="score-orbit" aria-label={`Production readiness ${readinessReport.score} percent`}><svg viewBox="0 0 160 160" role="img"><circle className="score-track" cx="80" cy="80" r="66"/><circle className="score-value" cx="80" cy="80" r="66" pathLength="100" strokeDasharray={`${readinessReport.score} 100`}/></svg><div><strong>{readinessReport.score}</strong><span>% ready</span></div></div>
       </div>
       <div className="verdict-bar"><div><span className="dot-amber"/>Current verdict</div><strong>Design-partner staging only</strong><p>Confidence: medium · Evidence-backed, assumption-sensitive</p></div>
@@ -68,7 +68,7 @@ function ProductConsole() {
 
   return (
     <section className="product-section" id="product" aria-labelledby="product-title">
-      <div className="product-copy"><div className="section-kicker"><span>02</span> Product experience</div><div><p className="eyebrow">The assurance control room</p><h2 id="product-title">Every claim earns its evidence.</h2></div><p className="lead">The interface never turns a successful API response into a green check. It shows what changed, what Concord could reach, what was repaired, and how the final behavior was proved.</p></div>
+      <div className="product-copy"><div className="section-kicker"><span>03</span> Product experience</div><div><p className="eyebrow">The assurance control room</p><h2 id="product-title">Every claim earns its evidence.</h2></div><p className="lead">Concord does not treat a successful API response as proof. It shows what changed, what was in scope, what was repaired, and whether the final user experience was actually corrected.</p></div>
       <div className="console-shell">
         <aside className="console-sidebar"><ConcordMark compact/><nav aria-label="Product demo navigation"><button className={activeView === "cases" ? "nav-active" : ""} type="button" onClick={() => setActiveView("cases")} aria-label="Assurance cases"><Icon name="pulse"/></button><button className={activeView === "coverage" ? "nav-active" : ""} type="button" onClick={() => setActiveView("coverage")} aria-label="Coverage ledger"><Icon name="layers"/></button><button type="button" onClick={() => setSimOpen(true)} aria-label="Open simulation"><Icon name="terminal"/></button></nav><span className="avatar" aria-label="Demo workspace">DA</span></aside>
         <div className="console-main">
@@ -85,14 +85,121 @@ function ProductConsole() {
 }
 
 function EnterpriseBoundary() {
-  return <section className="integration-section" id="integrations" aria-labelledby="integrations-title"><div className="integration-copy"><div className="section-kicker"><span>03</span> Integration architecture</div><p className="eyebrow">Built for the enterprise graph</p><h2 id="integrations-title">One boundary.<br/>Every system knows its role.</h2><p className="lead">Standard enterprise tools plug in through explicit contracts: source events, identity context, derivative actions, proof probes, and workflow notifications.</p></div><div className="integration-orbit" aria-label="Enterprise integration model"><div className="orbit-ring orbit-one"/><div className="orbit-ring orbit-two"/><div className="orbit-ring orbit-three"/><div className="orbit-center"><span className="brand-glyph" aria-hidden="true"><i/><i/><i/></span><strong>Concord</strong><small>Assurance plane</small></div><div className="orbit-chip chip-sp"><b>SP</b><span>SharePoint<small>Authority</small></span></div><div className="orbit-chip chip-en"><b>EN</b><span>Entra<small>Identity</small></span></div><div className="orbit-chip chip-pc"><b>PC</b><span>Pinecone<small>Derivative</small></span></div><div className="orbit-chip chip-rd"><b>RD</b><span>Redis<small>Cache</small></span></div><div className="orbit-chip chip-sl"><b>SL</b><span>Slack<small>Workflow</small></span></div><div className="orbit-chip chip-cf"><b>CF</b><span>Confluence<small>Planned</small></span></div></div><div className="contract-strip">{[["Authority", "Observe the source truth", "SharePoint + Entra"], ["Control", "Plan and coordinate safely", "Concord workflow"], ["Derivative", "Quarantine and repair", "Pinecone + Redis"], ["Proof", "Read back and retrieve", "Customer API"]].map(([title, detail, example], index) => <article key={title}><span>0{index + 1}</span><h3>{title}</h3><p>{detail}</p><small>{example}</small></article>)}</div></section>;
+  return <section className="integration-section" id="integrations" aria-labelledby="integrations-title"><div className="integration-copy"><div className="section-kicker"><span>05</span> Integration architecture</div><p className="eyebrow">Built for the enterprise graph</p><h2 id="integrations-title">One boundary.<br/>Every system knows its role.</h2><p className="lead">Standard enterprise tools connect through explicit contracts for source events, identity context, derivative actions, proof probes, and workflow notifications.</p></div><div className="integration-orbit" aria-label="Enterprise integration model"><div className="orbit-ring orbit-one"/><div className="orbit-ring orbit-two"/><div className="orbit-ring orbit-three"/><div className="orbit-center"><span className="brand-glyph" aria-hidden="true"><i/><i/><i/></span><strong>Concord</strong><small>Assurance plane</small></div><div className="orbit-chip chip-sp"><b>SP</b><span>SharePoint<small>Authority</small></span></div><div className="orbit-chip chip-en"><b>EN</b><span>Entra<small>Identity</small></span></div><div className="orbit-chip chip-pc"><b>PC</b><span>Pinecone<small>Derivative</small></span></div><div className="orbit-chip chip-rd"><b>RD</b><span>Redis<small>Cache</small></span></div><div className="orbit-chip chip-sl"><b>SL</b><span>Slack<small>Workflow</small></span></div><div className="orbit-chip chip-cf"><b>CF</b><span>Confluence<small>Planned</small></span></div></div><div className="contract-strip">{[["Authority", "Observe the source truth", "SharePoint + Entra"], ["Control", "Plan and coordinate safely", "Concord workflow"], ["Derivative", "Quarantine and repair", "Pinecone + Redis"], ["Proof", "Read back and retrieve", "Customer API"]].map(([title, detail, example], index) => <article key={title}><span>0{index + 1}</span><h3>{title}</h3><p>{detail}</p><small>{example}</small></article>)}</div></section>;
 }
 
 function LaunchGates() {
   const icons: IconName[] = ["code", "pulse", "shield", "layers"];
-  return <section className="gates-section" id="architecture" aria-labelledby="gates-title"><div className="gates-copy"><div className="section-kicker dark-kicker"><span>04</span> Production path</div><p className="eyebrow">The next honest milestone</p><h2 id="gates-title">Four gates between a compelling demo and a safety claim.</h2><p>These gates are part of the product, not a footnote. Each produces evidence that the next decision can inspect.</p></div><div className="gate-stack">{readinessReport.gates.map((gate, index) => <article key={gate}><span>{String(index + 1).padStart(2, "0")}</span><div><h3>{gate}</h3><p>{["Real authority event → complete registered lineage.", "Retry storm → one safe final state.", "Revoked identity → zero protected results.", "Failure → contained tenant and recoverable service."][index]}</p></div><Icon name={icons[index]}/></article>)}</div></section>;
+  return <section className="gates-section" id="architecture" aria-labelledby="gates-title"><div className="gates-copy"><div className="section-kicker dark-kicker"><span>07</span> Production path</div><p className="eyebrow">The next honest milestone</p><h2 id="gates-title">Four gates between a compelling demo and a safety claim.</h2><p>These gates are part of the product, not a footnote. Each one produces evidence for the next launch decision.</p></div><div className="gate-stack">{readinessReport.gates.map((gate, index) => <article key={gate}><span>{String(index + 1).padStart(2, "0")}</span><div><h3>{gate}</h3><p>{["Real authority event → complete registered lineage.", "Retry storm → one safe final state.", "Revoked identity → zero protected results.", "Failure → contained tenant and recoverable service."][index]}</p></div><Icon name={icons[index]}/></article>)}</div></section>;
+}
+
+function ProblemLandscape() {
+  return <section className="rift-problem" id="problem" aria-labelledby="problem-title">
+    <div className="rift-problem-copy reveal-on-scroll">
+      <p className="terrain-kicker"><span>01</span> The hidden failure</p>
+      <h2 id="problem-title">Permissions change.<br/><em>AI copies do not.</em></h2>
+      <p>Enterprise AI creates indexes, embeddings, caches, summaries, and agent memory from trusted systems. When the source changes, those copies can keep serving information that is no longer valid.</p>
+    </div>
+    <div className="rift-stage" aria-label="A source permission changes while derived AI data remains stale">
+      <div className="rift-stage-sun"/>
+      <div className="rift-rock rift-rock-left"><span>Source system</span><strong>Access revoked</strong><small>SharePoint · 09:42:16</small></div>
+      <div className="rift-depth"><i/><i/><i/><i/></div>
+      <div className="rift-rock rift-rock-right"><span>AI systems</span><strong>Still retrievable</strong><small>Vector · Cache · Agent memory</small></div>
+      <div className="rift-warning"><span>!</span>Control gap</div>
+    </div>
+    <div className="problem-consequence reveal-on-scroll">
+      <span>Without Concord</span>
+      <p>Teams discover the mismatch through an incident, an audit, or a user who sees something they should not.</p>
+    </div>
+  </section>;
+}
+
+function PropagationJourney() {
+  const chapters = [
+    { number: "01", label: "Observe", title: "Catch the authority change.", body: "Concord listens to the system that owns the truth—such as SharePoint, Jira, Confluence, or Slack—and identifies the exact object, identity, and policy that changed.", meta: "Source event · identity context" },
+    { number: "02", label: "Reconcile", title: "Repair only what became invalid.", body: "Registered lineage shows which indexes, vectors, cache keys, summaries, and agent states depend on that source. Concord quarantines and repairs the affected state instead of rebuilding everything.", meta: "Targeted repair · reversible action" },
+    { number: "03", label: "Prove", title: "Test the outcome as the affected user.", body: "A destination read-back confirms the data changed. An identity-aware retrieval test confirms the revoked user can no longer retrieve it. The complete evidence chain is preserved.", meta: "Behavioral proof · audit evidence" },
+  ];
+  return <section className="propagation-story" id="how-it-works" aria-labelledby="journey-title">
+    <header className="journey-heading reveal-on-scroll">
+      <p className="terrain-kicker"><span>02</span> How Concord works</p>
+      <h2 id="journey-title">One change.<br/><em>Every affected system.</em></h2>
+      <p>Concord closes the gap between the system that owns the truth and every AI system that depends on it.</p>
+    </header>
+    <div className="journey-layout">
+      <div className="journey-terrain" aria-hidden="true">
+        <div className="terrain-root terrain-root-one"/><div className="terrain-root terrain-root-two"/><div className="terrain-root terrain-root-three"/>
+        <div className="journey-source"><span>Authority</span><strong>SharePoint</strong><i/></div>
+        <div className="journey-current"><i/><i/><i/><b>Concord</b></div>
+        <div className="journey-derivatives"><span>Vector</span><span>Cache</span><span>Agent</span><span>Search</span></div>
+        <div className="journey-proof"><b>✓</b><span>Revoked identity</span><strong>0 results</strong></div>
+      </div>
+      <div className="journey-chapters">{chapters.map((chapter) => <article className="journey-chapter reveal-on-scroll" key={chapter.number}><div><span>{chapter.number}</span><small>{chapter.label}</small></div><h3>{chapter.title}</h3><p>{chapter.body}</p><footer>{chapter.meta}</footer></article>)}</div>
+    </div>
+  </section>;
+}
+
+function CustomerValue() {
+  return <section className="outcome-landscape" id="outcomes" aria-labelledby="outcome-title">
+    <div className="outcome-horizon" aria-hidden="true"><i/><i/><i/></div>
+    <div className="outcome-intro reveal-on-scroll"><p className="terrain-kicker"><span>04</span> Customer value</p><h2 id="outcome-title">Less rebuilding.<br/><em>More certainty.</em></h2><p>For security, AI-platform, governance, and FinOps teams that need to operate enterprise AI without losing control of access, retention, or evidence.</p></div>
+    <div className="outcome-grid">
+      <article className="reveal-on-scroll"><span>01</span><h3>Reduce stale exposure</h3><p>Find invalid AI-derived data when the authority changes—not after someone reports it.</p><small>Security · Governance</small></article>
+      <article className="reveal-on-scroll"><span>02</span><h3>Repair with precision</h3><p>Replace full re-indexing and broad synchronization with targeted, measurable repair.</p><small>AI Platform · FinOps</small></article>
+      <article className="reveal-on-scroll"><span>03</span><h3>Prove the final state</h3><p>Give auditors and application owners a trace from source event to user-level retrieval outcome.</p><small>Compliance · Application owners</small></article>
+    </div>
+    <div className="outcome-actions reveal-on-scroll"><a className="button button-amber" href="/value">Explore Value &amp; FinOps <Icon name="arrow" size={18}/></a><a href="/pricing">See the pricing model →</a><span>Customer-connected metrics only. No invented savings.</span></div>
+  </section>;
 }
 
 export default function ConcordApp() {
-  return <main><section className="hero" id="top"><nav className="site-nav" aria-label="Primary navigation"><a href="#top" aria-label="Concord home"><ConcordMark/></a><div className="nav-links"><a href="#product">Product</a><a href="/pricing">Pricing</a><a href="/value">Value</a><a href="/intelligence">Radar</a></div><a className="nav-cta" href="/workspace">Open workspace <Icon name="arrow" size={16}/></a></nav><div className="hero-glow hero-glow-left"/><div className="hero-glow hero-glow-right"/><div className="hero-grid"><div className="hero-copy"><div className="hero-chip"><span/>Design-partner release · bounded assurance</div><h1>Trust the state<br/><em>after the source</em><br/>changes.</h1><p>Concord is the independent assurance plane for AI-derived data—tracing registered artifacts, repairing invalid state, and proving what a revoked identity can retrieve.</p><div className="hero-actions"><a className="button button-amber" href="/workspace">Connect your first app free <Icon name="arrow" size={18}/></a><a className="text-link" href="#readiness"><Icon name="play" size={16}/>See the launch verdict</a></div></div><div className="hero-visual" aria-label="Concord connects source authority to derived AI systems"><Image src="/concord-hero.png" alt="Abstract forest and illuminated desert joined by data paths" fill priority sizes="(max-width: 1100px) 92vw, 50vw"/><div className="hero-visual-shade"/><div className="hero-system system-source"><span>Source truth</span><strong>SharePoint</strong><small>Permission revoked</small></div><div className="hero-system system-control"><span className="brand-glyph"><i/><i/><i/></span><strong>Concord</strong><small>Observe · reconcile · prove</small></div><div className="hero-system system-state"><span>Derived state</span><strong>Pinecone + Redis</strong><small>144 artifacts verified</small></div><div className="signal-path signal-a"/><div className="signal-path signal-b"/></div></div><div className="hero-bottom"><p>Independent by design</p><div><span>Registered lineage</span><span>Reversible action</span><span>Behavioral proof</span></div></div></section><ReadinessPanel/><ProductConsole/><EnterpriseBoundary/><LaunchGates/><section className="final-cta"><div><ConcordMark/><p>AI state changes. Evidence should keep up.</p></div><h2>Build the first<br/><em>provable</em> control loop.</h2><a className="button button-amber" href="/workspace">Start with one application <Icon name="arrow" size={18}/></a></section><footer className="site-footer"><span>Concord · AI Assurance</span><p>Product simulation · No external systems are modified</p><a href="#top">Back to top ↑</a></footer></main>;
+  useEffect(() => {
+    const root = document.documentElement;
+    const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    let frame = 0;
+    const updateScroll = () => {
+      if (frame || reduced) return;
+      frame = window.requestAnimationFrame(() => {
+        root.style.setProperty("--terrain-scroll", String(Math.min(window.scrollY, 1800)));
+        frame = 0;
+      });
+    };
+    const updatePointer = (event: PointerEvent) => {
+      if (reduced) return;
+      root.style.setProperty("--pointer-x", ((event.clientX / window.innerWidth) - .5).toFixed(3));
+      root.style.setProperty("--pointer-y", ((event.clientY / window.innerHeight) - .5).toFixed(3));
+    };
+    const observer = new IntersectionObserver((entries) => entries.forEach((entry) => {
+      if (entry.isIntersecting) entry.target.classList.add("is-visible");
+    }), { threshold: .14 });
+    document.querySelectorAll(".reveal-on-scroll").forEach((element) => observer.observe(element));
+    updateScroll();
+    window.addEventListener("scroll", updateScroll, { passive: true });
+    window.addEventListener("pointermove", updatePointer, { passive: true });
+    return () => {
+      window.removeEventListener("scroll", updateScroll);
+      window.removeEventListener("pointermove", updatePointer);
+      observer.disconnect();
+      if (frame) window.cancelAnimationFrame(frame);
+    };
+  }, []);
+
+  return <main className="immersive-home">
+    <section className="hero terrain-hero" id="top">
+      <nav className="site-nav" aria-label="Primary navigation"><a href="#top" aria-label="Concord home"><ConcordMark/></a><div className="nav-links"><a href="#how-it-works">How it works</a><a href="#product">Product</a><a href="/pricing">Pricing</a><a href="/value">Value</a></div><a className="nav-cta" href="/workspace">Open workspace <Icon name="arrow" size={16}/></a></nav>
+      <div className="terrain-sky" aria-hidden="true"/><div className="terrain-stars" aria-hidden="true"/><div className="terrain-sun" aria-hidden="true"/>
+      <div className="terrain-world" aria-hidden="true"><Image className="terrain-image" src="/concord-hero.png" alt="" fill priority sizes="100vw"/><div className="terrain-shade"/><div className="terrain-canopy"><i/><i/><i/><i/><i/></div><div className="terrain-ridge terrain-ridge-back"/><div className="terrain-ridge terrain-ridge-front"/><div className="terrain-flow"><i/><i/><i/></div></div>
+      <div className="hero-grid immersive-hero-grid"><div className="hero-copy"><div className="hero-chip"><span/>Enterprise AI assurance</div><h1>When access changes,<br/><em>your AI should change</em><br/>with it.</h1><p>Concord helps security and AI-platform teams find, repair, and prove stale permissions and content across enterprise AI systems.</p><div className="hero-actions"><a className="button button-amber" href="/workspace">Connect your first application free <Icon name="arrow" size={18}/></a><a className="text-link" href="#how-it-works"><Icon name="play" size={16}/>See how it works</a></div></div><div className="hero-proof-path" aria-label="A permission change is repaired and verified across AI systems"><div><span>Source change</span><strong>Access revoked</strong><small>SharePoint</small></div><i/><div className="proof-path-core"><span className="brand-glyph"><i/><i/><i/></span><strong>Concord</strong><small>Trace · repair · prove</small></div><i/><div><span>Verified outcome</span><strong>0 protected results</strong><small>Vector · Cache · Agent</small></div></div></div>
+      <div className="hero-bottom"><p>Independent assurance for enterprise AI</p><div><span>Source truth</span><span>Registered lineage</span><span>Identity-aware proof</span></div></div><a className="scroll-cue" href="#problem" aria-label="Scroll to understand the problem"><span>Scroll</span><i/></a>
+    </section>
+    <ProblemLandscape/>
+    <PropagationJourney/>
+    <ProductConsole/>
+    <CustomerValue/>
+    <EnterpriseBoundary/>
+    <ReadinessPanel/>
+    <LaunchGates/>
+    <section className="final-cta terrain-final"><div><ConcordMark/><p>Start with one real control loop. Expand when the evidence is clear.</p></div><h2>Keep AI aligned<br/>with <em>the truth.</em></h2><a className="button button-amber" href="/workspace">Connect your first application free <Icon name="arrow" size={18}/></a></section>
+    <footer className="site-footer"><span>Concord · Enterprise AI Assurance</span><p>Product simulation · No external systems are modified</p><a href="#top">Back to top ↑</a></footer>
+  </main>;
 }

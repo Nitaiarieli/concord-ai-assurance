@@ -29,11 +29,13 @@ test("renders the bounded launch verdict and product positioning", async () => {
   const response = await fetchFromWorker("/", { headers: { accept: "text/html" } });
   const html = await response.text();
   assert.equal(response.status, 200);
-  assert.match(html, /Trust the state/);
+  assert.match(html, /When access changes/);
+  assert.match(html, /Permissions change/);
+  assert.match(html, /How Concord works/);
   assert.match(html, /Design-partner staging only/i);
   assert.match(html, /Demo data/i);
   assert.match(html, /href="\/pricing"/);
-  assert.match(html, /Connect your first app free/i);
+  assert.match(html, /Connect your first application free/i);
 });
 
 for (const [path, expected] of [
