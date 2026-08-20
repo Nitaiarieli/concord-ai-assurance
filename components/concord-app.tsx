@@ -267,57 +267,23 @@ export default function ConcordApp() {
     const root = document.documentElement;
     const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     let frame = 0;
-    let pointerFrame = 0;
-    let previousScroll = window.scrollY;
-    let previousTime = performance.now();
-    const motionSections = Array.from(document.querySelectorAll<HTMLElement>("[data-motion-section], .integration-section, .gates-section"));
     const updateScroll = () => {
-      if (frame) return;
+      if (frame || reduced) return;
       frame = window.requestAnimationFrame(() => {
-        const now = performance.now();
-        const elapsed = Math.max(now - previousTime, 16);
-        const delta = window.scrollY - previousScroll;
-        const velocity = Math.max(-1, Math.min(1, delta / elapsed / 1.4));
         root.style.setProperty("--terrain-scroll", String(Math.min(window.scrollY, 1200)));
-        root.style.setProperty("--scroll-velocity", reduced ? "0" : velocity.toFixed(3));
-        if (!reduced) motionSections.forEach((section) => {
-          const bounds = section.getBoundingClientRect();
-          const progress = Math.max(0, Math.min(1, (window.innerHeight - bounds.top) / (window.innerHeight + bounds.height)));
-          section.style.setProperty("--scene-progress", progress.toFixed(3));
-        });
-        previousScroll = window.scrollY;
-        previousTime = now;
         frame = 0;
-      });
-    };
-    const updatePointer = (event: PointerEvent) => {
-      if (reduced || pointerFrame) return;
-      pointerFrame = window.requestAnimationFrame(() => {
-        root.style.setProperty("--pointer-x", ((event.clientX / window.innerWidth) * 2 - 1).toFixed(3));
-        root.style.setProperty("--pointer-y", ((event.clientY / window.innerHeight) * 2 - 1).toFixed(3));
-        pointerFrame = 0;
       });
     };
     const observer = new IntersectionObserver((entries) => entries.forEach((entry) => {
       if (entry.isIntersecting) entry.target.classList.add("is-visible");
     }), { threshold: .14 });
-    const motionObserver = new IntersectionObserver((entries) => entries.forEach((entry) => {
-      (entry.target as HTMLElement).dataset.motionActive = entry.isIntersecting ? "true" : "false";
-    }), { rootMargin: "12% 0px 12%", threshold: .08 });
     document.querySelectorAll(".reveal-on-scroll").forEach((element) => observer.observe(element));
-    motionSections.forEach((section) => motionObserver.observe(section));
     updateScroll();
     window.addEventListener("scroll", updateScroll, { passive: true });
-    window.addEventListener("resize", updateScroll, { passive: true });
-    window.addEventListener("pointermove", updatePointer, { passive: true });
     return () => {
       window.removeEventListener("scroll", updateScroll);
-      window.removeEventListener("resize", updateScroll);
-      window.removeEventListener("pointermove", updatePointer);
       observer.disconnect();
-      motionObserver.disconnect();
       if (frame) window.cancelAnimationFrame(frame);
-      if (pointerFrame) window.cancelAnimationFrame(pointerFrame);
     };
   }, []);
 

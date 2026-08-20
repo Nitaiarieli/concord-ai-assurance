@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { ContactDialog } from "@/components/contact-dialog";
+import { SiteMotionController } from "@/components/site-motion-controller";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -30,7 +31,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className="antialiased">{children}<ContactDialog/></body>
+      <body className="antialiased">{children}<SiteMotionController/><ContactDialog/></body>
     </html>
   );
 }
