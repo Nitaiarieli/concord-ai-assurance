@@ -212,12 +212,11 @@ function PropagationJourney() {
   const [activeStage, setActiveStage] = useState(0);
   const [selectedObject, setSelectedObject] = useState<SystemObjectId | null>(null);
   const chapters = [
-    { number: "01", label: "Source change", title: "The authority changes first.", body: "A permission, identity, retention rule, or source object changes in a registered enterprise system. Concord captures the validity-changing event with the exact object and identity context.", meta: "Authority event · Registered adapter", stage: "Source event captured" },
-    { number: "02", label: "Detect", title: "Concord recognizes what became invalid.", body: "The assurance plane evaluates the event against registered policies and boundaries. Unsupported systems stay visibly outside the claim instead of being treated as covered.", meta: "Bounded scope · Policy evaluation", stage: "Validity evaluated" },
-    { number: "03", label: "Trace", title: "The impact graph reveals every registered dependency.", body: "Cross-vendor lineage maps the source object to affected chunks, embeddings, vector records, cache keys, summaries, and agent memory across supported destinations.", meta: "Registered lineage · Impact preview", stage: "Affected derivatives identified" },
-    { number: "04", label: "Reconcile", title: "The smallest safe repair is calculated.", body: "Concord applies an idempotent, policy-specific action—such as quarantine, update, delete, invalidate, recompute, access-control update, or a controlled callback.", meta: "Targeted action · Idempotent execution", stage: "Repair in progress" },
-    { number: "05", label: "Verify", title: "The destination is read back and behavior is tested.", body: "Concord confirms the destination state, then tests retrieval as the affected identity. A successful write alone is never presented as proof.", meta: "Destination read-back · Identity-aware probe", stage: "Outcome behavior verified" },
-    { number: "06", label: "Evidence", title: "Every bounded result remains explainable.", body: "The final record distinguishes verified, repairing, unresolved, and unsupported coverage while preserving exposure time, exceptions, actions, and supporting evidence.", meta: "Coverage state · Exposure · Exceptions", stage: "Evidence package preserved" },
+    { number: "01", label: "Detect", title: "Capture the change at the authority.", body: "A permission, identity, retention rule, or source object changes in a registered enterprise system. Concord records the event with exact object, identity, policy, and adapter context.", meta: "Authority event · Policy evaluation", stage: "Validity-changing event captured" },
+    { number: "02", label: "Trace", title: "Resolve every registered dependency.", body: "Cross-vendor lineage maps the source object to affected chunks, embeddings, vector records, cache keys, summaries, and agent memory across supported destinations.", meta: "Registered lineage · Impact preview", stage: "Affected derivatives identified" },
+    { number: "03", label: "Repair", title: "Apply the smallest safe remediation.", body: "Concord calculates an idempotent, policy-specific action: quarantine, update, delete, invalidate, recompute, change access, or invoke a controlled callback.", meta: "Targeted action · Idempotent execution", stage: "Bounded repair in progress" },
+    { number: "04", label: "Verify", title: "Read back the destination. Test real retrieval.", body: "Concord confirms the destination state, then tests the retrieval path as the affected identity. A successful write or API response alone is never presented as proof.", meta: "Destination read-back · Identity-aware probe", stage: "Outcome behavior verified" },
+    { number: "05", label: "Prove", title: "Preserve the evidence—and the exceptions.", body: "The final record separates verified, repairing, unresolved, unsupported, and accepted-risk states while preserving exposure time, actions, exceptions, and supporting evidence.", meta: "Coverage state · Exposure · Evidence", stage: "Evidence package preserved" },
   ];
   const objects: Record<SystemObjectId, { eyebrow: string; title: string; summary: string; risk: string; dependency: string; action: string; proof: string; value: string }> = {
     source: { eyebrow: "Authoritative source", title: "SharePoint access state", summary: "The registered enterprise system that owns the current truth for this object and identity.", risk: "A permission or source object can change after AI derivatives have already been created.", dependency: "Concord resolves only lineage registered through supported adapters and customer-controlled identifiers.", action: "Observe the event, preserve its context, and calculate downstream impact. The authority itself remains customer-controlled.", proof: "The source event and current authority state are preserved as calculation evidence.", value: "Earlier detection shortens the period in which downstream AI state may remain invalid." },
@@ -243,7 +242,7 @@ function PropagationJourney() {
   return <section className="propagation-story cinematic-host" id="how-it-works" aria-labelledby="journey-title" data-motion-section="lineage">
     <CinematicEnvironment scene="lineage"/>
     <header className="journey-heading reveal-on-scroll">
-      <p className="terrain-kicker"><span>003/</span> How Concord works</p>
+      <p className="terrain-kicker"><span>002/</span> How Concord works</p>
       <h2 id="journey-title">A living control path<br/><em>from change to proof.</em></h2>
       <p>Scroll through the workflow. Select any system object to inspect its risk, dependency, permitted action, verification method, and business value.</p>
     </header>
@@ -259,7 +258,7 @@ function PropagationJourney() {
           {objectButton("memory", "object-memory", "Agent memory", "Registered derivative", <Icon name="layers" size={25}/>)}
           {objectButton("verification", "object-verification", "Identity probe", "Behavioral verification", <Icon name="shield" size={25}/>)}
           {objectButton("evidence", "object-evidence", "Evidence record", "Coverage and exceptions", <Icon name="check" size={25}/>)}
-          <div className="workflow-stage-readout" aria-live="polite"><span>Stage {String(activeStage + 1).padStart(2, "0")} / 06</span><strong>{chapters[activeStage].stage}</strong></div>
+          <div className="workflow-stage-readout" aria-live="polite"><span>Stage {String(activeStage + 1).padStart(2, "0")} / 05</span><strong>{chapters[activeStage].stage}</strong></div>
           {selected && <aside className="workflow-object-panel" aria-live="polite"><button type="button" onClick={() => setSelectedObject(null)} aria-label="Close object details">×</button><span>{selected.eyebrow}</span><h3>{selected.title}</h3><p>{selected.summary}</p><dl><div><dt>Why it can become invalid</dt><dd>{selected.risk}</dd></div><div><dt>Registered dependency</dt><dd>{selected.dependency}</dd></div><div><dt>Concord action</dt><dd>{selected.action}</dd></div><div><dt>Verification</dt><dd>{selected.proof}</dd></div><div><dt>Business value</dt><dd>{selected.value}</dd></div></dl></aside>}
           <p className="workflow-explore-hint"><span/>Select an object to explore its assurance contract</p>
         </div>
@@ -269,17 +268,66 @@ function PropagationJourney() {
   </section>;
 }
 
-function CustomerValue() {
-  return <section className="outcome-landscape cinematic-host" id="outcomes" aria-labelledby="outcome-title" data-motion-section="renewal">
-    <CinematicEnvironment scene="renewal"/>
-    <div className="outcome-horizon" aria-hidden="true"/>
-    <div className="outcome-intro reveal-on-scroll"><p className="terrain-kicker"><span>002/</span> Value by role</p><h2 id="outcome-title">Less rebuilding.<br/><em>More certainty.</em></h2><p>For security, AI-platform, governance, and FinOps teams that need to operate enterprise AI without losing control of access, retention, or evidence.</p></div>
-    <div className="outcome-grid">
-      <article className="reveal-on-scroll"><span>01</span><h3>Reduce stale exposure</h3><p>Find invalid AI-derived data when the authority changes—not after someone reports it.</p><small>Security · Governance</small></article>
-      <article className="reveal-on-scroll"><span>02</span><h3>Repair with precision</h3><p>Replace full re-indexing and broad synchronization with targeted, measurable repair.</p><small>AI Platform · FinOps</small></article>
-      <article className="reveal-on-scroll"><span>03</span><h3>Prove the final state</h3><p>Give auditors and application owners a trace from source event to user-level retrieval outcome.</p><small>Compliance · Application owners</small></article>
+function EnterpriseProof() {
+  const proofCase = cases[0];
+  const proofApps: { name: ApplicationName; role: string; state: "Registered" | "Planned" }[] = [
+    { name: "SharePoint", role: "Authority", state: "Registered" },
+    { name: "Entra", role: "Identity", state: "Registered" },
+    { name: "Pinecone", role: "Vector state", state: "Registered" },
+    { name: "Redis", role: "Cache state", state: "Registered" },
+    { name: "Slack", role: "Workflow", state: "Planned" },
+    { name: "Confluence", role: "Knowledge", state: "Planned" },
+  ];
+  const proofPath = [
+    ["What changed", "Entra access revoked"],
+    ["What was affected", "144 registered artifacts"],
+    ["What was repaired", "128 vectors · 16 cache keys"],
+    ["What was read back", "144 destinations invalidated"],
+    ["What was proven", "0 protected results"],
+  ];
+
+  return <section className="enterprise-proof cinematic-host" id="proof" aria-labelledby="enterprise-proof-title" data-motion-section="verification">
+    <CinematicEnvironment scene="verification"/>
+    <header className="enterprise-proof-heading reveal-on-scroll">
+      <p className="terrain-kicker"><span>003/</span> Enterprise value and proof</p>
+      <div><h2 id="enterprise-proof-title">One change.<br/><em>One defensible record.</em></h2><p>Security, AI-platform, governance, application, and FinOps teams see the same bounded story: what changed, what Concord repaired, what the destination returned, and what the affected identity could actually retrieve.</p></div>
+    </header>
+
+    <article className="assurance-record reveal-on-scroll" aria-label="Demonstration assurance record">
+      <header><div><span className="micro-label">Guided proof · Demo data</span><h3>{proofCase.id} · {proofCase.source}</h3></div><StatusPill status={proofCase.status}/></header>
+      <div className="assurance-record-path">{proofPath.map(([label, value], index) => <div key={label}><span>{String(index + 1).padStart(2, "0")}</span><small>{label}</small><strong>{value}</strong><i aria-hidden="true"/></div>)}</div>
+      <footer><div><span>Invalid-state exposure</span><strong>{proofCase.exposure}</strong></div><div><span>Registered coverage</span><strong>{proofCase.coverage}%</strong></div><div><span>Proof level</span><strong>{proofCase.proofLevel}</strong></div><p><Icon name="shield" size={18}/>{proofCase.risk}</p></footer>
+    </article>
+
+    <div className="enterprise-outcomes reveal-on-scroll" aria-label="Enterprise outcomes">
+      <article><span>01</span><div><h3>Reduce stale exposure</h3><p>Detect invalid AI-derived state when the authority changes—not after an incident or audit.</p></div><small>Security · Governance</small></article>
+      <article><span>02</span><div><h3>Repair only what changed</h3><p>Replace broad rebuilds with registered, policy-specific remediation and measurable execution.</p></div><small>AI Platform · FinOps</small></article>
+      <article><span>03</span><div><h3>Prove the real outcome</h3><p>Give application owners and auditors a trace from source event to user-level retrieval behavior.</p></div><small>Application owners · Compliance</small></article>
     </div>
-    <div className="outcome-actions reveal-on-scroll"><a className="button button-amber" href="/value">Explore Value &amp; FinOps <Icon name="arrow" size={18}/></a><a href="/pricing">See the pricing model →</a><span>Customer-connected metrics only. No invented savings.</span></div>
+
+    <div className="proof-coverage-rail reveal-on-scroll">
+      <div><span className="micro-label">Registered assurance boundary</span><p>Coverage is explicit. Planned and unsupported systems never inherit a verified state.</p></div>
+      <div className="proof-apps" role="list" aria-label="Supported and planned integrations">{proofApps.map((app) => <article role="listitem" key={app.name}><span><ApplicationIcon name={app.name}/></span><div><strong>{app.name}</strong><small>{app.role}</small></div><b className={app.state === "Registered" ? "proof-app-live" : "proof-app-planned"}>{app.state}</b></article>)}</div>
+    </div>
+
+    <div className="proof-disclosures" aria-label="Detailed Concord product evidence">
+      <details id="proof-control">
+        <summary><span>01</span><div><strong>Open the assurance control surface</strong><small>Cases, coverage ledger, replay, and safe simulation</small></div><i aria-hidden="true">+</i></summary>
+        <div className="proof-disclosure-content"><ProductConsole/></div>
+      </details>
+      <details>
+        <summary><span>02</span><div><strong>Inspect coverage and adapter roles</strong><small>Authorities, derivatives, proof endpoints, registered and planned states</small></div><i aria-hidden="true">+</i></summary>
+        <div className="proof-disclosure-content"><EnterpriseBoundary/><AdapterRegistry/></div>
+      </details>
+      <details>
+        <summary><span>03</span><div><strong>Review readiness and operating boundaries</strong><small>Design-partner staging only · evidence gaps remain visible</small></div><i aria-hidden="true">+</i></summary>
+        <div className="proof-disclosure-content"><ReadinessPanel/><LaunchGates/></div>
+      </details>
+    </div>
+
+    <nav className="enterprise-proof-links" aria-label="Explore Concord commercial evidence"><a href="/value">Value &amp; FinOps <Icon name="arrow" size={17}/></a><a href="/pricing">Pricing model <Icon name="arrow" size={17}/></a><a href="/intelligence">Market intelligence <Icon name="arrow" size={17}/></a></nav>
+    <div className="proof-commercial-note"><div><span>Start with one registered control loop</span><p>The first eligible production application has a $0 application fee. Expand only after the evidence is clear.</p></div><a href="/workspace">Connect your first application free <Icon name="arrow" size={17}/></a></div>
+    <p className="proof-boundary"><Icon name="shield" size={17}/>Bounded consistency for registered artifacts and supported adapters. Accepted risk is never presented as verified safety.</p>
   </section>;
 }
 
@@ -316,14 +364,14 @@ export default function ConcordApp() {
       <div className="hero-orbit" aria-hidden="true"><span>CONCORD</span><b>∞</b></div>
       <nav className="site-nav" aria-label="Primary navigation">
         <a href="#top" aria-label="Concord home"><ConcordMark/></a>
-        <div className="nav-links"><a href="#how-it-works">How it works</a><a href="#product">Product</a><a href="/pricing">Pricing</a><a href="/value">Value</a></div>
+        <div className="nav-links"><a href="#problem">The risk</a><a href="#how-it-works">How it works</a><a href="#proof">Proof</a><a href="/pricing">Pricing</a></div>
         <div className="nav-actions"><button className="nav-contact" type="button" data-contact-trigger>Contact</button><a className="nav-cta" href="/workspace">Open workspace <Icon name="arrow" size={16}/></a></div>
       </nav>
       <div className="hero-center merged-hero-center">
-        <p className="hero-chapter"><span>000/</span> Independent AI assurance</p>
+        <p className="hero-chapter"><span>000/</span> Independent assurance for security and AI-platform teams</p>
         <h1><span>Keep AI-derived state</span><span>aligned with the truth.</span></h1>
-        <p className="hero-promise">When authoritative access changes, Concord traces every registered downstream derivative, applies the policy-specific repair, and proves the real retrieval path is safe.</p>
-        <div className="hero-actions"><a href="#how-it-works">See how Concord works <i>↗</i></a><a href="#product">Open the control surface <i>↓</i></a></div>
+        <p className="hero-promise">Keep enterprise AI aligned with the truth. When access or authoritative information changes, Concord finds every registered AI-derived artifact affected, repairs the invalid state, verifies the real retrieval outcome, and preserves the evidence.</p>
+        <div className="hero-actions"><a href="#how-it-works">See the control loop <i>↗</i></a><a href="#proof">Inspect the proof <i>↓</i></a></div>
         <div className="hero-assurance-dock"><HeroAssuranceField/></div>
         <p className="hero-boundary-note"><Icon name="shield" size={16}/>Bounded consistency for registered artifacts and supported adapters.</p>
       </div>
@@ -331,18 +379,13 @@ export default function ConcordApp() {
       <a className="explore-link" href="#problem" aria-label="Scroll to understand the problem"><span>Explore</span><b>001</b><i>↓</i></a>
     </section>
     <ProblemLandscape/>
-    <CustomerValue/>
     <PropagationJourney/>
-    <EnterpriseBoundary/>
-    <ProductConsole/>
-    <ReadinessPanel/>
-    <AdapterRegistry/>
-    <LaunchGates/>
+    <EnterpriseProof/>
     <section className="final-cta terrain-final cinematic-host" data-motion-section="stable">
       <CinematicEnvironment scene="stable"/>
-      <div className="final-cta-brand"><ConcordMark/><p>Start with one real control loop. Expand when the evidence is clear.</p></div>
-      <h2>Keep AI aligned<br/>with <em>the truth.</em></h2>
-      <div className="final-cta-actions"><a className="button button-amber" href="/workspace">Connect your first application free <Icon name="arrow" size={18}/></a><button className="button button-contact-light" type="button" data-contact-trigger>Contact the Ralph Team</button></div>
+      <div className="final-cta-brand"><ConcordMark/><p>004/ Start with one real control loop. Expand when the evidence is clear.</p></div>
+      <h2>Carry one change<br/>all the way to <em>proof.</em></h2>
+      <button className="button button-amber final-contact-action" type="button" data-contact-trigger>Contact the Ralph Team <Icon name="arrow" size={18}/></button>
     </section>
     <footer className="site-footer"><span>Concord · Enterprise AI Assurance</span><p>Product simulation · No external systems are modified</p><a href="#top">Back to top ↑</a></footer>
   </main>;
