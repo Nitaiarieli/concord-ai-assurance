@@ -57,6 +57,9 @@ test("renders the compressed five-chapter landing story with progressive disclos
   assert.match(html, /Open the assurance control surface/i);
   assert.match(html, /Inspect coverage and adapter roles/i);
   assert.match(html, /Review readiness and operating boundaries/i);
+  assert.match(html, /Explore the control contract/i);
+  assert.match(html, /Registered boundary and business value/i);
+  assert.match(html, /Risk<\/button>.*Action<\/button>.*Proof<\/button>/is);
   assert.doesNotMatch(html, /Less rebuilding/i);
 });
 

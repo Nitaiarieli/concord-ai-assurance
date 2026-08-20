@@ -21,11 +21,11 @@ Secondary architecture, coverage, readiness, and product-control detail is prese
 | Product clarity | 2/2 | The hero states the authoritative-change-to-verified-outcome promise and names the intended security and AI-platform audience. |
 | Narrative structure | 2/2 | Five chapters move from promise to risk, control loop, proof, and one final action. |
 | Original art direction | 2/2 | Concord's cinematic forest/desert world, technical grid, and assurance-path metaphor remain distinctive and product-specific. |
-| Visual hierarchy | 2/2 | Each chapter has one principal focal point; secondary evidence moves into disclosures rather than additional full-height sections. |
-| Purposeful motion | 2/2 | Motion advances the change, trace, repair, verification, and proof sequence, with reduced-motion alternatives. |
-| Interaction usability | 2/2 | The workflow, assurance record, native disclosures, commercial links, workspace path, and contact modal remain directly actionable. |
+| Visual hierarchy | 2/2 | Each chapter has one principal focal point. The workflow window now separates stage navigation, the active source-to-outcome path, object selection, and focused details into distinct reading layers. |
+| Purposeful motion | 2/2 | A single signal travels through the active source → Concord → outcome path; stage transitions explain progress and reduced-motion alternatives preserve the complete state. |
+| Interaction usability | 2/2 | The workflow provides five-stage navigation, six registered-object tabs, Risk/Action/Proof detail tabs, expandable boundary context, visible focus states, and touch-safe controls. |
 | Copy quality | 2/2 | Messaging is concise, idiomatic, technically bounded, and avoids universal AI-governance claims. |
-| Responsive design | 1/2 | Mobile-specific stacking, compact integration coverage, readable disclosure summaries, and simplified motion are implemented and build-tested; a new physical-device render pass was not performed in this iteration. |
+| Responsive design | 1/2 | The assurance path becomes a vertical sequence on mobile, object controls reflow from six to three and then two columns, and all detail panels stack without absolute positioning. A new physical-device render pass was not performed in this iteration. |
 | Accessibility | 2/2 | Semantic sections, native details/summary controls, keyboard-operable contact behavior, visible focus states, readable type, and reduced-motion support are retained. |
 | Performance resilience | 1/2 | The shorter DOM and consolidated scenes reduce page weight and motion density; dedicated runtime profiling remains a separate verification step. |
 | Implementation integrity | 2/2 | Existing routes, contact behavior, pricing, FinOps, intelligence, workspace, demonstrations, and product surfaces are preserved. |

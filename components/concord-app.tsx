@@ -210,13 +210,21 @@ function ProblemLandscape() {
 
 function PropagationJourney() {
   const [activeStage, setActiveStage] = useState(0);
-  const [selectedObject, setSelectedObject] = useState<SystemObjectId | null>(null);
+  const [selectedObject, setSelectedObject] = useState<SystemObjectId>("source");
+  const [activeDetail, setActiveDetail] = useState<"risk" | "action" | "proof">("risk");
   const chapters = [
     { number: "01", label: "Detect", title: "Capture the change at the authority.", body: "A permission, identity, retention rule, or source object changes in a registered enterprise system. Concord records the event with exact object, identity, policy, and adapter context.", meta: "Authority event · Policy evaluation", stage: "Validity-changing event captured" },
     { number: "02", label: "Trace", title: "Resolve every registered dependency.", body: "Cross-vendor lineage maps the source object to affected chunks, embeddings, vector records, cache keys, summaries, and agent memory across supported destinations.", meta: "Registered lineage · Impact preview", stage: "Affected derivatives identified" },
     { number: "03", label: "Repair", title: "Apply the smallest safe remediation.", body: "Concord calculates an idempotent, policy-specific action: quarantine, update, delete, invalidate, recompute, change access, or invoke a controlled callback.", meta: "Targeted action · Idempotent execution", stage: "Bounded repair in progress" },
     { number: "04", label: "Verify", title: "Read back the destination. Test real retrieval.", body: "Concord confirms the destination state, then tests the retrieval path as the affected identity. A successful write or API response alone is never presented as proof.", meta: "Destination read-back · Identity-aware probe", stage: "Outcome behavior verified" },
     { number: "05", label: "Prove", title: "Preserve the evidence—and the exceptions.", body: "The final record separates verified, repairing, unresolved, unsupported, and accepted-risk states while preserving exposure time, actions, exceptions, and supporting evidence.", meta: "Coverage state · Exposure · Evidence", stage: "Evidence package preserved" },
+  ];
+  const stageVisuals: { from: { eyebrow: string; title: string; detail: string; icon: React.ReactNode }; to: { eyebrow: string; title: string; detail: string; icon: React.ReactNode } }[] = [
+    { from: { eyebrow: "Authoritative source", title: "Access revoked", detail: "SharePoint · 09:42:16", icon: <ApplicationIcon name="SharePoint"/> }, to: { eyebrow: "Captured event", title: "Change registered", detail: "Object · Identity · Policy", icon: <Icon name="pulse" size={24}/> } },
+    { from: { eyebrow: "Registered lineage", title: "Source mapped", detail: "Object → chunks → records", icon: <Icon name="layers" size={24}/> }, to: { eyebrow: "Impact set", title: "144 artifacts found", detail: "Vectors · Cache · Memory", icon: <Icon name="pulse" size={24}/> } },
+    { from: { eyebrow: "Affected state", title: "144 artifacts selected", detail: "Policy-specific scope", icon: <Icon name="layers" size={24}/> }, to: { eyebrow: "Targeted repair", title: "Remediation applied", detail: "128 vectors · 16 cache keys", icon: <Icon name="check" size={24}/> } },
+    { from: { eyebrow: "Destination read-back", title: "144 states confirmed", detail: "Write response is not enough", icon: <Icon name="code" size={24}/> }, to: { eyebrow: "Identity-aware probe", title: "0 protected results", detail: "Real retrieval path tested", icon: <Icon name="shield" size={24}/> } },
+    { from: { eyebrow: "Verified outcome", title: "Exposure measured", detail: "8m 42s invalid-state window", icon: <Icon name="shield" size={24}/> }, to: { eyebrow: "Evidence record", title: "Case CR-0841", detail: "Coverage · Actions · Exceptions", icon: <Icon name="check" size={24}/> } },
   ];
   const objects: Record<SystemObjectId, { eyebrow: string; title: string; summary: string; risk: string; dependency: string; action: string; proof: string; value: string }> = {
     source: { eyebrow: "Authoritative source", title: "SharePoint access state", summary: "The registered enterprise system that owns the current truth for this object and identity.", risk: "A permission or source object can change after AI derivatives have already been created.", dependency: "Concord resolves only lineage registered through supported adapters and customer-controlled identifiers.", action: "Observe the event, preserve its context, and calculate downstream impact. The authority itself remains customer-controlled.", proof: "The source event and current authority state are preserved as calculation evidence.", value: "Earlier detection shortens the period in which downstream AI state may remain invalid." },
@@ -226,7 +234,20 @@ function PropagationJourney() {
     verification: { eyebrow: "Verification checkpoint", title: "Identity-aware proof", summary: "A final test of what the affected identity can actually retrieve after remediation.", risk: "A successful write or API response can still leave the real user experience unchanged.", dependency: "The probe uses the affected identity and a registered destination retrieval path.", action: "Read back the destination, run the behavioral probe, and classify the outcome.", proof: "The result is marked verified, repairing, unresolved, or unsupported with timestamped evidence.", value: "Security and application owners can evaluate the real outcome instead of trusting process completion." },
     evidence: { eyebrow: "Evidence record", title: "Bounded assurance report", summary: "The traceable record connecting source event, impact, action, verification, exposure, and exceptions.", risk: "Without a shared evidence chain, teams must reconstruct incidents and audits manually.", dependency: "Each record references the registered adapter, policy, calculation inputs, destination response, and probe result.", action: "Preserve the result and unresolved exception; no unsupported outcome is silently upgraded to verified.", proof: "Coverage, timestamps, identities, actions, and supporting artifacts remain inspectable.", value: "A clear assurance record improves auditability and operational confidence without making universal consistency claims." },
   };
-  const selected = selectedObject ? objects[selectedObject] : null;
+  const selected = objects[selectedObject];
+  const stageObjectGroups: Record<SystemObjectId, number[]> = {
+    source: [0, 1],
+    vector: [1, 2],
+    cache: [1, 2],
+    memory: [1, 2],
+    verification: [3],
+    evidence: [4],
+  };
+  const detailContent = {
+    risk: { label: "Why it matters", body: selected.risk },
+    action: { label: "Concord action", body: selected.action },
+    proof: { label: "Required evidence", body: selected.proof },
+  };
 
   useEffect(() => {
     const stageNodes = document.querySelectorAll<HTMLElement>(".workflow-chapter[data-stage]");
@@ -238,7 +259,9 @@ function PropagationJourney() {
     return () => observer.disconnect();
   }, []);
 
-  const objectButton = (id: SystemObjectId, className: string, label: string, sublabel: string, icon: React.ReactNode) => <button className={`workflow-object ${className} ${selectedObject === id ? "object-selected" : ""}`} type="button" aria-pressed={selectedObject === id} onClick={() => setSelectedObject(id)}><span className="workflow-object-icon">{icon}</span><span><small>{sublabel}</small><strong>{label}</strong></span><em>Explore</em></button>;
+  const objectButton = (id: SystemObjectId, label: string, sublabel: string, icon: React.ReactNode) => <button id={`workflow-object-${id}`} className={`workflow-object ${selectedObject === id ? "object-selected" : ""} ${stageObjectGroups[id].includes(activeStage) ? "object-stage-active" : ""}`} type="button" role="tab" aria-selected={selectedObject === id} aria-controls="workflow-inspector-panel" onClick={() => { setSelectedObject(id); setActiveDetail("risk"); }}><span className="workflow-object-icon">{icon}</span><span><small>{sublabel}</small><strong>{label}</strong></span></button>;
+  const setWorkflowStage = (index: number) => setActiveStage(index);
+  const activeVisual = stageVisuals[activeStage];
   return <section className="propagation-story cinematic-host" id="how-it-works" aria-labelledby="journey-title" data-motion-section="lineage">
     <CinematicEnvironment scene="lineage"/>
     <header className="journey-heading reveal-on-scroll">
@@ -250,20 +273,42 @@ function PropagationJourney() {
       <div className={`workflow-sticky workflow-stage-${activeStage}`}>
         <div className="workflow-scene" aria-label="Interactive Concord dependency and reconciliation system">
           <div className="workflow-light" aria-hidden="true"/><div className="workflow-ground" aria-hidden="true"/>
-          <svg className="workflow-connections" viewBox="0 0 800 620" aria-hidden="true"><path className="path-source" d="M145 152 C245 175 287 235 376 279"/><path className="path-vector" d="M445 279 C545 235 586 162 684 148"/><path className="path-cache" d="M451 303 C564 300 624 308 700 320"/><path className="path-memory" d="M434 343 C522 410 563 462 642 496"/><path className="path-verify" d="M674 167 C566 330 422 430 209 493 M695 333 C560 398 405 455 209 493 M630 504 C490 512 362 514 209 493"/><path className="path-evidence" d="M236 510 C323 543 401 555 488 545"/></svg>
-          <div className="workflow-core" aria-label="Concord assurance plane"><span className="brand-glyph" aria-hidden="true"><i/><i/><i/></span><strong>Concord</strong><small>Assurance plane</small><i aria-hidden="true"/></div>
-          {objectButton("source", "object-source", "SharePoint", "Authority changed", <ApplicationIcon name="SharePoint"/>)}
-          {objectButton("vector", "object-vector", "Vector records", "Registered derivative", <ApplicationIcon name="Pinecone"/>)}
-          {objectButton("cache", "object-cache", "Cache state", "Registered derivative", <ApplicationIcon name="Redis"/>)}
-          {objectButton("memory", "object-memory", "Agent memory", "Registered derivative", <Icon name="layers" size={25}/>)}
-          {objectButton("verification", "object-verification", "Identity probe", "Behavioral verification", <Icon name="shield" size={25}/>)}
-          {objectButton("evidence", "object-evidence", "Evidence record", "Coverage and exceptions", <Icon name="check" size={25}/>)}
-          <div className="workflow-stage-readout" aria-live="polite"><span>Stage {String(activeStage + 1).padStart(2, "0")} / 05</span><strong>{chapters[activeStage].stage}</strong></div>
-          {selected && <aside className="workflow-object-panel" aria-live="polite"><button type="button" onClick={() => setSelectedObject(null)} aria-label="Close object details">×</button><span>{selected.eyebrow}</span><h3>{selected.title}</h3><p>{selected.summary}</p><dl><div><dt>Why it can become invalid</dt><dd>{selected.risk}</dd></div><div><dt>Registered dependency</dt><dd>{selected.dependency}</dd></div><div><dt>Concord action</dt><dd>{selected.action}</dd></div><div><dt>Verification</dt><dd>{selected.proof}</dd></div><div><dt>Business value</dt><dd>{selected.value}</dd></div></dl></aside>}
-          <p className="workflow-explore-hint"><span/>Select an object to explore its assurance contract</p>
+          <header className="workflow-stage-header">
+            <div className="workflow-stage-readout" aria-live="polite"><span>Guided example · Demo data</span><strong>{chapters[activeStage].stage}</strong></div>
+            <nav className="workflow-stage-nav" aria-label="Assurance workflow stages">{chapters.map((chapter, index) => <button key={chapter.number} type="button" aria-current={activeStage === index ? "step" : undefined} onClick={() => setWorkflowStage(index)}><span>{chapter.number}</span><small>{chapter.label}</small></button>)}</nav>
+          </header>
+
+          <div className="workflow-map" key={activeStage} aria-live="polite">
+            <article className="workflow-map-node workflow-map-from"><span className="workflow-map-icon">{activeVisual.from.icon}</span><div><small>{activeVisual.from.eyebrow}</small><strong>{activeVisual.from.title}</strong><p>{activeVisual.from.detail}</p></div></article>
+            <span className="workflow-route workflow-route-in" aria-hidden="true"><i/></span>
+            <div className="workflow-core" aria-label="Concord assurance plane"><span className="brand-glyph" aria-hidden="true"><i/><i/><i/></span><strong>Concord</strong><small>Assurance plane</small><i aria-hidden="true"/></div>
+            <span className="workflow-route workflow-route-out" aria-hidden="true"><i/></span>
+            <article className="workflow-map-node workflow-map-to"><span className="workflow-map-icon">{activeVisual.to.icon}</span><div><small>{activeVisual.to.eyebrow}</small><strong>{activeVisual.to.title}</strong><p>{activeVisual.to.detail}</p></div></article>
+          </div>
+
+          <section className="workflow-explorer" aria-labelledby="workflow-explorer-title">
+            <div className="workflow-explorer-heading"><div><span>Registered assurance objects</span><h3 id="workflow-explorer-title">Explore the control contract</h3></div><p>Select one object to inspect what can fail, what Concord can do, and what evidence is required.</p></div>
+            <div className="workflow-object-tabs" role="tablist" aria-label="Registered assurance objects">
+              {objectButton("source", "Source", "Authority", <ApplicationIcon name="SharePoint"/>)}
+              {objectButton("vector", "Vectors", "Derivative", <ApplicationIcon name="Pinecone"/>)}
+              {objectButton("cache", "Cache", "Derivative", <ApplicationIcon name="Redis"/>)}
+              {objectButton("memory", "Memory", "Derivative", <Icon name="layers" size={22}/>)}
+              {objectButton("verification", "Probe", "Verification", <Icon name="shield" size={22}/>)}
+              {objectButton("evidence", "Evidence", "Record", <Icon name="check" size={22}/>)}
+            </div>
+
+            <aside id="workflow-inspector-panel" className="workflow-object-panel" role="tabpanel" aria-labelledby={`workflow-object-${selectedObject}`} aria-live="polite">
+              <div className="workflow-object-summary"><span>{selected.eyebrow}</span><h3>{selected.title}</h3><p>{selected.summary}</p></div>
+              <div className="workflow-object-detail">
+                <div className="workflow-detail-tabs" role="tablist" aria-label="Object detail categories">{(["risk", "action", "proof"] as const).map((detail) => <button id={`workflow-detail-tab-${detail}`} key={detail} type="button" role="tab" aria-selected={activeDetail === detail} aria-controls="workflow-detail-panel" onClick={() => setActiveDetail(detail)}>{detail === "risk" ? "Risk" : detail === "action" ? "Action" : "Proof"}</button>)}</div>
+                <div id="workflow-detail-panel" className="workflow-detail-panel" role="tabpanel" aria-labelledby={`workflow-detail-tab-${activeDetail}`}><span>{detailContent[activeDetail].label}</span><p>{detailContent[activeDetail].body}</p></div>
+                <details className="workflow-more"><summary>Registered boundary and business value</summary><div><p><strong>Boundary</strong>{selected.dependency}</p><p><strong>Why it matters</strong>{selected.value}</p></div></details>
+              </div>
+            </aside>
+          </section>
         </div>
       </div>
-      <div className="journey-chapters">{chapters.map((chapter, index) => <article className={`journey-chapter workflow-chapter reveal-on-scroll ${activeStage === index ? "chapter-active" : ""}`} data-stage={index} key={chapter.number} onMouseEnter={() => setActiveStage(index)}><button className="workflow-chapter-selector" type="button" aria-pressed={activeStage === index} onFocus={() => setActiveStage(index)} onClick={() => setActiveStage(index)}><span>{chapter.number}</span><small>{chapter.label}</small><i aria-hidden="true"/></button><h3>{chapter.title}</h3><p>{chapter.body}</p><footer>{chapter.meta}</footer></article>)}</div>
+      <div className="journey-chapters">{chapters.map((chapter, index) => <article className={`journey-chapter workflow-chapter reveal-on-scroll ${activeStage === index ? "chapter-active" : ""}`} data-stage={index} key={chapter.number} onMouseEnter={() => setWorkflowStage(index)}><button className="workflow-chapter-selector" type="button" aria-pressed={activeStage === index} onFocus={() => setWorkflowStage(index)} onClick={() => setWorkflowStage(index)}><span>{chapter.number}</span><small>{chapter.label}</small><i aria-hidden="true"/></button><h3>{chapter.title}</h3><p>{chapter.body}</p><footer>{chapter.meta}</footer></article>)}</div>
     </div>
   </section>;
 }
