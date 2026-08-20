@@ -29,7 +29,8 @@ test("renders the bounded launch verdict and product positioning", async () => {
   const response = await fetchFromWorker("/", { headers: { accept: "text/html" } });
   const html = await response.text();
   assert.equal(response.status, 200);
-  assert.match(html, /When access changes/);
+  assert.match(html, /Keep enterprise AI/);
+  assert.match(html, /Bounded consistency for registered artifacts/i);
   assert.match(html, /Permissions change/);
   assert.match(html, /How Concord works/);
   assert.match(html, /Design-partner staging only/i);
