@@ -381,7 +381,7 @@ export default function ConcordApp() {
     <ProblemLandscape/>
     <PropagationJourney/>
     <EnterpriseProof/>
-    <section className="final-cta terrain-final cinematic-host" data-motion-section="stable">
+    <section className="final-cta terrain-final cinematic-host" id="contact" data-motion-section="stable">
       <CinematicEnvironment scene="stable"/>
       <div className="final-cta-brand"><ConcordMark/><p>004/ Start with one real control loop. Expand when the evidence is clear.</p></div>
       <h2>Carry one change<br/>all the way to <em>proof.</em></h2>

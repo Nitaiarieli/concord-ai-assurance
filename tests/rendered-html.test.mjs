@@ -39,6 +39,27 @@ test("renders the bounded launch verdict and product positioning", async () => {
   assert.match(html, /Connect your first application free/i);
 });
 
+test("renders the compressed five-chapter landing story with progressive disclosure", async () => {
+  const response = await fetchFromWorker("/", { headers: { accept: "text/html" } });
+  const html = await response.text();
+  assert.equal(response.status, 200);
+
+  const chapterOrder = [
+    'id="top"',
+    'id="problem"',
+    'id="how-it-works"',
+    'id="proof"',
+    'id="contact"',
+  ].map((marker) => html.indexOf(marker));
+
+  assert.ok(chapterOrder.every((index) => index >= 0));
+  assert.deepEqual([...chapterOrder].sort((a, b) => a - b), chapterOrder);
+  assert.match(html, /Open the assurance control surface/i);
+  assert.match(html, /Inspect coverage and adapter roles/i);
+  assert.match(html, /Review readiness and operating boundaries/i);
+  assert.doesNotMatch(html, /Less rebuilding/i);
+});
+
 for (const [path, expected] of [
   ["/pricing", /Connect your first.*application for free/is],
   ["/value", /Every financial number starts with a product event/i],

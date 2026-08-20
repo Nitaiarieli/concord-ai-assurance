@@ -1,23 +1,45 @@
-# Concord UI/UX quality review
+# Concord Landing Page — UI/UX Quality Review
 
-Date: 2026-08-21
+## Direction
 
-Direction: **The Concord Assurance Atlas**
+**The Five-Chapter Assurance Story**
 
-Score: **20/22** (acceptance threshold: 19/22; no zero scores)
+The landing page now behaves as a directed enterprise product narrative rather than a long product document. It keeps Concord's established forest-to-desert atmosphere, architectural grid, warm mineral palette, editorial typography, and evidence surfaces, while compressing the experience into five distinct chapters:
 
-| Dimension | Score | Implementation evidence |
+1. The promise
+2. The risk
+3. The control loop
+4. Enterprise value and proof
+5. Contact
+
+Secondary architecture, coverage, readiness, and product-control detail is preserved through progressive disclosure inside the proof chapter.
+
+## Scorecard
+
+| Dimension | Score | Evidence |
 | --- | ---: | --- |
-| Product clarity | 2 | The first viewport names the category, explains the authority-change → registered-derivative → verified-retrieval outcome, exposes the bounded-coverage qualifier, and gives direct routes to the workflow and control surface. |
-| Narrative structure | 2 | The old visual chapter rhythm now carries the latest story in one sequence: gap, value, method, integration boundary, product control surface, evidence, adapter registry, production gates, and contact. Duplicate sections were removed. |
-| Original art direction | 2 | The earlier Concord forest–desert identity is evolved through an architectural grid, editorial typography, technical coordinates, living lineage scenes, and embedded evidence surfaces. It remains recognizably Concord rather than a generic SaaS composition. |
-| Visual hierarchy | 2 | One large editorial idea leads each chapter. Fine grid lines, warm neutral fields, dark control scenes, lime verification states, generous spacing, and restrained metadata create a consistent reading order. |
-| Purposeful motion | 2 | Existing section-aware signals, roots, system states, repair transitions, and environmental movement are preserved and visually integrated with the grid. Reduced-motion rules remove continuous hero and decorative motion. |
-| Interaction usability | 2 | Product tabs, simulation, integration states, commercial routes, workspace navigation, pricing controls, filters, exports, and the contact flow remain intact. Browser QA verified correct contact links and Escape closing. |
-| Copy quality | 2 | Copy preserves the current product definition and the real operational sequence, avoids universal consistency claims, and makes supported, planned, and unregistered coverage explicit. |
-| Responsive design | 1 | Mobile rules replace the desktop editorial layout with left-aligned type, stacked actions and assurance controls, a simplified adapter registry, flat product surfaces, and reduced scene density. CSS and route output were verified; the available browser session could not create a true mobile viewport. |
-| Accessibility | 2 | Semantic landmarks, labelled sections, visible focus styles, native controls, dialog semantics, keyboard closing, focus restoration, readable contrast, touch-sized mobile controls, and reduced-motion handling are preserved. |
-| Performance resilience | 1 | The merge reuses the existing optimized local landscape, CSS/SVG scenes, transforms, and Intersection Observer rather than adding WebGL or new video payloads. No dedicated runtime profiling was performed. |
-| Implementation integrity | 2 | The production build and lint pass, all 15 automated tests pass, and desktop browser QA found zero horizontal overflow. Pricing, billing, FinOps, intelligence, workspace, simulation, APIs, contact, and D1-backed product logic remain present. |
+| Product clarity | 2/2 | The hero states the authoritative-change-to-verified-outcome promise and names the intended security and AI-platform audience. |
+| Narrative structure | 2/2 | Five chapters move from promise to risk, control loop, proof, and one final action. |
+| Original art direction | 2/2 | Concord's cinematic forest/desert world, technical grid, and assurance-path metaphor remain distinctive and product-specific. |
+| Visual hierarchy | 2/2 | Each chapter has one principal focal point; secondary evidence moves into disclosures rather than additional full-height sections. |
+| Purposeful motion | 2/2 | Motion advances the change, trace, repair, verification, and proof sequence, with reduced-motion alternatives. |
+| Interaction usability | 2/2 | The workflow, assurance record, native disclosures, commercial links, workspace path, and contact modal remain directly actionable. |
+| Copy quality | 2/2 | Messaging is concise, idiomatic, technically bounded, and avoids universal AI-governance claims. |
+| Responsive design | 1/2 | Mobile-specific stacking, compact integration coverage, readable disclosure summaries, and simplified motion are implemented and build-tested; a new physical-device render pass was not performed in this iteration. |
+| Accessibility | 2/2 | Semantic sections, native details/summary controls, keyboard-operable contact behavior, visible focus states, readable type, and reduced-motion support are retained. |
+| Performance resilience | 1/2 | The shorter DOM and consolidated scenes reduce page weight and motion density; dedicated runtime profiling remains a separate verification step. |
+| Implementation integrity | 2/2 | Existing routes, contact behavior, pricing, FinOps, intelligence, workspace, demonstrations, and product surfaces are preserved. |
 
-The visual merge clears the completion threshold. Desktop QA covered the hero, workflow, adapter registry, contact dialog, and overflow. Browser console noise was limited to the test environment's own extension; no application-origin warnings or errors were observed.
+**Total: 20/22**
+
+## Product-accuracy checks
+
+- Concord is described as bounded assurance for registered artifacts and supported adapters.
+- Attempted remediation is not presented as completion.
+- Destination read-back and identity-aware retrieval testing are required for verification.
+- Unsupported, unresolved, and accepted-risk states remain distinct from verified coverage.
+- Evidence is presented as the output of the full control loop, not as a generic dashboard claim.
+
+## Remaining validation opportunity
+
+Run a hands-on viewport and performance pass on representative iOS and Android devices before a broad public campaign. This is a launch-hardening step, not a known functional blocker.
