@@ -1,11 +1,13 @@
 import { and, asc, desc, eq } from "drizzle-orm";
 import { getDb } from "@/db";
 import {
+  aiDestinationConfigurations,
   auditEvents,
   canonicalChangeEvents,
   connectorDefinitions,
   connectorDeployments,
   connectorRuntimeCredentials,
+  integrationConfigurations,
   reconciliationRuns,
 } from "@/db/schema";
 import {
@@ -80,10 +82,17 @@ export async function getIntegrationPlatformSnapshot(email: string, displayName:
       runtimeVersion: connectorDeployments.runtimeVersion,
       policyVersion: connectorDeployments.policyVersion,
       lastHeartbeatAt: connectorDeployments.lastHeartbeatAt,
+      apiEndpoint: integrationConfigurations.apiEndpoint,
+      verificationIdentityRef: integrationConfigurations.verificationIdentityRef,
+      connectionStatus: integrationConfigurations.connectionStatus,
+      destinationType: aiDestinationConfigurations.destinationType,
+      destinationStatus: aiDestinationConfigurations.status,
       createdAt: connectorDeployments.createdAt,
     })
     .from(connectorDeployments)
     .innerJoin(connectorDefinitions, eq(connectorDeployments.connectorDefinitionId, connectorDefinitions.id))
+    .leftJoin(integrationConfigurations, eq(integrationConfigurations.connectorDeploymentId, connectorDeployments.id))
+    .leftJoin(aiDestinationConfigurations, eq(aiDestinationConfigurations.connectorDeploymentId, connectorDeployments.id))
     .where(eq(connectorDeployments.organizationId, organizationId))
     .orderBy(desc(connectorDeployments.createdAt));
   const events = await db
@@ -145,7 +154,10 @@ export async function createIntegrationDeployment(email: string, rawInput: unkno
   const runtimeToken = createRuntimeEnrollmentToken();
   const tokenHash = await hashRuntimeToken(runtimeToken);
   const credentialId = crypto.randomUUID();
+  const integrationConfigurationId = crypto.randomUUID();
+  const destinationConfigurationId = crypto.randomUUID();
   const expiresAt = new Date(Date.now() + 90 * 24 * 60 * 60 * 1000).toISOString();
+  const secretReference = `customer-vault://connector/${deploymentId}`;
   await db.insert(connectorDeployments).values({
     id: deploymentId,
     organizationId: membership.organizationId,
@@ -158,11 +170,42 @@ export async function createIntegrationDeployment(email: string, rawInput: unkno
     deploymentMode: input.deploymentMode,
     status: "enrollment_pending",
     healthStatus: "awaiting_runtime",
-    secretReference: `customer-vault://connector/${deploymentId}`,
+    secretReference,
     createdAt: timestamp,
     updatedAt: timestamp,
   });
   try {
+    await db.insert(integrationConfigurations).values({
+      id: integrationConfigurationId,
+      organizationId: membership.organizationId,
+      connectorDeploymentId: deploymentId,
+      applicationType: input.connectorKey,
+      apiEndpoint: input.apiEndpoint,
+      authenticationMethod: input.authenticationMethod,
+      credentialReference: secretReference,
+      requiredPermissionsJson: JSON.stringify(input.connectorKey === "bookstack"
+        ? ["Access System API", "View monitored content", "Manage content restrictions for permission override read-back"]
+        : ["Connector-specific least-privilege read access"]),
+      monitoredScopesJson: JSON.stringify(input.monitoredScopes),
+      verificationIdentityRef: input.verificationIdentityRef,
+      policyVersion: input.policyVersion,
+      connectionStatus: input.apiEndpoint ? "awaiting_credentials" : "awaiting_endpoint",
+      createdAt: timestamp,
+      updatedAt: timestamp,
+    });
+    await db.insert(aiDestinationConfigurations).values({
+      id: destinationConfigurationId,
+      organizationId: membership.organizationId,
+      connectorDeploymentId: deploymentId,
+      destinationType: input.destinationType,
+      displayName: input.destinationType === "local_index" ? "Deterministic local index" : "Customer vector database",
+      configurationJson: JSON.stringify({ contentPlane: "customer_runtime", credentialStorage: "customer_vault", adapterVersion: 1 }),
+      secretReference: input.destinationType === "vector_database" ? `customer-vault://destination/${destinationConfigurationId}` : null,
+      verificationMode: "identity_retrieval",
+      status: input.destinationType === "local_index" ? "adapter_ready" : "configuration_pending",
+      createdAt: timestamp,
+      updatedAt: timestamp,
+    });
     await db.insert(connectorRuntimeCredentials).values({
       id: credentialId,
       organizationId: membership.organizationId,
@@ -175,6 +218,8 @@ export async function createIntegrationDeployment(email: string, rawInput: unkno
       updatedAt: timestamp,
     });
   } catch (error) {
+    await db.delete(aiDestinationConfigurations).where(eq(aiDestinationConfigurations.connectorDeploymentId, deploymentId));
+    await db.delete(integrationConfigurations).where(eq(integrationConfigurations.connectorDeploymentId, deploymentId));
     await db.delete(connectorDeployments).where(eq(connectorDeployments.id, deploymentId));
     throw error;
   }
@@ -185,11 +230,11 @@ export async function createIntegrationDeployment(email: string, rawInput: unkno
     action: "connector.deployment_created",
     entityType: "connector_deployment",
     entityId: deploymentId,
-    afterJson: JSON.stringify({ connectorKey: input.connectorKey, environment: input.environment, deploymentMode: input.deploymentMode, status: "enrollment_pending" }),
+    afterJson: JSON.stringify({ connectorKey: input.connectorKey, environment: input.environment, deploymentMode: input.deploymentMode, destinationType: input.destinationType, status: "enrollment_pending" }),
     occurredAt: timestamp,
   });
   return {
-    deployment: { id: deploymentId, connectorKey: input.connectorKey, displayName: input.displayName, status: "enrollment_pending", healthStatus: "awaiting_runtime" },
+    deployment: { id: deploymentId, connectorKey: input.connectorKey, displayName: input.displayName, status: "enrollment_pending", healthStatus: "awaiting_runtime", apiEndpoint: input.apiEndpoint, verificationIdentityRef: input.verificationIdentityRef, connectionStatus: input.apiEndpoint ? "awaiting_credentials" : "awaiting_endpoint", destinationType: input.destinationType, destinationStatus: input.destinationType === "local_index" ? "adapter_ready" : "configuration_pending" },
     enrollment: { runtimeToken, expiresAt, displayedOnce: true },
   };
 }

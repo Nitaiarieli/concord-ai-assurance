@@ -3,11 +3,15 @@ import { createPrototypeGraph, prototypePolicy } from "./fixtures.ts";
 import { MemoryConsistencyStore } from "./memory-store.ts";
 import { evaluateServeGuard } from "./serve-guard.ts";
 import { SimulatedDocumentSourceConnector, SimulatedRetrievalBoundary, SimulatedWorkPermissionConnector } from "./simulated-connectors.ts";
+import { bookStackBoundaryScenarios, runBookStackBoundaryDemo } from "./bookstack-e2e.ts";
 
-export const demoScenarios = ["content_update", "permission_revocation", "unknown_dependency", "verification_failure"] as const;
+export const demoScenarios = ["content_update", "permission_revocation", "unknown_dependency", "verification_failure", ...bookStackBoundaryScenarios] as const;
 export type DemoScenario = (typeof demoScenarios)[number];
 
 export async function runConsistencyDemo(scenario: DemoScenario) {
+  if (bookStackBoundaryScenarios.includes(scenario as (typeof bookStackBoundaryScenarios)[number])) {
+    return runBookStackBoundaryDemo(scenario as (typeof bookStackBoundaryScenarios)[number]);
+  }
   const graph = createPrototypeGraph();
   if (scenario === "unknown_dependency") {
     graph.edges = graph.edges.filter((edge) => edge.edgeId !== "e-retrieval-artifact");

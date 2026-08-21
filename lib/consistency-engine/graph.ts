@@ -8,7 +8,11 @@ import type {
 } from "./model.ts";
 
 export function isSecurityEvent(event: NormalizedEvent) {
-  return event.securityClassification === "security_revocation" || event.securityClassification === "security_deletion" || event.mutationType === "ACCESS_REVOKED" || event.mutationType === "USER_DEACTIVATED";
+  return event.securityClassification === "security_revocation"
+    || event.securityClassification === "security_deletion"
+    || event.securityClassification === "security_unknown"
+    || event.mutationType === "ACCESS_REVOKED"
+    || event.mutationType === "USER_DEACTIVATED";
 }
 
 export async function transformDelta(edge: EdgeContract, event: NormalizedEvent) {

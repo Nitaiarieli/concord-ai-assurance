@@ -146,6 +146,7 @@ export function assertMinimizedOperationalPayload(value: unknown) {
 }
 
 export function validateConnectorDeploymentInput(input: unknown) {
+  assertMinimizedOperationalPayload(input);
   if (!input || typeof input !== "object") throw new Error("Integration deployment input is required.");
   const value = input as Record<string, unknown>;
   const connectorKey = requiredString(value.connectorKey, "connectorKey", 40) as ConnectorKey;
@@ -156,6 +157,15 @@ export function validateConnectorDeploymentInput(input: unknown) {
   if (!new Set(["production", "staging", "sandbox"]).has(environment)) throw new Error("Unsupported environment.");
   const deploymentMode = requiredString(value.deploymentMode, "deploymentMode", 30);
   if (!new Set(["customer_cloud", "private_network", "air_gapped_preparation"]).has(deploymentMode)) throw new Error("Unsupported deployment mode.");
+  const apiEndpoint = optionalString(value.apiEndpoint, "apiEndpoint", 500);
+  if (apiEndpoint) {
+    const parsed = new URL(apiEndpoint);
+    if (!new Set(["http:", "https:"]).has(parsed.protocol) || parsed.username || parsed.password) {
+      throw new Error("apiEndpoint must be an HTTP(S) URL without embedded credentials.");
+    }
+  }
+  const destinationType = optionalString(value.destinationType, "destinationType", 40) ?? "local_index";
+  if (!new Set(["local_index", "vector_database"]).has(destinationType)) throw new Error("Unsupported first AI destination.");
   return {
     connector,
     connectorKey,
@@ -163,6 +173,12 @@ export function validateConnectorDeploymentInput(input: unknown) {
     externalInstanceKey: requiredString(value.externalInstanceKey, "externalInstanceKey", 180),
     environment: environment as "production" | "staging" | "sandbox",
     deploymentMode: deploymentMode as "customer_cloud" | "private_network" | "air_gapped_preparation",
+    apiEndpoint,
+    authenticationMethod: "api_token" as const,
+    destinationType: destinationType as "local_index" | "vector_database",
+    verificationIdentityRef: optionalString(value.verificationIdentityRef, "verificationIdentityRef", 240),
+    monitoredScopes: stringArray(value.monitoredScopes ?? ["pages", "content_permissions", "audit_log", "webhooks"], "monitoredScopes", 20),
+    policyVersion: optionalString(value.policyVersion, "policyVersion", 60) ?? "policy-v1",
   };
 }
 

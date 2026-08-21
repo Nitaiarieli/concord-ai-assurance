@@ -395,6 +395,43 @@ export const connectorDeployments = sqliteTable("connector_deployments", {
   index("connector_deployments_org_status_idx").on(table.organizationId, table.status),
 ]);
 
+export const aiDestinationConfigurations = sqliteTable("ai_destination_configurations", {
+  id: text("id").primaryKey(),
+  organizationId: text("organization_id").notNull().references(() => organizations.id),
+  connectorDeploymentId: text("connector_deployment_id").notNull().references(() => connectorDeployments.id),
+  destinationType: text("destination_type").notNull(),
+  displayName: text("display_name").notNull(),
+  configurationJson: text("configuration_json").notNull(),
+  secretReference: text("secret_reference"),
+  verificationMode: text("verification_mode").notNull().default("identity_retrieval"),
+  status: text("status").notNull().default("configuration_pending"),
+  lastVerifiedAt: text("last_verified_at"),
+  ...auditColumns,
+}, (table) => [
+  uniqueIndex("ai_destination_configurations_deployment_uidx").on(table.connectorDeploymentId),
+  index("ai_destination_configurations_org_status_idx").on(table.organizationId, table.status),
+]);
+
+export const integrationConfigurations = sqliteTable("integration_configurations", {
+  id: text("id").primaryKey(),
+  organizationId: text("organization_id").notNull().references(() => organizations.id),
+  connectorDeploymentId: text("connector_deployment_id").notNull().references(() => connectorDeployments.id),
+  applicationType: text("application_type").notNull(),
+  apiEndpoint: text("api_endpoint"),
+  authenticationMethod: text("authentication_method").notNull(),
+  credentialReference: text("credential_reference").notNull(),
+  requiredPermissionsJson: text("required_permissions_json").notNull(),
+  monitoredScopesJson: text("monitored_scopes_json").notNull(),
+  verificationIdentityRef: text("verification_identity_ref"),
+  policyVersion: text("policy_version").notNull(),
+  connectionStatus: text("connection_status").notNull().default("awaiting_credentials"),
+  lastSynchronizationAt: text("last_synchronization_at"),
+  ...auditColumns,
+}, (table) => [
+  uniqueIndex("integration_configurations_deployment_uidx").on(table.connectorDeploymentId),
+  index("integration_configurations_org_status_idx").on(table.organizationId, table.connectionStatus),
+]);
+
 export const connectorRuntimeCredentials = sqliteTable("connector_runtime_credentials", {
   id: text("id").primaryKey(),
   organizationId: text("organization_id").notNull().references(() => organizations.id),

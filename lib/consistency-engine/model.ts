@@ -12,7 +12,7 @@ export type ValidityState = (typeof validityStates)[number];
 export type EvidenceType = "observed" | "declared" | "inferred";
 export type UnknownBehavior = "propagate" | "block" | "allow_bounded_stale";
 export type PropagationDecision = "PROPAGATE" | "PRUNE" | "UNKNOWN";
-export type SecurityClassification = "normal" | "sensitive" | "security_revocation" | "security_deletion";
+export type SecurityClassification = "normal" | "sensitive" | "security_revocation" | "security_deletion" | "security_unknown";
 export type Criticality = "low" | "normal" | "high" | "security";
 
 export type SourceVersion = {
@@ -86,6 +86,9 @@ export const mutationTypes = [
   "CONTENT_CREATED",
   "CONTENT_UPDATED",
   "CONTENT_DELETED",
+  "CONTENT_RESTORED",
+  "CONTENT_MOVED",
+  "RETENTION_INVALIDATED",
   "ACCESS_GRANTED",
   "ACCESS_REVOKED",
   "ROLE_CHANGED",

@@ -28,6 +28,11 @@ type Deployment = {
   runtimeVersion: string | null;
   policyVersion: string | null;
   lastHeartbeatAt: string | null;
+  apiEndpoint: string | null;
+  verificationIdentityRef: string | null;
+  connectionStatus: string | null;
+  destinationType: string | null;
+  destinationStatus: string | null;
   createdAt: string;
 };
 
@@ -65,6 +70,10 @@ export function IntegrationControlCenter({ initialSnapshot }: { initialSnapshot:
           externalInstanceKey: data.get("externalInstanceKey"),
           environment: data.get("environment"),
           deploymentMode: data.get("deploymentMode"),
+          apiEndpoint: data.get("apiEndpoint"),
+          destinationType: data.get("destinationType"),
+          verificationIdentityRef: data.get("verificationIdentityRef"),
+          monitoredScopes: ["pages", "content_permissions", "audit_log", "webhooks"],
         }),
       });
       const body = await response.json();
@@ -80,6 +89,11 @@ export function IntegrationControlCenter({ initialSnapshot }: { initialSnapshot:
         runtimeVersion: null,
         policyVersion: null,
         lastHeartbeatAt: null,
+        apiEndpoint: body.deployment.apiEndpoint ?? null,
+        verificationIdentityRef: body.deployment.verificationIdentityRef ?? null,
+        connectionStatus: body.deployment.connectionStatus ?? "awaiting_endpoint",
+        destinationType: body.deployment.destinationType ?? "local_index",
+        destinationStatus: body.deployment.destinationStatus ?? "adapter_ready",
         createdAt: new Date().toISOString(),
       };
       setSnapshot((current) => ({ ...current, deployments: [deployment, ...current.deployments], metrics: { ...current.metrics, deployments: current.metrics.deployments + 1 } }));
@@ -109,6 +123,8 @@ export function IntegrationControlCenter({ initialSnapshot }: { initialSnapshot:
           <fieldset><legend>Connector</legend><div className="integration-provider-grid">{available.map((item) => <button type="button" key={item.connectorKey} className={connectorKey === item.connectorKey ? "active" : ""} onClick={() => setConnectorKey(item.connectorKey)}><strong>{item.displayName}</strong><small>{item.phase}</small></button>)}</div></fieldset>
           <label>Deployment name<input name="displayName" required maxLength={100} placeholder="e.g. Knowledge POC"/></label>
           <label>Instance identifier<input name="externalInstanceKey" required maxLength={180} placeholder="e.g. bookstack.staging.acme.internal"/></label>
+          <label>API endpoint <span>optional until the environment is ready</span><input name="apiEndpoint" type="url" maxLength={500} placeholder="https://bookstack.example.com"/></label>
+          <div className="integration-form-grid"><label>First AI destination<select name="destinationType" defaultValue="local_index"><option value="local_index">Deterministic local index</option><option value="vector_database">Customer vector database</option></select></label><label>Verification identity reference<input name="verificationIdentityRef" maxLength={240} placeholder="e.g. bookstack-user:17"/></label></div>
           <div className="integration-form-grid"><label>Environment<select name="environment" defaultValue="staging"><option value="staging">Staging</option><option value="sandbox">Sandbox</option><option value="production">Production</option></select></label><label>Deployment mode<select name="deploymentMode" defaultValue="customer_cloud"><option value="customer_cloud">Customer cloud</option><option value="private_network">Private network</option><option value="air_gapped_preparation">Air-gapped preparation</option></select></label></div>
           <div className="integration-data-rule"><strong>Control-plane data rule</strong><p>No documents, embeddings, secrets, full permission snapshots, or detailed evidence may be submitted to these endpoints.</p></div>
           <button className="button button-amber" type="submit" disabled={busy}>{busy ? "Creating boundary…" : "Create enrollment boundary →"}</button>
@@ -128,9 +144,8 @@ export function IntegrationControlCenter({ initialSnapshot }: { initialSnapshot:
 
       <section className="integration-deployments-panel">
         <header><div><span>Client integration deployments</span><h2>Every boundary is explicit.</h2></div><p>{snapshot.deployments.length ? "Runtime health and version state update after authenticated heartbeats." : "No client runtime has been enrolled yet."}</p></header>
-        {snapshot.deployments.length ? <div>{snapshot.deployments.map((deployment) => <article key={deployment.id}><div><span>{deployment.connectorName.slice(0, 2).toUpperCase()}</span><div><h3>{deployment.displayName}</h3><p>{deployment.externalInstanceKey} · {deployment.environment} · {deployment.deploymentMode.replaceAll("_", " ")}</p></div></div><dl><div><dt>Status</dt><dd>{deployment.status.replaceAll("_", " ")}</dd></div><div><dt>Health</dt><dd>{deployment.healthStatus.replaceAll("_", " ")}</dd></div><div><dt>Runtime</dt><dd>{deployment.runtimeVersion ?? "Awaiting enrollment"}</dd></div><div><dt>Last signal</dt><dd>{deployment.lastHeartbeatAt ? new Date(deployment.lastHeartbeatAt).toLocaleString() : "Never"}</dd></div></dl></article>)}</div> : <div className="integration-empty"><strong>No deployment records</strong><p>Create a BookStack or Zulip enrollment boundary to prepare the first customer-hosted runtime.</p></div>}
+        {snapshot.deployments.length ? <div>{snapshot.deployments.map((deployment) => <article key={deployment.id}><div><span>{deployment.connectorName.slice(0, 2).toUpperCase()}</span><div><h3>{deployment.displayName}</h3><p>{deployment.externalInstanceKey} · {deployment.environment} · {deployment.deploymentMode.replaceAll("_", " ")}</p></div></div><dl><div><dt>Connection</dt><dd>{(deployment.connectionStatus ?? deployment.status).replaceAll("_", " ")}</dd></div><div><dt>Destination</dt><dd>{deployment.destinationType?.replaceAll("_", " ") ?? "Not selected"}</dd></div><div><dt>Runtime</dt><dd>{deployment.runtimeVersion ?? "Awaiting enrollment"}</dd></div><div><dt>Last signal</dt><dd>{deployment.lastHeartbeatAt ? new Date(deployment.lastHeartbeatAt).toLocaleString() : "Never"}</dd></div></dl></article>)}</div> : <div className="integration-empty"><strong>No deployment records</strong><p>Create a BookStack or Zulip enrollment boundary to prepare the first customer-hosted runtime.</p></div>}
       </section>
     </section>
   </>;
 }
-
