@@ -1,6 +1,6 @@
 import Link from "next/link";
 
-export function CommercialHeader({ active }: { active?: "coverage" | "pricing" | "value" | "intelligence" | "agent" | "workspace" }) {
+export function CommercialHeader({ active }: { active?: "coverage" | "engine" | "pricing" | "value" | "intelligence" | "agent" | "workspace" }) {
   return (
     <header className="commercial-header">
       <Link className="commercial-brand" href="/" aria-label="Concord home">
@@ -8,6 +8,7 @@ export function CommercialHeader({ active }: { active?: "coverage" | "pricing" |
       </Link>
       <nav aria-label="Commercial navigation">
         <a className={active === "coverage" ? "active" : ""} href="/coverage">Coverage</a>
+        <a className={active === "engine" ? "active" : ""} href="/consistency-engine">Engine</a>
         <a className={active === "pricing" ? "active" : ""} href="/pricing">Pricing</a>
         <a className={active === "value" ? "active" : ""} href="/value">Value &amp; FinOps</a>
         <a className={active === "intelligence" ? "active" : ""} href="/intelligence">Market radar</a>

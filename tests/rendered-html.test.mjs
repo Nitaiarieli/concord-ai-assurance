@@ -68,6 +68,7 @@ for (const [path, expected] of [
   ["/value", /Every financial number starts with a product event/i],
   ["/intelligence", /Crunchbase access/i],
   ["/coverage", /BookStack and Zulip|One closed loop/i],
+  ["/consistency-engine", /Never call an AI artifact current without proof/i],
 ]) {
   test(`renders commercial route ${path}`, async () => {
     const response = await fetchFromWorker(path, { headers: { accept: "text/html" } });
@@ -140,4 +141,26 @@ test("simulation API rejects unbounded record counts", async () => {
     }),
   });
   assert.equal(response.status, 400);
+});
+
+test("consistency-engine demo exposes conditional guarantees and never hides a missing dependency", async () => {
+  const success = await fetchFromWorker("/api/consistency-engine/demo", {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify({ scenario: "content_update" }),
+  });
+  const successBody = await success.json();
+  assert.equal(success.status, 200);
+  assert.equal(successBody.serveGuard.decision, "ALLOW");
+  assert.ok(successBody.result.affectedNodes.includes("artifact:strategy-answer"));
+
+  const unknown = await fetchFromWorker("/api/consistency-engine/demo", {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify({ scenario: "unknown_dependency" }),
+  });
+  const unknownBody = await unknown.json();
+  assert.equal(unknown.status, 200);
+  assert.notEqual(unknownBody.serveGuard.decision, "ALLOW");
+  assert.match(unknownBody.guarantee, /missing edge is not discoverable/i);
 });

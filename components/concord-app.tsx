@@ -409,7 +409,7 @@ export default function ConcordApp() {
       <div className="hero-orbit" aria-hidden="true"><span>CONCORD</span><b>∞</b></div>
       <nav className="site-nav" aria-label="Primary navigation">
         <a href="#top" aria-label="Concord home"><ConcordMark/></a>
-        <div className="nav-links"><a href="#problem">The risk</a><a href="#how-it-works">How it works</a><a href="#proof">Proof</a><a href="/coverage">Coverage</a><a href="/pricing">Pricing</a></div>
+        <div className="nav-links"><a href="#problem">The risk</a><a href="#how-it-works">How it works</a><a href="#proof">Proof</a><a href="/coverage">Coverage</a><a href="/consistency-engine">Engine</a><a href="/pricing">Pricing</a></div>
         <div className="nav-actions"><button className="nav-contact" type="button" data-contact-trigger>Contact</button><a className="nav-cta" href="/workspace">Open workspace <Icon name="arrow" size={16}/></a></div>
       </nav>
       <div className="hero-center merged-hero-center">

@@ -554,3 +554,90 @@ export const deploymentAgentFindings = sqliteTable("deployment_agent_findings", 
 }, (table) => [
   index("deployment_agent_findings_org_run_idx").on(table.organizationId, table.runId),
 ]);
+
+export const consistencyEngineNodes = sqliteTable("consistency_engine_nodes", {
+  id: text("id").primaryKey(),
+  organizationId: text("organization_id").notNull().references(() => organizations.id),
+  nodeType: text("node_type").notNull(),
+  authoritative: integer("authoritative", { mode: "boolean" }).notNull().default(false),
+  sourceVersionJson: text("source_version_json"),
+  effectiveStateHash: text("effective_state_hash").notNull(),
+  validityState: text("validity_state").notNull(),
+  policyClass: text("policy_class").notNull(),
+  securityEpoch: integer("security_epoch").notNull().default(0),
+  provenanceJson: text("provenance_json").notNull(),
+  requiredAuthoritiesJson: text("required_authorities_json").notNull(),
+  dependencyCoverage: text("dependency_coverage").notNull(),
+  lastVerifiedAt: text("last_verified_at"),
+  ...auditColumns,
+}, (table) => [
+  index("consistency_engine_nodes_org_state_idx").on(table.organizationId, table.validityState),
+]);
+
+export const consistencyEngineSecurityEpochs = sqliteTable("consistency_engine_security_epochs", {
+  organizationId: text("organization_id").primaryKey().references(() => organizations.id),
+  currentEpoch: integer("current_epoch").notNull().default(0),
+  ...auditColumns,
+});
+
+export const consistencyEngineEdges = sqliteTable("consistency_engine_edges", {
+  id: text("id").primaryKey(),
+  organizationId: text("organization_id").notNull().references(() => organizations.id),
+  sourceNodeId: text("source_node_id").notNull().references(() => consistencyEngineNodes.id),
+  destinationNodeId: text("destination_node_id").notNull().references(() => consistencyEngineNodes.id),
+  dependencyType: text("dependency_type").notNull(),
+  contractJson: text("contract_json").notNull(),
+  edgeVersion: integer("edge_version").notNull(),
+  evidenceType: text("evidence_type").notNull(),
+  confidence: real("confidence"),
+  ...auditColumns,
+}, (table) => [
+  index("consistency_engine_edges_org_source_idx").on(table.organizationId, table.sourceNodeId),
+  uniqueIndex("consistency_engine_edges_org_id_version_uidx").on(table.organizationId, table.id, table.edgeVersion),
+]);
+
+export const consistencyEngineEvents = sqliteTable("consistency_engine_events", {
+  id: text("id").primaryKey(),
+  organizationId: text("organization_id").notNull().references(() => organizations.id),
+  authority: text("authority").notNull(),
+  objectId: text("object_id").notNull(),
+  mutationType: text("mutation_type").notNull(),
+  sourceSequence: integer("source_sequence").notNull(),
+  idempotencyKey: text("idempotency_key").notNull(),
+  logicalTimestamp: integer("logical_timestamp").notNull(),
+  eventJson: text("event_json").notNull(),
+  receivedAt: text("received_at").notNull(),
+}, (table) => [
+  uniqueIndex("consistency_engine_events_org_idempotency_uidx").on(table.organizationId, table.idempotencyKey),
+  index("consistency_engine_events_org_authority_sequence_idx").on(table.organizationId, table.authority, table.sourceSequence),
+]);
+
+export const consistencyEngineActions = sqliteTable("consistency_engine_actions", {
+  id: text("id").primaryKey(),
+  organizationId: text("organization_id").notNull().references(() => organizations.id),
+  eventId: text("event_id").notNull().references(() => consistencyEngineEvents.id),
+  nodeId: text("node_id").notNull().references(() => consistencyEngineNodes.id),
+  idempotencyKey: text("idempotency_key").notNull(),
+  status: text("status").notNull(),
+  actionJson: text("action_json").notNull(),
+  ...auditColumns,
+}, (table) => [
+  uniqueIndex("consistency_engine_actions_org_idempotency_uidx").on(table.organizationId, table.idempotencyKey),
+  index("consistency_engine_actions_org_event_idx").on(table.organizationId, table.eventId),
+]);
+
+export const consistencyEngineProofs = sqliteTable("consistency_engine_proofs", {
+  id: text("id").primaryKey(),
+  organizationId: text("organization_id").notNull().references(() => organizations.id),
+  eventId: text("event_id").notNull().references(() => consistencyEngineEvents.id),
+  artifactId: text("artifact_id").notNull().references(() => consistencyEngineNodes.id),
+  policyVersion: text("policy_version").notNull(),
+  securityEpoch: integer("security_epoch").notNull(),
+  result: text("result").notNull(),
+  proofHash: text("proof_hash").notNull(),
+  proofJson: text("proof_json").notNull(),
+  verifiedAt: text("verified_at").notNull(),
+}, (table) => [
+  uniqueIndex("consistency_engine_proofs_hash_uidx").on(table.proofHash),
+  index("consistency_engine_proofs_org_artifact_time_idx").on(table.organizationId, table.artifactId, table.verifiedAt),
+]);
