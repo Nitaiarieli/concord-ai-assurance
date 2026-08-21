@@ -86,7 +86,7 @@ test("public pricing never exposes draft monetary rates", async () => {
 });
 
 test("tenant-scoped mutation routes reject unauthenticated requests before database access", async () => {
-  for (const [path, method] of [["/api/applications", "POST"], ["/api/analytics", "POST"]]) {
+  for (const [path, method] of [["/api/applications", "POST"], ["/api/analytics", "POST"], ["/api/deployment-agent", "POST"]]) {
     const response = await fetchFromWorker(path, {
       method,
       headers: { "content-type": "application/json" },

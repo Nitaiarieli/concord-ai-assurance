@@ -94,6 +94,10 @@ async function authorizedOrganization(email: string) {
   return membership;
 }
 
+export async function requireOrganizationMembership(email: string) {
+  return authorizedOrganization(email);
+}
+
 export async function getWorkspaceSnapshot(email: string, displayName: string) {
   const organizationId = await getOrCreateOrganization(email, displayName);
   const db = await getDb();

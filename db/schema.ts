@@ -358,3 +358,79 @@ export const auditEvents = sqliteTable("audit_events", {
   afterJson: text("after_json"),
   occurredAt: text("occurred_at").notNull(),
 }, (table) => [index("audit_events_org_time_idx").on(table.organizationId, table.occurredAt)]);
+
+export const deploymentAgentRuns = sqliteTable("deployment_agent_runs", {
+  id: text("id").primaryKey(),
+  organizationId: text("organization_id").notNull().references(() => organizations.id),
+  requestKey: text("request_key").notNull(),
+  createdBy: text("created_by").notNull(),
+  status: text("status").notNull().default("running"),
+  currentStage: text("current_stage").notNull().default("research"),
+  hypothesis: text("hypothesis").notNull(),
+  intakeJson: text("intake_json").notNull(),
+  recommendationJson: text("recommendation_json"),
+  auditJson: text("audit_json"),
+  dossierJson: text("dossier_json"),
+  revisionCount: integer("revision_count").notNull().default(0),
+  researchAsOf: text("research_as_of").notNull(),
+  completedAt: text("completed_at"),
+  ...auditColumns,
+}, (table) => [
+  uniqueIndex("deployment_agent_runs_org_request_uidx").on(table.organizationId, table.requestKey),
+  index("deployment_agent_runs_org_time_idx").on(table.organizationId, table.createdAt),
+]);
+
+export const deploymentAgentEvents = sqliteTable("deployment_agent_events", {
+  id: text("id").primaryKey(),
+  organizationId: text("organization_id").notNull().references(() => organizations.id),
+  runId: text("run_id").notNull().references(() => deploymentAgentRuns.id),
+  skill: text("skill").notNull(),
+  cycle: integer("cycle").notNull().default(0),
+  sequence: integer("sequence").notNull(),
+  status: text("status").notNull(),
+  inputJson: text("input_json").notNull(),
+  outputJson: text("output_json").notNull(),
+  sourceCount: integer("source_count").notNull().default(0),
+  startedAt: text("started_at").notNull(),
+  completedAt: text("completed_at"),
+  ...auditColumns,
+}, (table) => [
+  uniqueIndex("deployment_agent_events_run_skill_cycle_uidx").on(table.runId, table.skill, table.cycle),
+  uniqueIndex("deployment_agent_events_run_sequence_uidx").on(table.runId, table.sequence),
+  index("deployment_agent_events_org_run_idx").on(table.organizationId, table.runId),
+]);
+
+export const deploymentAgentEvidence = sqliteTable("deployment_agent_evidence", {
+  id: text("id").primaryKey(),
+  organizationId: text("organization_id").notNull().references(() => organizations.id),
+  runId: text("run_id").notNull().references(() => deploymentAgentRuns.id),
+  skill: text("skill").notNull(),
+  claim: text("claim").notNull(),
+  classification: text("classification").notNull(),
+  sourceTitle: text("source_title").notNull(),
+  sourceUrl: text("source_url").notNull(),
+  sourceType: text("source_type").notNull(),
+  publishedAt: text("published_at"),
+  accessedAt: text("accessed_at").notNull(),
+  confidence: text("confidence").notNull(),
+  ...auditColumns,
+}, (table) => [
+  index("deployment_agent_evidence_org_run_idx").on(table.organizationId, table.runId),
+]);
+
+export const deploymentAgentFindings = sqliteTable("deployment_agent_findings", {
+  id: text("id").primaryKey(),
+  organizationId: text("organization_id").notNull().references(() => organizations.id),
+  runId: text("run_id").notNull().references(() => deploymentAgentRuns.id),
+  cycle: integer("cycle").notNull().default(0),
+  severity: text("severity").notNull(),
+  component: text("component").notNull(),
+  risk: text("risk").notNull(),
+  remediation: text("remediation").notNull(),
+  owner: text("owner").notNull(),
+  validationMethod: text("validation_method").notNull(),
+  status: text("status").notNull().default("open"),
+  ...auditColumns,
+}, (table) => [
+  index("deployment_agent_findings_org_run_idx").on(table.organizationId, table.runId),
+]);

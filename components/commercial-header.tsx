@@ -1,6 +1,6 @@
 import Link from "next/link";
 
-export function CommercialHeader({ active }: { active?: "pricing" | "value" | "intelligence" | "workspace" }) {
+export function CommercialHeader({ active }: { active?: "pricing" | "value" | "intelligence" | "agent" | "workspace" }) {
   return (
     <header className="commercial-header">
       <Link className="commercial-brand" href="/" aria-label="Concord home">
@@ -10,6 +10,7 @@ export function CommercialHeader({ active }: { active?: "pricing" | "value" | "i
         <a className={active === "pricing" ? "active" : ""} href="/pricing">Pricing</a>
         <a className={active === "value" ? "active" : ""} href="/value">Value &amp; FinOps</a>
         <a className={active === "intelligence" ? "active" : ""} href="/intelligence">Market radar</a>
+        <a className={active === "agent" ? "active" : ""} href="/deployment-agent">Architecture agent</a>
       </nav>
       <div className="commercial-header-actions">
         <button className="commercial-contact-link" type="button" data-contact-trigger>Contact</button>
