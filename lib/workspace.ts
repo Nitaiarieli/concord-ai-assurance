@@ -13,6 +13,8 @@ import {
 } from "@/db/schema";
 
 export const applicationProviders = [
+  "bookstack",
+  "zulip",
   "jira",
   "confluence",
   "slack",

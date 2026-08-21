@@ -35,10 +35,11 @@ export const readinessReport = {
     { label: "Operations", score: 24, note: "No observed SLO, recovery, or on-call history." },
   ],
   gates: [
-    "Connect a real SharePoint + Entra staging fixture.",
+    "Connect a real BookStack staging fixture and map its effective permission behavior.",
+    "Stress-test Zulip private-channel events, metadata visibility, and content visibility.",
     "Prove Pinecone and Redis reconciliation is idempotent under retries.",
     "Close a case only after identity-aware retrieval denial is observed.",
-    "Complete tenant-isolation, abuse-case, and recovery testing.",
+    "Pass the Linear black-box portability gate without redesigning the connector core.",
   ],
 } as const;
 
@@ -100,14 +101,14 @@ export const cases: AssuranceCase[] = [
 ];
 
 export const integrations = [
-  { name: "SharePoint", role: "Authority source", state: "Pilot contract" },
-  { name: "Microsoft Entra", role: "Identity authority", state: "Pilot contract" },
-  { name: "Pinecone", role: "Vector derivative", state: "Pilot contract" },
-  { name: "Redis", role: "Semantic cache", state: "Pilot contract" },
-  { name: "Slack", role: "Alerts & approvals", state: "Planned" },
-  { name: "Confluence", role: "Knowledge source", state: "Planned" },
-  { name: "ServiceNow", role: "Case workflow", state: "Planned" },
-  { name: "Jira", role: "Engineering workflow", state: "Planned" },
+  { name: "BookStack", role: "Structured knowledge source", state: "Foundation contract" },
+  { name: "Zulip", role: "Messaging and permission stress test", state: "Foundation contract" },
+  { name: "Pinecone", role: "Vector destination", state: "MVP contract" },
+  { name: "Redis", role: "Cache destination", state: "MVP contract" },
+  { name: "Linear", role: "Black-box SaaS validation", state: "Phase 2 planned" },
+  { name: "SharePoint", role: "Enterprise knowledge target", state: "Roadmap" },
+  { name: "Slack", role: "Enterprise messaging target", state: "Roadmap" },
+  { name: "Jira", role: "Project-management target", state: "Roadmap" },
 ] as const;
 
 type SimulationInput = {

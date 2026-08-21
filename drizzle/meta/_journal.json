@@ -15,6 +15,13 @@
       "when": 1787302592107,
       "tag": "0001_secret_boomerang",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "6",
+      "when": 1787313202096,
+      "tag": "0002_watery_nico_minoru",
+      "breakpoints": true
     }
   ]
 }

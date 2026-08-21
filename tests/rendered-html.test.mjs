@@ -67,6 +67,7 @@ for (const [path, expected] of [
   ["/pricing", /Connect your first.*application for free/is],
   ["/value", /Every financial number starts with a product event/i],
   ["/intelligence", /Crunchbase access/i],
+  ["/coverage", /BookStack and Zulip|One closed loop/i],
 ]) {
   test(`renders commercial route ${path}`, async () => {
     const response = await fetchFromWorker(path, { headers: { accept: "text/html" } });
@@ -86,9 +87,20 @@ test("public pricing never exposes draft monetary rates", async () => {
 });
 
 test("tenant-scoped mutation routes reject unauthenticated requests before database access", async () => {
-  for (const [path, method] of [["/api/applications", "POST"], ["/api/analytics", "POST"], ["/api/deployment-agent", "POST"]]) {
+  for (const [path, method] of [["/api/applications", "POST"], ["/api/analytics", "POST"], ["/api/deployment-agent", "POST"], ["/api/integration-deployments", "POST"]]) {
     const response = await fetchFromWorker(path, {
       method,
+      headers: { "content-type": "application/json" },
+      body: "{}",
+    });
+    assert.equal(response.status, 401);
+  }
+});
+
+test("runtime ingestion routes reject requests without a deployment credential before database access", async () => {
+  for (const path of ["/api/runtime/v1/heartbeat", "/api/runtime/v1/events"]) {
+    const response = await fetchFromWorker(path, {
+      method: "POST",
       headers: { "content-type": "application/json" },
       body: "{}",
     });

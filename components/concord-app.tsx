@@ -150,15 +150,15 @@ function ProductConsole() {
 }
 
 function EnterpriseBoundary() {
-  const applications: { name: ApplicationName; role: string; className: string; state: "live" | "planned" }[] = [
-    { name: "SharePoint", role: "Authority", className: "chip-sp", state: "live" },
-    { name: "Entra", role: "Identity", className: "chip-en", state: "live" },
-    { name: "Pinecone", role: "Derivative", className: "chip-pc", state: "live" },
-    { name: "Redis", role: "Cache", className: "chip-rd", state: "live" },
-    { name: "Slack", role: "Workflow", className: "chip-sl", state: "live" },
-    { name: "Confluence", role: "Planned", className: "chip-cf", state: "planned" },
+  const applications: { name: ApplicationName; role: string; className: string; state: "contract" | "target" }[] = [
+    { name: "SharePoint", role: "Knowledge target", className: "chip-sp", state: "target" },
+    { name: "Entra", role: "Identity target", className: "chip-en", state: "target" },
+    { name: "Pinecone", role: "MVP contract", className: "chip-pc", state: "contract" },
+    { name: "Redis", role: "MVP contract", className: "chip-rd", state: "contract" },
+    { name: "Slack", role: "Messaging target", className: "chip-sl", state: "target" },
+    { name: "Confluence", role: "Knowledge target", className: "chip-cf", state: "target" },
   ];
-  return <section className="integration-section cinematic-host" id="integrations" aria-labelledby="integrations-title" data-motion-section="integrations"><CinematicEnvironment scene="integrations"/><div className="integration-copy"><div className="section-kicker"><span>004/</span> Integration architecture</div><p className="eyebrow">Your registered enterprise boundary</p><h2 id="integrations-title">One assurance layer.<br/>Each system has a role.</h2><p className="lead">Concord defines each supported application as an authority, identity source, derivative store, cache, workflow, or proof endpoint—then follows a validity-changing event across that explicit boundary.</p></div><div className="integration-orbit" aria-label="Concord assurance boundary and connected enterprise applications"><div className="orbit-field-label"><span/>Registered assurance boundary</div><div className="orbit-ring orbit-one"/><div className="orbit-ring orbit-two"/><div className="orbit-ring orbit-three"/><div className="orbit-center"><span className="brand-glyph" aria-hidden="true"><i/><i/><i/></span><strong>Concord</strong><small>Assurance plane</small><em>Bounded and verified</em></div>{applications.map((application) => <div className={`orbit-chip ${application.className} ${application.state === "planned" ? "orbit-chip-planned" : ""}`} key={application.name}><span className="orbit-app-mark"><ApplicationIcon name={application.name}/></span><span>{application.name}<small>{application.role}</small></span><i className="orbit-status" aria-label={application.state === "live" ? "Connected" : "Planned"}/></div>)}</div><div className="contract-strip">{[["Authority", "Observe the source truth", "SharePoint + Entra"], ["Control", "Coordinate every change", "Concord workflow"], ["Derivative", "Quarantine and repair", "Pinecone + Redis"], ["Proof", "Verify the final experience", "Identity-aware probe"]].map(([title, detail, example], index) => <article key={title}><span>0{index + 1}</span><h3>{title}</h3><p>{detail}</p><small>{example}</small></article>)}</div></section>;
+  return <section className="integration-section cinematic-host" id="integrations" aria-labelledby="integrations-title" data-motion-section="integrations"><CinematicEnvironment scene="integrations"/><div className="integration-copy"><div className="section-kicker"><span>004/</span> Integration architecture</div><p className="eyebrow">A universal connector contract</p><h2 id="integrations-title">One assurance layer.<br/>Each system has a role.</h2><p className="lead">BookStack and Zulip are the first proof environments. The reusable contract then expands across applications, identity systems, AI transformations, destinations, and retrieval interfaces without changing Concord&apos;s core loop.</p><a className="integration-coverage-link" href="/coverage">Explore the enterprise coverage plan →</a></div><div className="integration-orbit" aria-label="Reference enterprise ecosystem for the Concord connector platform"><div className="orbit-field-label"><span/>Reference ecosystem · coverage varies</div><div className="orbit-ring orbit-one"/><div className="orbit-ring orbit-two"/><div className="orbit-ring orbit-three"/><div className="orbit-center"><span className="brand-glyph" aria-hidden="true"><i/><i/><i/></span><strong>Concord</strong><small>Reusable contract</small><em>Coverage is explicit</em></div>{applications.map((application) => <div className={`orbit-chip ${application.className} ${application.state === "target" ? "orbit-chip-planned" : ""}`} key={application.name}><span className="orbit-app-mark"><ApplicationIcon name={application.name}/></span><span>{application.name}<small>{application.role}</small></span><i className="orbit-status" aria-label={application.state === "contract" ? "MVP contract" : "Target category"}/></div>)}</div><div className="contract-strip">{[["Authority", "Observe the source truth", "BookStack + Zulip"], ["Control", "Normalize every change", "Canonical events"], ["Derivative", "Quarantine and repair", "Pinecone + Redis"], ["Proof", "Verify the final experience", "Identity-aware probe"]].map(([title, detail, example], index) => <article key={title}><span>0{index + 1}</span><h3>{title}</h3><p>{detail}</p><small>{example}</small></article>)}</div></section>;
 }
 
 function AdapterRegistry() {
@@ -175,8 +175,8 @@ function AdapterRegistry() {
         <span>{String(index + 1).padStart(2, "0")}</span>
         <h3>{integration.name}</h3>
         <p>{integration.role}</p>
-        <small><i className={integration.state === "Pilot contract" ? "adapter-live" : "adapter-planned"}/>{integration.state}</small>
-        <b>{integration.state === "Pilot contract" ? "Registered" : "Planned"}</b>
+        <small><i className={integration.state.includes("contract") ? "adapter-live" : "adapter-planned"}/>{integration.state}</small>
+        <b>{integration.state.includes("contract") ? "Registered contract" : "Planned"}</b>
       </article>)}
     </div>
   </section>;
@@ -409,7 +409,7 @@ export default function ConcordApp() {
       <div className="hero-orbit" aria-hidden="true"><span>CONCORD</span><b>∞</b></div>
       <nav className="site-nav" aria-label="Primary navigation">
         <a href="#top" aria-label="Concord home"><ConcordMark/></a>
-        <div className="nav-links"><a href="#problem">The risk</a><a href="#how-it-works">How it works</a><a href="#proof">Proof</a><a href="/pricing">Pricing</a></div>
+        <div className="nav-links"><a href="#problem">The risk</a><a href="#how-it-works">How it works</a><a href="#proof">Proof</a><a href="/coverage">Coverage</a><a href="/pricing">Pricing</a></div>
         <div className="nav-actions"><button className="nav-contact" type="button" data-contact-trigger>Contact</button><a className="nav-cta" href="/workspace">Open workspace <Icon name="arrow" size={16}/></a></div>
       </nav>
       <div className="hero-center merged-hero-center">

@@ -359,6 +359,126 @@ export const auditEvents = sqliteTable("audit_events", {
   occurredAt: text("occurred_at").notNull(),
 }, (table) => [index("audit_events_org_time_idx").on(table.organizationId, table.occurredAt)]);
 
+export const connectorDefinitions = sqliteTable("connector_definitions", {
+  id: text("id").primaryKey(),
+  connectorKey: text("connector_key").notNull(),
+  displayName: text("display_name").notNull(),
+  connectorClass: text("connector_class").notNull(),
+  phase: text("phase").notNull(),
+  readiness: text("readiness").notNull(),
+  certification: text("certification").notNull(),
+  manifestVersion: integer("manifest_version").notNull().default(1),
+  capabilityManifestJson: text("capability_manifest_json").notNull(),
+  limitationsJson: text("limitations_json").notNull(),
+  ...auditColumns,
+}, (table) => [uniqueIndex("connector_definitions_key_uidx").on(table.connectorKey)]);
+
+export const connectorDeployments = sqliteTable("connector_deployments", {
+  id: text("id").primaryKey(),
+  organizationId: text("organization_id").notNull().references(() => organizations.id),
+  connectorDefinitionId: text("connector_definition_id").notNull().references(() => connectorDefinitions.id),
+  connectedApplicationId: text("connected_application_id").references(() => connectedApplications.id),
+  applicationInstanceId: text("application_instance_id").references(() => applicationInstances.id),
+  displayName: text("display_name").notNull(),
+  externalInstanceKey: text("external_instance_key").notNull(),
+  environment: text("environment").notNull(),
+  deploymentMode: text("deployment_mode").notNull(),
+  status: text("status").notNull().default("enrollment_pending"),
+  healthStatus: text("health_status").notNull().default("awaiting_runtime"),
+  runtimeVersion: text("runtime_version"),
+  policyVersion: text("policy_version"),
+  secretReference: text("secret_reference").notNull(),
+  lastHeartbeatAt: text("last_heartbeat_at"),
+  ...auditColumns,
+}, (table) => [
+  uniqueIndex("connector_deployments_org_definition_instance_uidx").on(table.organizationId, table.connectorDefinitionId, table.externalInstanceKey),
+  index("connector_deployments_org_status_idx").on(table.organizationId, table.status),
+]);
+
+export const connectorRuntimeCredentials = sqliteTable("connector_runtime_credentials", {
+  id: text("id").primaryKey(),
+  organizationId: text("organization_id").notNull().references(() => organizations.id),
+  connectorDeploymentId: text("connector_deployment_id").notNull().references(() => connectorDeployments.id),
+  tokenHash: text("token_hash").notNull(),
+  tokenPrefix: text("token_prefix").notNull(),
+  status: text("status").notNull().default("active"),
+  expiresAt: text("expires_at"),
+  lastUsedAt: text("last_used_at"),
+  revokedAt: text("revoked_at"),
+  ...auditColumns,
+}, (table) => [
+  uniqueIndex("connector_runtime_credentials_hash_uidx").on(table.tokenHash),
+  index("connector_runtime_credentials_org_deployment_idx").on(table.organizationId, table.connectorDeploymentId),
+]);
+
+export const canonicalChangeEvents = sqliteTable("canonical_change_events", {
+  id: text("id").primaryKey(),
+  organizationId: text("organization_id").notNull().references(() => organizations.id),
+  connectorDeploymentId: text("connector_deployment_id").notNull().references(() => connectorDeployments.id),
+  sourceEventId: text("source_event_id").notNull(),
+  sourceObjectType: text("source_object_type").notNull(),
+  sourceObjectId: text("source_object_id").notNull(),
+  changeType: text("change_type").notNull(),
+  eventTimestamp: text("event_timestamp").notNull(),
+  observedTimestamp: text("observed_timestamp").notNull(),
+  actorIdentityRef: text("actor_identity_ref"),
+  previousStateRef: text("previous_state_ref"),
+  newStateRef: text("new_state_ref"),
+  affectedIdentitiesJson: text("affected_identities_json").notNull(),
+  affectedGroupsJson: text("affected_groups_json").notNull(),
+  permissionDeltaJson: text("permission_delta_json").notNull(),
+  contentValidityDeltaJson: text("content_validity_delta_json").notNull(),
+  sourceSystemVersion: text("source_system_version"),
+  correlationId: text("correlation_id").notNull(),
+  evidenceReferencesJson: text("evidence_references_json").notNull(),
+  processingStatus: text("processing_status").notNull().default("detected"),
+  ...auditColumns,
+}, (table) => [
+  uniqueIndex("canonical_change_events_deployment_source_uidx").on(table.connectorDeploymentId, table.sourceEventId),
+  index("canonical_change_events_org_time_idx").on(table.organizationId, table.eventTimestamp),
+  index("canonical_change_events_org_correlation_idx").on(table.organizationId, table.correlationId),
+]);
+
+export const lineageRegistrations = sqliteTable("lineage_registrations", {
+  id: text("id").primaryKey(),
+  organizationId: text("organization_id").notNull().references(() => organizations.id),
+  connectorDeploymentId: text("connector_deployment_id").notNull().references(() => connectorDeployments.id),
+  sourceObjectId: text("source_object_id").notNull(),
+  sourceVersionRef: text("source_version_ref").notNull(),
+  derivativeType: text("derivative_type").notNull(),
+  derivativeStableId: text("derivative_stable_id").notNull(),
+  destinationRef: text("destination_ref").notNull(),
+  transformationPathJson: text("transformation_path_json").notNull(),
+  verificationEndpointRef: text("verification_endpoint_ref"),
+  status: text("status").notNull().default("registered"),
+  lastObservedAt: text("last_observed_at").notNull(),
+  ...auditColumns,
+}, (table) => [
+  uniqueIndex("lineage_registrations_org_derivative_uidx").on(table.organizationId, table.derivativeStableId),
+  index("lineage_registrations_org_source_idx").on(table.organizationId, table.sourceObjectId),
+]);
+
+export const reconciliationRuns = sqliteTable("reconciliation_runs", {
+  id: text("id").primaryKey(),
+  organizationId: text("organization_id").notNull().references(() => organizations.id),
+  connectorDeploymentId: text("connector_deployment_id").notNull().references(() => connectorDeployments.id),
+  canonicalChangeEventId: text("canonical_change_event_id").notNull().references(() => canonicalChangeEvents.id),
+  idempotencyKey: text("idempotency_key").notNull(),
+  status: text("status").notNull().default("detected"),
+  repairAction: text("repair_action").notNull().default("pending_policy"),
+  approvalState: text("approval_state").notNull().default("not_evaluated"),
+  destinationReadback: text("destination_readback").notNull().default("not_started"),
+  verificationClassification: text("verification_classification").notNull().default("unverified"),
+  evidenceHash: text("evidence_hash"),
+  errorClassification: text("error_classification"),
+  startedAt: text("started_at").notNull(),
+  completedAt: text("completed_at"),
+  ...auditColumns,
+}, (table) => [
+  uniqueIndex("reconciliation_runs_org_idempotency_uidx").on(table.organizationId, table.idempotencyKey),
+  index("reconciliation_runs_org_status_idx").on(table.organizationId, table.status),
+]);
+
 export const deploymentAgentRuns = sqliteTable("deployment_agent_runs", {
   id: text("id").primaryKey(),
   organizationId: text("organization_id").notNull().references(() => organizations.id),
