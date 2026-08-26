@@ -1,0 +1,54 @@
+{
+  "benchmarkVersion": 1,
+  "generatedAt": "2026-08-21T19:13:51.890Z",
+  "environment": {
+    "runtime": "v24.19.0",
+    "storage": "deterministic in-memory adapter",
+    "externalSystems": "simulated"
+  },
+  "graph": {
+    "nodes": 2000,
+    "edges": 1998,
+    "affectedPathLength": 32,
+    "samples": 60
+  },
+  "propagationLatencyMs": {
+    "p50": 7.519,
+    "p95": 10.347,
+    "p99": 12.465
+  },
+  "permissionRevocationBlockingLatencyMs": 5.203,
+  "meanAffectedNodes": 32,
+  "meanAffectedEdges": 32,
+  "falsePruningRate": 0,
+  "conservativeOverPropagation": 0,
+  "recomputationAvoided": {
+    "meanNodes": 1968,
+    "percent": 98.4
+  },
+  "verificationCost": {
+    "meanExternalCalls": 96,
+    "totalExternalCalls": 5760
+  },
+  "storageOverheadBytes": {
+    "provenanceGraph": 1358182,
+    "proofs": 1311049,
+    "eventLog": 31681,
+    "total": 2700912
+  },
+  "referenceOracleLatencyMs": {
+    "p50": 1.909,
+    "p95": 3.835,
+    "p99": 11.025
+  },
+  "simulatedFullRebuildLatencyMs": {
+    "p50": 66.725,
+    "p95": 86.664,
+    "p99": 92.834
+  },
+  "relativePerformance": {
+    "incrementalVsImpactOracleMedian": 0.25,
+    "incrementalVsSimulatedFullRebuildMedian": 8.87
+  },
+  "interpretation": "Prototype microbenchmark only. It excludes real network, connector, storage, queueing, and destination-service latency. The full-graph impact oracle is faster than the complete incremental path in this in-memory test because the incremental path also plans, executes, verifies, and writes proofs. The simulated rebuild baseline hashes every node but is not a substitute for a production benchmark against real destination APIs."
+}
