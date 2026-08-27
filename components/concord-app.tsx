@@ -1,437 +1,150 @@
 "use client";
 
-import { FormEvent, useEffect, useMemo, useState } from "react";
-import type { AssuranceCase } from "@/lib/concord";
+import { KeyboardEvent as ReactKeyboardEvent, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { cases, integrations, readinessReport } from "@/lib/concord";
 
-type IconName = "arrow" | "check" | "clock" | "code" | "layers" | "play" | "pulse" | "shield" | "terminal";
-type ApplicationName = "SharePoint" | "Entra" | "Pinecone" | "Redis" | "Slack" | "Confluence";
-type SystemObjectId = "source" | "vector" | "cache" | "memory" | "verification" | "evidence";
-type CinematicScene = "hero" | "problem" | "lineage" | "repair" | "renewal" | "integrations" | "verification" | "gates" | "stable";
+type StageId = "detect" | "trace" | "repair" | "verify" | "prove";
+type ObjectId = "authority" | "vector" | "cache" | "memory" | "probe" | "evidence";
+type DetailId = "risk" | "action" | "proof";
+type ProofState = "Verified" | "Repairing" | "Unresolved" | "Unsupported" | "Accepted risk";
+type Stage = { id: StageId; number: string; label: string; headline: string; body: string; input: string; action: string; output: string; detail: string; objects: ObjectId[] };
 
-function Icon({ name, size = 20 }: { name: IconName; size?: number }) {
-  const paths: Record<IconName, React.ReactNode> = {
-    arrow: <><path d="M5 12h14"/><path d="m13 6 6 6-6 6"/></>,
-    check: <path d="m5 12 4 4L19 6"/>,
-    clock: <><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></>,
-    code: <><path d="m8 9-3 3 3 3"/><path d="m16 9 3 3-3 3"/><path d="m14 5-4 14"/></>,
-    layers: <><path d="m12 3-9 5 9 5 9-5z"/><path d="m3 12 9 5 9-5M3 16l9 5 9-5"/></>,
-    play: <path d="m8 5 11 7-11 7z"/>,
-    pulse: <path d="M3 12h4l2-6 4 12 2-6h6"/>,
-    shield: <><path d="M12 3 5 6v5c0 5 3 8 7 10 4-2 7-5 7-10V6z"/><path d="m9 12 2 2 4-4"/></>,
-    terminal: <><path d="m5 7 4 4-4 4"/><path d="M11 17h8"/></>,
-  };
-  return <svg aria-hidden="true" viewBox="0 0 24 24" width={size} height={size} fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">{paths[name]}</svg>;
-}
+const stages: Stage[] = [
+  { id: "detect", number: "01", label: "Detect", headline: "Capture the change at its authority.", body: "Concord records the permission, identity, retention, or content event—together with the source object, principal, policy, and version.", input: "BookStack · strategy-page", action: "Validity event captured", output: "Policy access-revocation/v3", detail: "The authority stays customer-controlled. Observation does not imply that Concord can alter the source.", objects: ["authority"] },
+  { id: "trace", number: "02", label: "Trace", headline: "Find the registered copies affected.", body: "Versioned lineage resolves the changed source to the derivative records, cache keys, memories, and retrieval paths registered with Concord.", input: "1 authority event", action: "Registered lineage resolved", output: "144 affected artifacts", detail: "Unknown or unregistered dependencies remain visible as coverage gaps. Concord never turns absence of evidence into a safety claim.", objects: ["authority", "vector", "cache", "memory"] },
+  { id: "repair", number: "03", label: "Repair", headline: "Apply the smallest safe repair.", body: "Concord selects the policy-specific action supported by each adapter: quarantine, update, delete, invalidate, recompute, change access, or invoke a controlled callback.", input: "144 selected artifacts", action: "Bounded repair executed", output: "128 vectors · 16 cache keys", detail: "An accepted write is progress, not proof. Every supported destination must still be read back.", objects: ["vector", "cache", "memory"] },
+  { id: "verify", number: "04", label: "Verify", headline: "Read it back. Test retrieval.", body: "Concord confirms the destination state, then runs the registered end-to-end retrieval path as the affected identity.", input: "Destination read-back", action: "Identity-aware probe", output: "0 protected results", detail: "A successful API response alone is never presented as assurance. Verification depends on the behavior observed at the consumption boundary.", objects: ["vector", "cache", "probe"] },
+  { id: "prove", number: "05", label: "Prove", headline: "Preserve the outcome and the gaps.", body: "One record connects the source event, impact calculation, actions, read-backs, retrieval probe, exposure time, and unresolved coverage.", input: "Complete event trail", action: "Evidence sealed", output: "Bounded assurance record", detail: "Verified, repairing, unresolved, unsupported, and accepted-risk states stay distinct in every report.", objects: ["probe", "evidence"] },
+];
 
-function ApplicationIcon({ name }: { name: ApplicationName }) {
-  const marks: Record<ApplicationName, React.ReactNode> = {
-    SharePoint: <><circle cx="20" cy="16" r="8" fill="#18A28B"/><circle cx="11" cy="16" r="7" fill="#087E6B"/><path d="M19 10h8.5A2.5 2.5 0 0 1 30 12.5v10a2.5 2.5 0 0 1-2.5 2.5H19z" fill="#0F6F61"/><path d="M6 10h11v14H6z" fill="#075B50"/><path d="M14.2 14.1c-.8-.5-1.7-.7-2.5-.7-1.1 0-1.7.4-1.7 1s.5.8 1.9 1.2c2 .5 3 1.4 3 3 0 1.9-1.5 3-3.8 3-1.2 0-2.5-.3-3.4-.9l.8-1.8c.8.5 1.8.8 2.7.8 1.1 0 1.7-.4 1.7-1s-.5-.8-1.9-1.2c-2-.5-3-1.5-3-3 0-1.8 1.5-3 3.7-3 1.1 0 2.2.3 3.1.8z" fill="white"/></>,
-    Entra: <><defs><linearGradient id="entra-a" x1="5" y1="5" x2="27" y2="27" gradientUnits="userSpaceOnUse"><stop stopColor="#7B5CFA"/><stop offset=".52" stopColor="#2F7DE1"/><stop offset="1" stopColor="#20B8C8"/></linearGradient></defs><path d="M16 3 27.7 9.8v12.4L16 29 4.3 22.2V9.8z" fill="url(#entra-a)"/><path d="m10.1 19.8 5.9-10 5.9 10-5.9-3.1z" fill="white" fillOpacity=".92"/></>,
-    Pinecone: <><circle cx="16" cy="16" r="4" fill="#121A17"/><g stroke="#18B89A" strokeWidth="2.4" strokeLinecap="round"><path d="M16 3v7M16 22v7M3 16h7M22 16h7M6.8 6.8l5 5M20.2 20.2l5 5M25.2 6.8l-5 5M11.8 20.2l-5 5"/></g><circle cx="16" cy="16" r="2" fill="#18B89A"/></>,
-    Redis: <><path d="m5 20 11 5 11-5-11-5z" fill="#A51F17"/><path d="m5 15 11 5 11-5-11-5z" fill="#D82C20"/><path d="m5 10 11 5 11-5-11-5z" fill="#F04438"/><path d="m11.5 9.8 4.5-2 4.5 2-4.5 2z" fill="white"/><circle cx="22.8" cy="11" r="1.2" fill="#FFE18B"/></>,
-    Slack: <><rect x="13" y="3" width="6" height="12" rx="3" fill="#36C5F0"/><rect x="17" y="13" width="12" height="6" rx="3" fill="#2EB67D"/><rect x="13" y="17" width="6" height="12" rx="3" fill="#ECB22E"/><rect x="3" y="13" width="12" height="6" rx="3" fill="#E01E5A"/><circle cx="10" cy="10" r="3" fill="#36C5F0"/><circle cx="22" cy="10" r="3" fill="#2EB67D"/><circle cx="22" cy="22" r="3" fill="#ECB22E"/><circle cx="10" cy="22" r="3" fill="#E01E5A"/></>,
-    Confluence: <><path d="M7.2 19.7c-.7 1.1-1.5 2.4-2.5 3.8-.4.6-.2 1.4.4 1.8l4.1 2.5c.6.4 1.4.2 1.8-.4 2.8-4.3 5.1-3.6 10.1-1.2l2.1 1c.7.3 1.4 0 1.7-.7l2-4.4c.3-.7 0-1.5-.7-1.8-1.4-.7-2.8-1.4-4.2-2-6.4-3-10.7-4.8-14.8 1.4z" fill="#1868DB"/><path d="M24.8 12.3c.7-1.1 1.5-2.4 2.5-3.8.4-.6.2-1.4-.4-1.8l-4.1-2.5c-.6-.4-1.4-.2-1.8.4-2.8 4.3-5.1 3.6-10.1 1.2l-2.1-1c-.7-.3-1.4 0-1.7.7l-2 4.4c-.3.7 0 1.5.7 1.8 1.4.7 2.8 1.4 4.2 2 6.4 3 10.7 4.8 14.8-1.4z" fill="#2684FF"/></>,
-  };
-  return <svg className="application-icon" aria-hidden="true" viewBox="0 0 32 32">{marks[name]}</svg>;
+const objectDetails: Record<ObjectId, { name: string; kind: string; registration: string; state: ProofState; summary: string; risk: string; action: string; proof: string }> = {
+  authority: { name: "BookStack", kind: "Authoritative source", registration: "Foundation contract", state: "Verified", summary: "The registered system that owns the current source object and effective permission state.", risk: "A source permission or document can change after AI derivatives have already been created.", action: "Observe the event, reconcile current source state, and calculate registered downstream impact.", proof: "Preserve the authoritative object version, permission observation, policy, and event receipt." },
+  vector: { name: "Pinecone", kind: "Vector destination", registration: "MVP contract", state: "Repairing", summary: "Embeddings and vector records derived from the affected source object.", risk: "A semantically searchable copy can remain retrievable after its source access changes.", action: "Quarantine, delete, update, or recompute only the registered records selected by policy.", proof: "Read back each destination record, then include it in the affected-identity retrieval probe." },
+  cache: { name: "Redis", kind: "Cache destination", registration: "MVP contract", state: "Repairing", summary: "Registered cache keys that can preserve a result after its authority changes.", risk: "A valid-looking response can outlive the permission, retention rule, or source data that created it.", action: "Invalidate or update affected keys with an idempotent, policy-specific operation.", proof: "Read back invalidation and test the same application retrieval path used by the affected identity." },
+  memory: { name: "Agent memory", kind: "Persistent derivative", registration: "Adapter required", state: "Unsupported", summary: "Persistent agent state derived from enterprise knowledge or earlier interactions.", risk: "An agent can continue using remembered content after that content is no longer valid.", action: "Update, delete, recompute, change access, or invoke a controlled callback only when a supported adapter exists.", proof: "No adapter is registered in this demonstration, so this object remains explicitly unsupported." },
+  probe: { name: "Retrieval probe", kind: "Behavioral verification", registration: "Registered path", state: "Verified", summary: "A final test of what the affected identity can retrieve after remediation.", risk: "A clean destination record can still produce the wrong behavior through a different retrieval layer.", action: "Run the real registered retrieval path using the affected identity and expected source version.", proof: "Preserve the query, identity, consumed version, returned results, and policy decision." },
+  evidence: { name: "Assurance record", kind: "Evidence package", registration: "Preserved", state: "Verified", summary: "A bounded record connecting the event, impact, repair, read-back, retrieval result, and exceptions.", risk: "Without one evidence chain, operators and auditors must reconstruct whether the incident actually closed.", action: "Seal the result without upgrading unresolved, unsupported, or accepted-risk scope.", proof: "Expose timestamps, policy, artifacts, receipts, probe behavior, exposure time, and remaining gaps." },
+};
+
+const evidenceEvents: Array<{ id: string; time: string; category: "Authority" | "Control" | "Proof"; title: string; state: ProofState; evidence: string; boundary: string }> = [
+  { id: "EVT-441", time: "09:42:16.021", category: "Authority", title: "Access revoked at the source", state: "Verified", evidence: "Source event · strategy-page · finance-leadership", boundary: "Authority observation is registered. Concord does not alter the source permission." },
+  { id: "CALC-118", time: "09:42:16.184", category: "Control", title: "Registered impact calculated", state: "Verified", evidence: "144 artifacts · lineage revision 86 · access-revocation/v3", boundary: "Only registered edges are included. Agent memory remains outside this example." },
+  { id: "ACT-207", time: "09:42:18.902", category: "Control", title: "Targeted remediation acknowledged", state: "Repairing", evidence: "128 quarantine receipts · 16 invalidation acknowledgements", boundary: "Accepted writes are progress. Destination read-back is still required." },
+  { id: "READ-083", time: "09:49:54.411", category: "Proof", title: "Destination state read back", state: "Verified", evidence: "128 destination reads · 128 expected states · 0 mismatches", boundary: "Redis read-back is pending, so that scope remains Repairing." },
+  { id: "PROBE-51", time: "09:50:58.772", category: "Proof", title: "Affected identity retrieved zero protected results", state: "Verified", evidence: "12 retrieval attempts · 0 protected results", boundary: "This proves the registered path tested in this run—not universal safety." },
+];
+
+function Icon({ name }: { name: "arrow" | "close" | "next" | "pause" | "play" | "shield" }) {
+  const path = { arrow: <><path d="M5 12h14"/><path d="m13 6 6 6-6 6"/></>, close: <><path d="m6 6 12 12"/><path d="M18 6 6 18"/></>, next: <path d="m9 6 6 6-6 6"/>, pause: <><path d="M9 6v12"/><path d="M15 6v12"/></>, play: <path d="m8 5 11 7-11 7z"/>, shield: <><path d="M12 3 5 6v5c0 5 3 8 7 10 4-2 7-5 7-10V6z"/><path d="m9 12 2 2 4-4"/></> }[name];
+  return <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">{path}</svg>;
 }
 
 function ConcordMark({ compact = false }: { compact?: boolean }) {
-  return <span className="brand-mark" aria-label="Concord"><span className="brand-glyph" aria-hidden="true"><i/><i/><i/></span>{!compact && <span>Concord</span>}</span>;
+  return <span className="cc-brand-mark"><span className="cc-brand-aperture" aria-hidden="true"><i/><i/><i/></span>{!compact && <strong>Concord</strong>}</span>;
 }
 
-function StatusPill({ status }: { status: AssuranceCase["status"] }) {
-  return <span className={`status-pill status-${status.toLowerCase()}`}><i />{status}</span>;
+function AppMark({ id }: { id: ObjectId }) {
+  const labels: Record<ObjectId, string> = { authority: "B", vector: "P", cache: "R", memory: "M", probe: "✓", evidence: "E" };
+  return <span className={`cc-app-mark cc-app-${id}`} aria-hidden="true">{labels[id]}</span>;
 }
 
-const cinematicScenes: Record<CinematicScene, { paths: string[]; nodes: [number, number][] }> = {
-  hero: { paths: ["M-30 420 C120 330 205 440 350 330 S610 222 760 315 S930 220 1040 152", "M130 480 C222 396 270 390 348 330 M348 330 C404 250 458 240 520 188"], nodes: [[130,420],[350,330],[520,188],[760,315],[940,210]] },
-  problem: { paths: ["M-20 330 C150 288 238 304 420 260", "M578 258 C735 210 874 250 1040 170"], nodes: [[120,305],[318,282],[690,230],[888,238]] },
-  lineage: { paths: ["M-30 130 C180 112 238 280 420 260 S640 108 1030 145", "M420 260 C330 352 244 374 80 430", "M420 260 C570 350 710 412 970 430", "M420 260 C510 188 610 170 760 205"], nodes: [[112,122],[420,260],[80,430],[760,205],[970,430]] },
-  repair: { paths: ["M-30 392 C210 340 304 392 470 270 S760 190 1030 112", "M190 410 C284 314 342 310 470 270"], nodes: [[190,356],[470,270],[690,205],[902,140]] },
-  renewal: { paths: ["M-20 450 C170 430 240 342 382 372 S628 296 760 330 S920 220 1030 250", "M382 372 C360 268 312 214 232 150 M760 330 C786 224 840 168 920 120"], nodes: [[232,150],[382,372],[760,330],[920,120]] },
-  integrations: { paths: ["M500 260 C330 80 142 92 42 242 C120 458 328 455 500 260 C678 72 872 92 958 242 C888 442 684 464 500 260"], nodes: [[42,242],[210,118],[500,260],[790,118],[958,242],[780,408],[220,410]] },
-  verification: { paths: ["M-20 372 C172 320 258 352 420 286 S720 238 1020 142", "M420 286 C510 360 630 398 842 410"], nodes: [[124,340],[420,286],[650,232],[842,410],[930,170]] },
-  gates: { paths: ["M60 424 L250 340 L438 280 L628 206 L940 112"], nodes: [[60,424],[250,340],[438,280],[628,206],[940,112]] },
-  stable: { paths: ["M-30 352 C168 280 284 342 450 270 S760 232 1030 178", "M450 270 C516 188 590 164 684 142"], nodes: [[120,310],[450,270],[684,142],[900,205]] },
-};
+function StateBadge({ state }: { state: ProofState }) {
+  const slug = state.toLowerCase().replaceAll(" ", "-");
+  const symbol: Record<ProofState, string> = { Verified: "✓", Repairing: "↻", Unresolved: "!", Unsupported: "×", "Accepted risk": "◇" };
+  return <span className={`cc-state cc-state-${slug}`}><i aria-hidden="true">{symbol[state]}</i>{state}</span>;
+}
 
-function CinematicEnvironment({ scene }: { scene: CinematicScene }) {
-  const spec = cinematicScenes[scene];
-  return <div className={`cinematic-environment cinema-${scene}`} aria-hidden="true">
-    <span className="cinema-light"/><span className="cinema-land cinema-land-a"/><span className="cinema-land cinema-land-b"/>
-    <svg className="cinema-network" viewBox="0 0 1000 520" preserveAspectRatio="none">
-      {spec.paths.map((path, index) => <path className={`cinema-route cinema-route-${index + 1}`} d={path} key={path}/>) }
-      {spec.nodes.map(([cx, cy], index) => <circle className={`cinema-node cinema-node-${index + 1}`} cx={cx} cy={cy} r="4" key={`${cx}-${cy}`}/>) }
+function SiteHeader() {
+  return <header className="cc-header">
+    <a href="#top" aria-label="Concord home"><ConcordMark/></a>
+    <nav aria-label="Primary navigation"><a href="#problem">The risk</a><a href="#how-it-works">How it works</a><a href="#proof">Proof</a><a href="/coverage">Coverage</a><a href="/pricing">Pricing</a></nav>
+    <details className="cc-mobile-menu"><summary>Menu</summary><div><a href="#problem">The risk</a><a href="#how-it-works">How it works</a><a href="#proof">Proof</a><a href="/coverage">Coverage</a><a href="/consistency-engine">Engine</a><a href="/pricing">Pricing</a><a href="/value">Value &amp; FinOps</a><a href="/intelligence">Market radar</a><a href="/deployment-agent">Architecture agent</a><button type="button" data-contact-trigger>Contact</button></div></details>
+    <div className="cc-header-actions"><button type="button" data-contact-trigger>Contact</button><a href="/workspace">Open workspace <Icon name="arrow"/></a></div>
+  </header>;
+}
+
+function EcosystemLineage() {
+  return <div className="cc-lineage-system" aria-hidden="true">
+    <svg viewBox="0 0 1000 6000" preserveAspectRatio="none">
+      <path className="cc-root-shadow" pathLength="1" d="M842 0C824 360 906 720 815 1080C728 1424 604 1615 636 1990C668 2366 829 2557 728 2930C622 3320 478 3505 541 3890C598 4236 730 4500 624 4860C538 5150 391 5480 442 6000"/>
+      <path className="cc-root-main" pathLength="1" d="M842 0C824 360 906 720 815 1080C728 1424 604 1615 636 1990C668 2366 829 2557 728 2930C622 3320 478 3505 541 3890C598 4236 730 4500 624 4860C538 5150 391 5480 442 6000"/>
+      <path className="cc-root-branch cc-root-branch-a" pathLength="1" d="M811 1090C718 1022 645 914 548 786C486 704 399 638 302 606"/>
+      <path className="cc-root-branch cc-root-branch-b" pathLength="1" d="M635 1992C544 1898 455 1815 344 1780C262 1754 193 1680 151 1585"/>
+      <path className="cc-root-branch cc-root-branch-c" pathLength="1" d="M729 2934C814 2850 861 2744 902 2626C923 2565 951 2519 985 2490"/>
+      <path className="cc-root-branch cc-root-branch-d" pathLength="1" d="M541 3893C444 3806 344 3744 223 3721C141 3705 79 3657 22 3574"/>
+      <path className="cc-root-branch cc-root-branch-e" pathLength="1" d="M625 4862C720 4780 807 4680 843 4543C864 4461 911 4407 980 4360"/>
+      {[{x:842,y:248},{x:815,y:1080},{x:636,y:1990},{x:728,y:2930},{x:541,y:3890},{x:624,y:4860},{x:442,y:5740}].map((node) => <circle key={`${node.x}-${node.y}`} cx={node.x} cy={node.y} r="9"/>)}
     </svg>
-    <span className="cinema-growth cinema-growth-a"/><span className="cinema-growth cinema-growth-b"/><span className="cinema-growth cinema-growth-c"/>
-    <i className="cinema-particle particle-a"/><i className="cinema-particle particle-b"/><i className="cinema-particle particle-c"/><i className="cinema-particle particle-d"/>
+    <Fauna kind="bird"/>
+    <Fauna kind="oryx"/>
+    <Fauna kind="gecko"/>
   </div>;
 }
 
-function HeroAssuranceField() {
-  const [focus, setFocus] = useState<"source" | "control" | "outcome">("control");
-  const details = {
-    source: { eyebrow: "01 · Authority changes", title: "A permission is revoked.", body: "The event is captured from the registered source of truth with object, identity, and policy context." },
-    control: { eyebrow: "02 · Concord reconciles", title: "Only registered impact is repaired.", body: "Lineage identifies the affected derivatives so Concord can apply a bounded, policy-specific action." },
-    outcome: { eyebrow: "03 · Behavior is verified", title: "The affected identity gets zero protected results.", body: "Destination read-back and an identity-aware retrieval probe produce evidence—not just a successful API response." },
-  };
-  return <div className={`hero-assurance-field hero-focus-${focus}`} aria-label="Interactive Concord assurance flow">
-    <div className="hero-material hero-material-one" aria-hidden="true"/><div className="hero-material hero-material-two" aria-hidden="true"/>
-    <div className="hero-system-line hero-line-one" aria-hidden="true"><i/></div><div className="hero-system-line hero-line-two" aria-hidden="true"><i/></div>
-    <button className="hero-system-object hero-object-source" type="button" aria-pressed={focus === "source"} onClick={() => setFocus("source")}>
-      <span className="hero-object-icon"><ApplicationIcon name="SharePoint"/></span><span><small>Authority</small><strong>Access revoked</strong></span><i aria-hidden="true"/>
-    </button>
-    <button className="hero-system-object hero-object-control" type="button" aria-pressed={focus === "control"} onClick={() => setFocus("control")}>
-      <span className="brand-glyph" aria-hidden="true"><i/><i/><i/></span><span><small>Assurance plane</small><strong>Concord</strong></span>
-    </button>
-    <button className="hero-system-object hero-object-outcome" type="button" aria-pressed={focus === "outcome"} onClick={() => setFocus("outcome")}>
-      <span className="hero-object-icon hero-proof-icon"><Icon name="shield" size={24}/></span><span><small>Behavioral proof</small><strong>0 protected results</strong></span><i aria-hidden="true"/>
-    </button>
-    <div className="hero-field-detail" aria-live="polite"><span>{details[focus].eyebrow}</span><strong>{details[focus].title}</strong><p>{details[focus].body}</p></div>
-    <p className="hero-field-hint">Select a system object to inspect the control path.</p>
-  </div>;
+function Fauna({ kind }: { kind: "bird" | "oryx" | "gecko" }) {
+  if (kind === "bird") return <span className="cc-fauna cc-fauna-bird" aria-hidden="true"><svg viewBox="0 0 160 80"><path d="M4 48c21-4 39-16 57-31 5-4 11-1 10 5l-2 14c17-9 35-14 54-12l30 5-27 9c-15 5-27 15-34 29l-6 11-6-15c-5-12-14-18-27-16L4 53z"/><path d="m69 36 18-31 8 2-7 30z"/></svg></span>;
+  if (kind === "oryx") return <span className="cc-fauna cc-fauna-oryx" aria-hidden="true"><svg viewBox="0 0 190 126"><path d="M33 72c18-18 43-27 73-24l31 4 18-13 8 3-13 17 7 16-5 23-7-1-1-20-21 3-8 38-8 1-4-38-42 2-7 35-8 1-3-39-21-6z"/><path d="m142 44 10-38 5-4-5 44zm9 0 21-33 5-2-18 41z"/><circle cx="157" cy="48" r="2" fill="var(--cc-sand-light)"/></svg></span>;
+  return <span className="cc-fauna cc-fauna-gecko" aria-hidden="true"><svg viewBox="0 0 170 90"><path d="M10 59c18 2 31-4 41-17 13-17 35-21 53-12 10 5 20 5 30-1l23-15-17 21c12 5 20 14 22 28-13-9-25-12-37-8-14 5-29 5-43-1-11-5-20-2-27 8-10 16-27 23-48 18 11-5 17-12 18-21z"/><path d="m74 54-19 25-9 3 18-32zm50-8 25 21 3 8-33-22z"/></svg></span>;
 }
 
-function ReadinessPanel() {
-  return (
-    <section className="readiness-wrap cinematic-host" id="readiness" aria-labelledby="readiness-title" data-motion-section="verification">
-      <CinematicEnvironment scene="verification"/>
-      <div className="section-kicker dark-kicker"><span>006/</span> Evidence and readiness</div>
-      <div className="readiness-grid">
-        <div><p className="eyebrow">Launch decision / 20 Aug 2026</p><h2 id="readiness-title">Ready to prove.<br/>Not ready to promise.</h2><p className="lead muted-light">The product boundaries are clearly defined. The implementation evidence is not yet strong enough to support a production safety claim.</p></div>
-        <div className="score-orbit" aria-label={`Production readiness ${readinessReport.score} percent`}><svg viewBox="0 0 160 160" role="img"><circle className="score-track" cx="80" cy="80" r="66"/><circle className="score-value" cx="80" cy="80" r="66" pathLength="100" strokeDasharray={`${readinessReport.score} 100`}/></svg><div><strong>{readinessReport.score}</strong><span>% ready</span></div></div>
-      </div>
-      <div className="verdict-bar"><div><span className="dot-amber"/>Current verdict</div><strong>Design-partner staging only</strong><p>Confidence: medium · Evidence-backed, assumption-sensitive</p></div>
-      <div className="dimension-grid">{readinessReport.dimensions.map((dimension) => <article key={dimension.label}><div className="dimension-head"><span>{dimension.label}</span><strong>{dimension.score}</strong></div><div className="mini-meter"><i style={{ width: `${dimension.score}%` }}/></div><p>{dimension.note}</p></article>)}</div>
-    </section>
-  );
+function HeroInstrument() {
+  const [focus, setFocus] = useState<"change" | "repair" | "proof">("repair");
+  const messages = { change: ["Authority event", "Access revoked", "Source version 0042 captured"], repair: ["Registered impact", "144 artifacts", "Policy-safe remediation calculated"], proof: ["Retrieval outcome", "0 protected results", "Behavior preserved as evidence"] } as const;
+  const message = messages[focus];
+  return <aside className={`cc-hero-instrument cc-focus-${focus}`} aria-label="Interactive assurance trace"><header><span><i aria-hidden="true"/> Guided trace · Demo data</span><strong>CR-0841</strong></header><div className="cc-instrument-stage"><div className="cc-aperture-stack" aria-hidden="true"><i/><i/><i/><i/><i/></div><button type="button" className="cc-instrument-node cc-node-source" aria-pressed={focus === "change"} onClick={() => setFocus("change")}><AppMark id="authority"/><span><small>Authority</small><strong>BookStack</strong></span></button><button type="button" className="cc-instrument-node cc-node-control" aria-pressed={focus === "repair"} onClick={() => setFocus("repair")}><ConcordMark compact/><span><small>Assurance plane</small><strong>Concord</strong></span></button><button type="button" className="cc-instrument-node cc-node-proof" aria-pressed={focus === "proof"} onClick={() => setFocus("proof")}><AppMark id="probe"/><span><small>Retrieval test</small><strong>Application path</strong></span></button><span className="cc-signal cc-signal-one" aria-hidden="true"><i/></span><span className="cc-signal cc-signal-two" aria-hidden="true"><i/></span></div><div className="cc-instrument-readout" aria-live="polite"><span>{message[0]}</span><strong>{message[1]}</strong><p>{message[2]}</p></div><footer><StateBadge state="Verified"/><span>Registered path only</span></footer></aside>;
 }
 
-function ProductConsole() {
-  const [selectedId, setSelectedId] = useState(cases[0].id);
-  const [activeView, setActiveView] = useState<"cases" | "coverage">("cases");
-  const [simOpen, setSimOpen] = useState(false);
-  const [simResult, setSimResult] = useState<null | { affectedArtifacts: number; expectedCoverage: number; approvalRequired: boolean; exceptions: string[] }>(null);
-  const [busy, setBusy] = useState(false);
-  const [error, setError] = useState("");
-  const selected = useMemo(() => cases.find((item) => item.id === selectedId) ?? cases[0], [selectedId]);
-
-  async function runSimulation(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    setBusy(true); setError("");
-    const form = new FormData(event.currentTarget);
-    try {
-      const response = await fetch("/api/simulations", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ sourceId: form.get("sourceId"), principalType: form.get("principalType"), vectorRecords: Number(form.get("vectorRecords")), cacheKeys: Number(form.get("cacheKeys")), proofEndpoint: form.get("proofEndpoint") === "on" }) });
-      const data = await response.json();
-      if (!response.ok) throw new Error(data.error ?? "Simulation failed.");
-      setSimResult(data.plan);
-    } catch (caught) { setError(caught instanceof Error ? caught.message : "Simulation failed."); }
-    finally { setBusy(false); }
-  }
-
-  return (
-    <section className="product-section cinematic-host" id="product" aria-labelledby="product-title" data-motion-section="repair">
-      <CinematicEnvironment scene="repair"/>
-      <div className="product-copy"><div className="section-kicker"><span>005/</span> Product control surface</div><div><p className="eyebrow">The assurance control room</p><h2 id="product-title">Every claim earns its evidence.</h2></div><p className="lead">Concord does not treat a successful API response as proof. It shows what changed, what was in scope, what was repaired, and whether the final user experience was actually corrected.</p></div>
-      <div className="console-shell">
-        <aside className="console-sidebar"><ConcordMark compact/><nav aria-label="Product demo navigation"><button className={activeView === "cases" ? "nav-active" : ""} type="button" onClick={() => setActiveView("cases")} aria-label="Assurance cases"><Icon name="pulse"/></button><button className={activeView === "coverage" ? "nav-active" : ""} type="button" onClick={() => setActiveView("coverage")} aria-label="Coverage ledger"><Icon name="layers"/></button><button type="button" onClick={() => setSimOpen(true)} aria-label="Open simulation"><Icon name="terminal"/></button></nav><span className="avatar" aria-label="Demo workspace">DA</span></aside>
-        <div className="console-main">
-          <header className="console-topbar"><div><span className="demo-badge">Demo data</span><strong>{activeView === "cases" ? "Assurance cases" : "Coverage ledger"}</strong></div><button className="button button-dark button-small" type="button" onClick={() => { setSimOpen(true); setSimResult(null); }}><Icon name="play" size={16}/>Run simulation</button></header>
-          {activeView === "cases" ? <div className="console-content">
-            <div className="case-list" role="list" aria-label="Assurance cases"><div className="case-list-head"><span>Case</span><span>Exposure</span></div>{cases.map((item) => <button key={item.id} type="button" className={`case-row ${selectedId === item.id ? "case-selected" : ""}`} onClick={() => setSelectedId(item.id)}><div><StatusPill status={item.status}/><strong>{item.id}</strong><p>{item.event} · {item.principal}</p></div><span><Icon name="clock" size={14}/>{item.exposure}</span></button>)}</div>
-            <article className="case-detail" aria-live="polite"><div className="case-detail-head"><div><span className="micro-label">{selected.id} · {selected.updated}</span><h3>{selected.source}</h3></div><div className="coverage-number"><strong>{selected.coverage}%</strong><span>registered coverage</span></div></div><div className="proof-callout"><Icon name="shield"/><div><strong>{selected.proofLevel} proof level</strong><p>{selected.risk}</p></div></div><div className="proof-rail">{selected.proof.map((step, index) => <div className={`proof-step proof-${step.state}`} key={step.label}><span>{step.state === "complete" ? <Icon name="check" size={15}/> : index + 1}</span><div><strong>{step.label}</strong><p>{step.detail}</p></div></div>)}</div><footer className="detail-footer"><span>Artifacts <strong>{selected.artifacts}</strong></span><button type="button" onClick={() => setSimOpen(true)}>Open replay <Icon name="arrow" size={16}/></button></footer></article>
-          </div> : <div className="ledger-content"><div className="ledger-hero"><div><span className="micro-label">Registered guarantee boundary</span><h3>Four pilot adapters.<br/>Zero hidden coverage.</h3></div><strong>92<span>%</span></strong></div><div className="ledger-grid">{integrations.slice(0, 4).map((item, index) => <article key={item.name}><span>0{index + 1}</span><h4>{item.name}</h4><p>{item.role}</p><small>{item.state}</small></article>)}</div><p className="ledger-note"><Icon name="shield" size={18}/>Anything outside a registered adapter is visibly excluded from Concord&apos;s assurance claim.</p></div>}
-        </div>
-      </div>
-      {simOpen && <div className="modal-backdrop" role="presentation" onMouseDown={(event) => { if (event.currentTarget === event.target) setSimOpen(false); }}><section className="simulation-modal" role="dialog" aria-modal="true" aria-labelledby="simulation-title"><div className="modal-head"><div><span className="demo-badge">Safe planning mode</span><h3 id="simulation-title">Simulate a revocation</h3></div><button className="modal-close" type="button" onClick={() => setSimOpen(false)} aria-label="Close simulation">×</button></div><p>This endpoint produces a deterministic action plan. It has no credentials, persistence, or external write capability.</p><form onSubmit={runSimulation}><label>Registered source object<input name="sourceId" defaultValue="sharepoint://strategy/fy27" required maxLength={120}/></label><div className="form-grid"><label>Principal type<select name="principalType" defaultValue="group"><option value="group">Group</option><option value="user">User</option></select></label><label>Vector records<input name="vectorRecords" type="number" defaultValue="128" min="0" max="10000"/></label><label>Cache keys<input name="cacheKeys" type="number" defaultValue="16" min="0" max="1000"/></label></div><label className="check-label"><input name="proofEndpoint" type="checkbox" defaultChecked/><span><Icon name="check" size={15}/></span>Identity-aware retrieval probe is registered</label><button className="button button-amber" type="submit" disabled={busy}>{busy ? "Calculating…" : "Generate safe plan"}<Icon name="arrow" size={17}/></button></form>{error && <p className="form-error" role="alert">{error}</p>}{simResult && <div className="simulation-result" aria-live="polite"><div><span>Affected artifacts</span><strong>{simResult.affectedArtifacts}</strong></div><div><span>Expected coverage</span><strong>{simResult.expectedCoverage}%</strong></div><div><span>Approval</span><strong>{simResult.approvalRequired ? "Required" : "Not required"}</strong></div><p><Icon name="shield" size={16}/>Plan only · 0 external writes {simResult.exceptions.length ? `· ${simResult.exceptions.length} exception` : "· behavioral proof available"}</p></div>}</section></div>}
-    </section>
-  );
+function RiskChapter() {
+  return <section className="cc-risk" id="risk" aria-labelledby="risk-title"><div className="cc-section-index"><span>01</span><p>The mismatch</p></div><div className="cc-risk-copy cc-reveal"><p className="cc-kicker">When authority changes</p><h2 id="risk-title">A source can change. Its AI copies may not.</h2><p>Vectors, caches, retrieval layers, and agent memory can retain content after access or authoritative information changes. That gap is where invalid answers persist.</p></div><div className="cc-revision-object cc-reveal" aria-label="Example of source and derivative state diverging"><article className="cc-revision-authority"><header><AppMark id="authority"/><span><small>Authoritative source</small><strong>Access removed</strong></span><time>09:42:16</time></header><div><span className="cc-revision-line cc-line-current"/><span className="cc-revision-line"/><span className="cc-revision-line"/></div><footer>Version 0042 · current</footer></article><div className="cc-revision-gap"><span>Validity gap</span><i aria-hidden="true"/><strong>02:18 exposed</strong></div><article className="cc-revision-derivative"><header><AppMark id="vector"/><span><small>AI-derived state</small><strong>Old access retained</strong></span><time>09:42:17</time></header><div><span className="cc-revision-line cc-line-invalid"/><span className="cc-revision-line"/><span className="cc-revision-line"/></div><footer><StateBadge state="Unresolved"/></footer></article></div><p className="cc-risk-boundary"><Icon name="shield"/> Assurance applies only to registered artifacts and supported adapters. Unregistered state remains outside the guarantee.</p></section>;
 }
 
-function EnterpriseBoundary() {
-  const applications: { name: ApplicationName; role: string; className: string; state: "contract" | "target" }[] = [
-    { name: "SharePoint", role: "Knowledge target", className: "chip-sp", state: "target" },
-    { name: "Entra", role: "Identity target", className: "chip-en", state: "target" },
-    { name: "Pinecone", role: "MVP contract", className: "chip-pc", state: "contract" },
-    { name: "Redis", role: "MVP contract", className: "chip-rd", state: "contract" },
-    { name: "Slack", role: "Messaging target", className: "chip-sl", state: "target" },
-    { name: "Confluence", role: "Knowledge target", className: "chip-cf", state: "target" },
-  ];
-  return <section className="integration-section cinematic-host" id="integrations" aria-labelledby="integrations-title" data-motion-section="integrations"><CinematicEnvironment scene="integrations"/><div className="integration-copy"><div className="section-kicker"><span>004/</span> Integration architecture</div><p className="eyebrow">A universal connector contract</p><h2 id="integrations-title">One assurance layer.<br/>Each system has a role.</h2><p className="lead">BookStack and Zulip are the first proof environments. The reusable contract then expands across applications, identity systems, AI transformations, destinations, and retrieval interfaces without changing Concord&apos;s core loop.</p><a className="integration-coverage-link" href="/coverage">Explore the enterprise coverage plan →</a></div><div className="integration-orbit" aria-label="Reference enterprise ecosystem for the Concord connector platform"><div className="orbit-field-label"><span/>Reference ecosystem · coverage varies</div><div className="orbit-ring orbit-one"/><div className="orbit-ring orbit-two"/><div className="orbit-ring orbit-three"/><div className="orbit-center"><span className="brand-glyph" aria-hidden="true"><i/><i/><i/></span><strong>Concord</strong><small>Reusable contract</small><em>Coverage is explicit</em></div>{applications.map((application) => <div className={`orbit-chip ${application.className} ${application.state === "target" ? "orbit-chip-planned" : ""}`} key={application.name}><span className="orbit-app-mark"><ApplicationIcon name={application.name}/></span><span>{application.name}<small>{application.role}</small></span><i className="orbit-status" aria-label={application.state === "contract" ? "MVP contract" : "Target category"}/></div>)}</div><div className="contract-strip">{[["Authority", "Observe the source truth", "BookStack + Zulip"], ["Control", "Normalize every change", "Canonical events"], ["Derivative", "Quarantine and repair", "Pinecone + Redis"], ["Proof", "Verify the final experience", "Identity-aware probe"]].map(([title, detail, example], index) => <article key={title}><span>0{index + 1}</span><h3>{title}</h3><p>{detail}</p><small>{example}</small></article>)}</div></section>;
+function WorkflowChapter() {
+  const [activeIndex, setActiveIndex] = useState(0);
+  const [playing, setPlaying] = useState(false);
+  const [selectedObject, setSelectedObject] = useState<ObjectId>("authority");
+  const [detail, setDetail] = useState<DetailId>("risk");
+  const [inspectorOpen, setInspectorOpen] = useState(false);
+  const tabRefs = useRef<Array<HTMLButtonElement | null>>([]);
+  const inspectorRef = useRef<HTMLElement>(null);
+  const returnFocusRef = useRef<HTMLButtonElement | null>(null);
+  const active = stages[activeIndex];
+  const object = objectDetails[selectedObject];
+  const chooseStage = useCallback((index: number) => { setActiveIndex(Math.max(0, Math.min(stages.length - 1, index))); setPlaying(false); }, []);
+  useEffect(() => { if (!playing) return; const timer = window.setInterval(() => setActiveIndex((current) => { if (current === stages.length - 1) { setPlaying(false); return current; } return current + 1; }), 2800); return () => window.clearInterval(timer); }, [playing]);
+  const closeInspector = useCallback(() => { setInspectorOpen(false); window.setTimeout(() => returnFocusRef.current?.focus(), 0); }, []);
+  useEffect(() => { if (!inspectorOpen) return; const panel = inspectorRef.current; if (!panel) return; const focusable = Array.from(panel.querySelectorAll<HTMLElement>('button:not([disabled]), a[href], [tabindex]:not([tabindex="-1"])')); focusable[0]?.focus(); const onKeyDown = (event: globalThis.KeyboardEvent) => { if (event.key === "Escape") { event.preventDefault(); closeInspector(); return; } if (event.key !== "Tab" || focusable.length === 0) return; const first = focusable[0]; const last = focusable[focusable.length - 1]; if (event.shiftKey && document.activeElement === first) { event.preventDefault(); last.focus(); } if (!event.shiftKey && document.activeElement === last) { event.preventDefault(); first.focus(); } }; document.addEventListener("keydown", onKeyDown); return () => document.removeEventListener("keydown", onKeyDown); }, [closeInspector, inspectorOpen]);
+  const handleStageKey = (event: ReactKeyboardEvent<HTMLButtonElement>, index: number) => { let next = index; if (event.key === "ArrowRight" || event.key === "ArrowDown") next = (index + 1) % stages.length; else if (event.key === "ArrowLeft" || event.key === "ArrowUp") next = (index - 1 + stages.length) % stages.length; else if (event.key === "Home") next = 0; else if (event.key === "End") next = stages.length - 1; else return; event.preventDefault(); chooseStage(next); tabRefs.current[next]?.focus(); };
+  const openObject = (id: ObjectId, button: HTMLButtonElement) => { returnFocusRef.current = button; setSelectedObject(id); setDetail("risk"); setInspectorOpen(true); };
+  return <section className="cc-workflow" id="how-it-works" aria-labelledby="workflow-title"><header className="cc-workflow-heading cc-reveal"><div className="cc-section-index"><span>02</span><p>How Concord works</p></div><div><p className="cc-kicker">One change. Five controlled handoffs.</p><h2 id="workflow-title">From authority<br/>to evidence.</h2></div><p>Select a stage to follow one registered control loop. Open any object to inspect its risk, permitted action, and proof requirement.</p></header><div className="cc-stage-rail" role="tablist" aria-label="Assurance workflow stages">{stages.map((stage, index) => <button ref={(node) => { tabRefs.current[index] = node; }} id={`cc-stage-tab-${stage.id}`} key={stage.id} type="button" role="tab" tabIndex={activeIndex === index ? 0 : -1} aria-selected={activeIndex === index} aria-controls="cc-stage-panel" onKeyDown={(event) => handleStageKey(event, index)} onClick={() => chooseStage(index)}><span>{stage.number}</span><strong>{stage.label}</strong><i aria-hidden="true"/></button>)}</div><div id="cc-stage-panel" className={`cc-stage-panel cc-stage-${active.id}`} role="tabpanel" aria-labelledby={`cc-stage-tab-${active.id}`} key={active.id}><div className="cc-stage-story"><span className="cc-kicker">{active.number} / {active.label}</span><h3>{active.headline}</h3><p>{active.body}</p><div className="cc-stage-controls"><button type="button" onClick={() => chooseStage(activeIndex - 1)} disabled={activeIndex === 0} aria-label="Previous stage"><Icon name="next"/> Previous</button><button type="button" className="cc-play" onClick={() => { if (activeIndex === stages.length - 1) setActiveIndex(0); setPlaying((current) => !current); }} aria-pressed={playing}><Icon name={playing ? "pause" : "play"}/>{playing ? "Pause trace" : "Run trace"}</button><button type="button" onClick={() => chooseStage(activeIndex === stages.length - 1 ? 0 : activeIndex + 1)}>{activeIndex === stages.length - 1 ? "Replay" : "Next"} <Icon name="next"/></button></div></div><div className="cc-stage-chamber" aria-label={`${active.label} stage product demonstration`}><header><span>Guided product proof</span><strong>Demonstration data</strong></header><div className="cc-chamber-path"><article><small>Input</small><strong>{active.input}</strong></article><span className="cc-chamber-route" aria-hidden="true"><i/></span><div className="cc-chamber-core"><ConcordMark compact/><small>{active.action}</small></div><span className="cc-chamber-route" aria-hidden="true"><i/></span><article><small>Observed output</small><strong>{active.output}</strong></article></div><p className="cc-stage-boundary"><Icon name="shield"/>{active.detail}</p><div className="cc-object-strip" aria-label="Registered assurance objects">{(Object.keys(objectDetails) as ObjectId[]).map((id) => { const item = objectDetails[id]; const stageActive = active.objects.includes(id); return <button key={id} type="button" className={stageActive ? "is-active" : ""} aria-haspopup="dialog" aria-expanded={inspectorOpen && selectedObject === id} onClick={(event) => openObject(id, event.currentTarget)}><AppMark id={id}/><span><small>{item.kind}</small><strong>{item.name}</strong></span><i aria-hidden="true">+</i></button>; })}</div></div></div><div className="cc-inspector-layer" hidden={!inspectorOpen} role="presentation" onMouseDown={(event) => { if (event.currentTarget === event.target) closeInspector(); }}><aside ref={inspectorRef} className="cc-inspector" role="dialog" aria-modal="true" aria-labelledby="cc-inspector-title" aria-describedby="cc-inspector-summary"><div className="cc-inspector-grip" aria-hidden="true"/><button className="cc-inspector-close" type="button" onClick={closeInspector} aria-label="Close object details"><Icon name="close"/></button><header><AppMark id={selectedObject}/><span><small>{object.kind}</small><h3 id="cc-inspector-title">{object.name}</h3></span></header><p id="cc-inspector-summary">{object.summary}</p><div className="cc-inspector-state"><StateBadge state={object.state}/><span>{object.registration}</span></div><div className="cc-detail-tabs" role="tablist" aria-label="Object detail categories">{(["risk", "action", "proof"] as DetailId[]).map((item) => <button id={`cc-detail-tab-${item}`} key={item} type="button" role="tab" aria-selected={detail === item} aria-controls="cc-detail-panel" onClick={() => setDetail(item)}>{item === "risk" ? "Risk" : item === "action" ? "Action" : "Proof"}</button>)}</div><div id="cc-detail-panel" role="tabpanel" aria-labelledby={`cc-detail-tab-${detail}`}><span>{detail === "risk" ? "What can fail" : detail === "action" ? "What Concord can do" : "What closes the loop"}</span><p>{object[detail]}</p></div><footer><span>Evidence reference</span><strong>CR-0841/{selectedObject}</strong></footer></aside></div></section>;
 }
 
-function AdapterRegistry() {
-  return <section className="adapter-registry cinematic-host" id="adapter-registry" aria-labelledby="adapter-registry-title" data-motion-section="gates">
-    <CinematicEnvironment scene="gates"/>
-    <div className="adapter-registry-heading">
-      <div className="section-kicker dark-kicker"><span>007/</span> Adapter registry</div>
-      <p className="eyebrow">Coverage is explicit</p>
-      <h2 id="adapter-registry-title">Supported, planned,<br/><em>or outside the claim.</em></h2>
-      <p>Every adapter publishes its operational role and current coverage state. Anything unregistered remains visible as unsupported instead of being silently treated as protected.</p>
-    </div>
-    <div className="adapter-list" role="list" aria-label="Concord adapter registry">
-      {integrations.map((integration, index) => <article role="listitem" key={integration.name}>
-        <span>{String(index + 1).padStart(2, "0")}</span>
-        <h3>{integration.name}</h3>
-        <p>{integration.role}</p>
-        <small><i className={integration.state.includes("contract") ? "adapter-live" : "adapter-planned"}/>{integration.state}</small>
-        <b>{integration.state.includes("contract") ? "Registered contract" : "Planned"}</b>
-      </article>)}
-    </div>
-  </section>;
+function EvidenceChapter() {
+  const filters = ["All", "Authority", "Control", "Proof"] as const;
+  const [filter, setFilter] = useState<(typeof filters)[number]>("All");
+  const filtered = useMemo(() => filter === "All" ? evidenceEvents : evidenceEvents.filter((event) => event.category === filter), [filter]);
+  const [selectedId, setSelectedId] = useState(evidenceEvents[0].id);
+  const selected = filtered.find((event) => event.id === selectedId) ?? filtered[0];
+  return <section className="cc-proof" id="proof" aria-labelledby="proof-title"><header className="cc-proof-heading cc-reveal"><div className="cc-section-index"><span>03</span><p>Proof, not process</p></div><p className="cc-kicker">An API success response is not proof.</p><h2 id="proof-title">Test the outcome.<br/>Keep the record.</h2><p>Concord closes a case only after destination read-back and a real retrieval test. Everything else stays visibly in progress or outside coverage.</p></header><div className="cc-evidence-instrument cc-reveal"><header><div><span>CR-0841</span><strong>Bounded assurance record</strong><small>Guided proof · Demo data</small></div><StateBadge state="Verified"/></header><div className="cc-evidence-summary"><div><span>Authority event</span><strong>Access revoked</strong></div><div><span>Registered impact</span><strong>144 artifacts</strong></div><div><span>Observed retrieval</span><strong>0 protected results</strong></div><div><span>Invalid-state exposure</span><strong>{cases[0].exposure}</strong></div></div><div className="cc-evidence-filters" aria-label="Filter evidence events">{filters.map((item) => <button key={item} type="button" aria-pressed={filter === item} onClick={() => setFilter(item)}>{item}</button>)}</div><div className="cc-evidence-body"><div className="cc-evidence-list" role="list" aria-label="Timestamped evidence events">{filtered.map((event) => <button key={event.id} type="button" className={selected.id === event.id ? "is-selected" : ""} aria-pressed={selected.id === event.id} onClick={() => setSelectedId(event.id)}><time>{event.time}</time><span><small>{event.category} · {event.id}</small><strong>{event.title}</strong></span><StateBadge state={event.state}/></button>)}</div><aside className="cc-evidence-detail" aria-live="polite"><span>Selected evidence</span><h3>{selected.title}</h3><StateBadge state={selected.state}/><dl><div><dt>Observation</dt><dd>{selected.evidence}</dd></div><div><dt>Assurance boundary</dt><dd>{selected.boundary}</dd></div></dl></aside></div><footer><Icon name="shield"/><p>Bounded consistency for registered artifacts and supported adapters. Accepted risk is never presented as verified safety.</p></footer></div></section>;
 }
 
-function LaunchGates() {
-  const icons: IconName[] = ["code", "pulse", "shield", "layers"];
-  return <section className="gates-section" id="architecture" aria-labelledby="gates-title"><div className="gates-copy"><div className="section-kicker dark-kicker"><span>008/</span> Production path</div><p className="eyebrow">The next honest milestone</p><h2 id="gates-title">Four gates between a compelling demo and a safety claim.</h2><p>These gates are part of the product, not a footnote. Each one produces evidence for the next launch decision.</p></div><div className="gate-stack">{readinessReport.gates.map((gate, index) => <article key={gate}><span>{String(index + 1).padStart(2, "0")}</span><div><h3>{gate}</h3><p>{["Real authority event → complete registered lineage.", "Retry storm → one safe final state.", "Revoked identity → zero protected results.", "Failure → contained tenant and recoverable service."][index]}</p></div><Icon name={icons[index]}/></article>)}</div></section>;
+function BoundaryChapter() {
+  const currentIntegrations = integrations.slice(0, 4);
+  return <section className="cc-boundary" id="boundary" aria-labelledby="boundary-title"><div className="cc-boundary-heading cc-reveal"><div className="cc-section-index"><span>04</span><p>Honest coverage</p></div><div><p className="cc-kicker">Coverage must be explicit</p><h2 id="boundary-title">Know what Concord can prove.</h2></div><p>Each adapter states what it can observe, repair, and verify. Unsupported or unresolved scope stays visible—never folded into a reassuring total.</p></div><div className="cc-boundary-grid cc-reveal"><article className="cc-coverage-map"><header><span>Current adapter boundary</span><strong>Contracts, not production claims</strong></header><div>{currentIntegrations.map((integration, index) => <section key={integration.name}><span>{String(index + 1).padStart(2, "0")}</span><div><strong>{integration.name}</strong><small>{integration.role}</small></div><em>{integration.state}</em></section>)}</div><a href="/coverage">Inspect the complete coverage model <Icon name="arrow"/></a></article><article className="cc-readiness"><header><span>Current launch boundary</span><StateBadge state="Unresolved"/></header><strong>{readinessReport.verdict}</strong><p>Ready for controlled design-partner staging. Live connector credentials, customer-hosted validation, recovery testing, and operational evidence remain production gates.</p><details><summary>Review readiness and operating boundaries <span aria-hidden="true">+</span></summary><ol>{readinessReport.gates.map((gate) => <li key={gate}>{gate}</li>)}</ol></details><a href="/consistency-engine">Open the assurance control surface <Icon name="arrow"/></a><a href="/coverage">Inspect coverage and adapter roles <Icon name="arrow"/></a></article></div><div className="cc-state-legend" aria-label="Concord product states">{(["Verified", "Repairing", "Unresolved", "Unsupported", "Accepted risk"] as ProofState[]).map((state) => <StateBadge key={state} state={state}/>)}</div></section>;
 }
 
-function ProblemLandscape() {
-  return <section className="rift-problem cinematic-host" id="problem" aria-labelledby="problem-title" data-motion-section="problem">
-    <CinematicEnvironment scene="problem"/>
-    <div className="rift-problem-copy reveal-on-scroll">
-      <p className="terrain-kicker"><span>001/</span> The hidden failure</p>
-      <h2 id="problem-title">Permissions change.<br/><em>AI copies do not.</em></h2>
-      <p>Enterprise AI creates indexes, embeddings, caches, summaries, and agent memory from trusted systems. When the source changes, those copies can keep serving information that is no longer valid.</p>
-    </div>
-    <div className="rift-stage" aria-label="A source permission changes while derived AI data remains stale">
-      <div className="rift-rock rift-rock-left"><span>Source system</span><strong>Access revoked</strong><small>SharePoint · 09:42:16</small></div>
-      <div className="rift-depth" aria-hidden="true"/>
-      <div className="rift-rock rift-rock-right"><span>AI systems</span><strong>Still retrievable</strong><small>Vector · Cache · Agent memory</small></div>
-      <div className="rift-warning"><span>!</span>Control gap</div>
-    </div>
-    <div className="problem-consequence reveal-on-scroll">
-      <span>Without Concord</span>
-      <p>Teams discover the mismatch through an incident, an audit, or a user who sees something they should not.</p>
-    </div>
-  </section>;
+function FinalChapter() {
+  return <section className="cc-final" id="contact" aria-labelledby="final-title"><div className="cc-final-aperture" aria-hidden="true"><i/><i/><i/><i/><i/></div><div className="cc-section-index"><span>05</span><p>Start bounded</p></div><div className="cc-final-copy cc-reveal"><p className="cc-kicker">Start with one verified path</p><h2 id="final-title">Prove one loop. Then expand.</h2><p>Connect one application, register one validity-changing event, and measure the retrieval outcome before expanding coverage.</p><div><button type="button" data-contact-trigger>Talk to Ralph Team <Icon name="arrow"/></button><a href="/workspace">Connect your first application free <Icon name="arrow"/></a></div></div><address><span>Ralph Team</span><a href="tel:+972556669857">+972 55-666-9857</a><a href="mailto:nitai@ralphteam.ai">nitai@ralphteam.ai</a></address></section>;
 }
 
-function PropagationJourney() {
-  const [activeStage, setActiveStage] = useState(0);
-  const [selectedObject, setSelectedObject] = useState<SystemObjectId>("source");
-  const [activeDetail, setActiveDetail] = useState<"risk" | "action" | "proof">("risk");
-  const chapters = [
-    { number: "01", label: "Detect", title: "Capture the change at the authority.", body: "A permission, identity, retention rule, or source object changes in a registered enterprise system. Concord records the event with exact object, identity, policy, and adapter context.", meta: "Authority event · Policy evaluation", stage: "Validity-changing event captured" },
-    { number: "02", label: "Trace", title: "Resolve every registered dependency.", body: "Cross-vendor lineage maps the source object to affected chunks, embeddings, vector records, cache keys, summaries, and agent memory across supported destinations.", meta: "Registered lineage · Impact preview", stage: "Affected derivatives identified" },
-    { number: "03", label: "Repair", title: "Apply the smallest safe remediation.", body: "Concord calculates an idempotent, policy-specific action: quarantine, update, delete, invalidate, recompute, change access, or invoke a controlled callback.", meta: "Targeted action · Idempotent execution", stage: "Bounded repair in progress" },
-    { number: "04", label: "Verify", title: "Read back the destination. Test real retrieval.", body: "Concord confirms the destination state, then tests the retrieval path as the affected identity. A successful write or API response alone is never presented as proof.", meta: "Destination read-back · Identity-aware probe", stage: "Outcome behavior verified" },
-    { number: "05", label: "Prove", title: "Preserve the evidence—and the exceptions.", body: "The final record separates verified, repairing, unresolved, unsupported, and accepted-risk states while preserving exposure time, actions, exceptions, and supporting evidence.", meta: "Coverage state · Exposure · Evidence", stage: "Evidence package preserved" },
-  ];
-  const stageVisuals: { from: { eyebrow: string; title: string; detail: string; icon: React.ReactNode }; to: { eyebrow: string; title: string; detail: string; icon: React.ReactNode } }[] = [
-    { from: { eyebrow: "Authoritative source", title: "Access revoked", detail: "SharePoint · 09:42:16", icon: <ApplicationIcon name="SharePoint"/> }, to: { eyebrow: "Captured event", title: "Change registered", detail: "Object · Identity · Policy", icon: <Icon name="pulse" size={24}/> } },
-    { from: { eyebrow: "Registered lineage", title: "Source mapped", detail: "Object → chunks → records", icon: <Icon name="layers" size={24}/> }, to: { eyebrow: "Impact set", title: "144 artifacts found", detail: "Vectors · Cache · Memory", icon: <Icon name="pulse" size={24}/> } },
-    { from: { eyebrow: "Affected state", title: "144 artifacts selected", detail: "Policy-specific scope", icon: <Icon name="layers" size={24}/> }, to: { eyebrow: "Targeted repair", title: "Remediation applied", detail: "128 vectors · 16 cache keys", icon: <Icon name="check" size={24}/> } },
-    { from: { eyebrow: "Destination read-back", title: "144 states confirmed", detail: "Write response is not enough", icon: <Icon name="code" size={24}/> }, to: { eyebrow: "Identity-aware probe", title: "0 protected results", detail: "Real retrieval path tested", icon: <Icon name="shield" size={24}/> } },
-    { from: { eyebrow: "Verified outcome", title: "Exposure measured", detail: "8m 42s invalid-state window", icon: <Icon name="shield" size={24}/> }, to: { eyebrow: "Evidence record", title: "Case CR-0841", detail: "Coverage · Actions · Exceptions", icon: <Icon name="check" size={24}/> } },
-  ];
-  const objects: Record<SystemObjectId, { eyebrow: string; title: string; summary: string; risk: string; dependency: string; action: string; proof: string; value: string }> = {
-    source: { eyebrow: "Authoritative source", title: "SharePoint access state", summary: "The registered enterprise system that owns the current truth for this object and identity.", risk: "A permission or source object can change after AI derivatives have already been created.", dependency: "Concord resolves only lineage registered through supported adapters and customer-controlled identifiers.", action: "Observe the event, preserve its context, and calculate downstream impact. The authority itself remains customer-controlled.", proof: "The source event and current authority state are preserved as calculation evidence.", value: "Earlier detection shortens the period in which downstream AI state may remain invalid." },
-    vector: { eyebrow: "Registered derivative", title: "Vector records", summary: "Embeddings and vector records derived from the affected source object.", risk: "A semantically searchable copy can remain retrievable after the source permission or content changes.", dependency: "Object-to-chunk and chunk-to-vector mappings connect the source to affected records.", action: "Quarantine, delete, update, or recompute only the registered records selected by policy.", proof: "Destination read-back confirms record state before the behavioral retrieval test runs.", value: "Targeted repair can avoid broad re-indexing and reduce manual platform work." },
-    cache: { eyebrow: "Registered derivative", title: "Cache state", summary: "Cached responses or keys that can preserve a result after its upstream authority has changed.", risk: "A valid-looking response may outlive the permission, retention rule, or source data that created it.", dependency: "Registered cache keys and namespaces link the cached result to the source and affected identities.", action: "Invalidate or update the affected keys with an idempotent operation.", proof: "A destination read confirms invalidation before the affected identity is tested.", value: "Precise invalidation reduces stale exposure without clearing unrelated customer state." },
-    memory: { eyebrow: "Registered derivative", title: "Agent memory", summary: "Persistent AI or agent state derived from enterprise knowledge and prior interactions.", risk: "An agent may continue using remembered content after that content is no longer valid for a user or workflow.", dependency: "Registered memory references and callback contracts connect the state to its source lineage.", action: "Update, delete, recompute, adjust access control, or invoke a controlled callback according to policy.", proof: "The destination state and subsequent agent retrieval behavior are both recorded.", value: "Teams gain a repeatable path to reconcile persistent AI state across vendor boundaries." },
-    verification: { eyebrow: "Verification checkpoint", title: "Identity-aware proof", summary: "A final test of what the affected identity can actually retrieve after remediation.", risk: "A successful write or API response can still leave the real user experience unchanged.", dependency: "The probe uses the affected identity and a registered destination retrieval path.", action: "Read back the destination, run the behavioral probe, and classify the outcome.", proof: "The result is marked verified, repairing, unresolved, or unsupported with timestamped evidence.", value: "Security and application owners can evaluate the real outcome instead of trusting process completion." },
-    evidence: { eyebrow: "Evidence record", title: "Bounded assurance report", summary: "The traceable record connecting source event, impact, action, verification, exposure, and exceptions.", risk: "Without a shared evidence chain, teams must reconstruct incidents and audits manually.", dependency: "Each record references the registered adapter, policy, calculation inputs, destination response, and probe result.", action: "Preserve the result and unresolved exception; no unsupported outcome is silently upgraded to verified.", proof: "Coverage, timestamps, identities, actions, and supporting artifacts remain inspectable.", value: "A clear assurance record improves auditability and operational confidence without making universal consistency claims." },
-  };
-  const selected = objects[selectedObject];
-  const stageObjectGroups: Record<SystemObjectId, number[]> = {
-    source: [0, 1],
-    vector: [1, 2],
-    cache: [1, 2],
-    memory: [1, 2],
-    verification: [3],
-    evidence: [4],
-  };
-  const detailContent = {
-    risk: { label: "Why it matters", body: selected.risk },
-    action: { label: "Concord action", body: selected.action },
-    proof: { label: "Required evidence", body: selected.proof },
-  };
-
-  useEffect(() => {
-    const stageNodes = document.querySelectorAll<HTMLElement>(".workflow-chapter[data-stage]");
-    const observer = new IntersectionObserver((entries) => {
-      const visible = entries.filter((entry) => entry.isIntersecting).sort((a, b) => b.intersectionRatio - a.intersectionRatio)[0];
-      if (visible) setActiveStage(Number((visible.target as HTMLElement).dataset.stage ?? 0));
-    }, { rootMargin: "-30% 0px -48%", threshold: [0, .2, .5, .8] });
-    stageNodes.forEach((node) => observer.observe(node));
-    return () => observer.disconnect();
-  }, []);
-
-  const objectButton = (id: SystemObjectId, label: string, sublabel: string, icon: React.ReactNode) => <button id={`workflow-object-${id}`} className={`workflow-object ${selectedObject === id ? "object-selected" : ""} ${stageObjectGroups[id].includes(activeStage) ? "object-stage-active" : ""}`} type="button" role="tab" aria-selected={selectedObject === id} aria-controls="workflow-inspector-panel" onClick={() => { setSelectedObject(id); setActiveDetail("risk"); }}><span className="workflow-object-icon">{icon}</span><span><small>{sublabel}</small><strong>{label}</strong></span></button>;
-  const setWorkflowStage = (index: number) => setActiveStage(index);
-  const activeVisual = stageVisuals[activeStage];
-  return <section className="propagation-story cinematic-host" id="how-it-works" aria-labelledby="journey-title" data-motion-section="lineage">
-    <CinematicEnvironment scene="lineage"/>
-    <header className="journey-heading reveal-on-scroll">
-      <p className="terrain-kicker"><span>002/</span> How Concord works</p>
-      <h2 id="journey-title">A living control path<br/><em>from change to proof.</em></h2>
-      <p>Scroll through the workflow. Select any system object to inspect its risk, dependency, permitted action, verification method, and business value.</p>
-    </header>
-    <div className="workflow-layout">
-      <div className={`workflow-sticky workflow-stage-${activeStage}`}>
-        <div className="workflow-scene" aria-label="Interactive Concord dependency and reconciliation system">
-          <div className="workflow-light" aria-hidden="true"/><div className="workflow-ground" aria-hidden="true"/>
-          <header className="workflow-stage-header">
-            <div className="workflow-stage-readout" aria-live="polite"><span>Guided example · Demo data</span><strong>{chapters[activeStage].stage}</strong></div>
-            <nav className="workflow-stage-nav" aria-label="Assurance workflow stages">{chapters.map((chapter, index) => <button key={chapter.number} type="button" aria-current={activeStage === index ? "step" : undefined} onClick={() => setWorkflowStage(index)}><span>{chapter.number}</span><small>{chapter.label}</small></button>)}</nav>
-          </header>
-
-          <div className="workflow-map" key={activeStage} aria-live="polite">
-            <article className="workflow-map-node workflow-map-from"><span className="workflow-map-icon">{activeVisual.from.icon}</span><div><small>{activeVisual.from.eyebrow}</small><strong>{activeVisual.from.title}</strong><p>{activeVisual.from.detail}</p></div></article>
-            <span className="workflow-route workflow-route-in" aria-hidden="true"><i/></span>
-            <div className="workflow-core" aria-label="Concord assurance plane"><span className="brand-glyph" aria-hidden="true"><i/><i/><i/></span><strong>Concord</strong><small>Assurance plane</small><i aria-hidden="true"/></div>
-            <span className="workflow-route workflow-route-out" aria-hidden="true"><i/></span>
-            <article className="workflow-map-node workflow-map-to"><span className="workflow-map-icon">{activeVisual.to.icon}</span><div><small>{activeVisual.to.eyebrow}</small><strong>{activeVisual.to.title}</strong><p>{activeVisual.to.detail}</p></div></article>
-          </div>
-
-          <section className="workflow-explorer" aria-labelledby="workflow-explorer-title">
-            <div className="workflow-explorer-heading"><div><span>Registered assurance objects</span><h3 id="workflow-explorer-title">Explore the control contract</h3></div><p>Select one object to inspect what can fail, what Concord can do, and what evidence is required.</p></div>
-            <div className="workflow-object-tabs" role="tablist" aria-label="Registered assurance objects">
-              {objectButton("source", "Source", "Authority", <ApplicationIcon name="SharePoint"/>)}
-              {objectButton("vector", "Vectors", "Derivative", <ApplicationIcon name="Pinecone"/>)}
-              {objectButton("cache", "Cache", "Derivative", <ApplicationIcon name="Redis"/>)}
-              {objectButton("memory", "Memory", "Derivative", <Icon name="layers" size={22}/>)}
-              {objectButton("verification", "Probe", "Verification", <Icon name="shield" size={22}/>)}
-              {objectButton("evidence", "Evidence", "Record", <Icon name="check" size={22}/>)}
-            </div>
-
-            <aside id="workflow-inspector-panel" className="workflow-object-panel" role="tabpanel" aria-labelledby={`workflow-object-${selectedObject}`} aria-live="polite">
-              <div className="workflow-object-summary"><span>{selected.eyebrow}</span><h3>{selected.title}</h3><p>{selected.summary}</p></div>
-              <div className="workflow-object-detail">
-                <div className="workflow-detail-tabs" role="tablist" aria-label="Object detail categories">{(["risk", "action", "proof"] as const).map((detail) => <button id={`workflow-detail-tab-${detail}`} key={detail} type="button" role="tab" aria-selected={activeDetail === detail} aria-controls="workflow-detail-panel" onClick={() => setActiveDetail(detail)}>{detail === "risk" ? "Risk" : detail === "action" ? "Action" : "Proof"}</button>)}</div>
-                <div id="workflow-detail-panel" className="workflow-detail-panel" role="tabpanel" aria-labelledby={`workflow-detail-tab-${activeDetail}`}><span>{detailContent[activeDetail].label}</span><p>{detailContent[activeDetail].body}</p></div>
-                <details className="workflow-more"><summary>Registered boundary and business value</summary><div><p><strong>Boundary</strong>{selected.dependency}</p><p><strong>Why it matters</strong>{selected.value}</p></div></details>
-              </div>
-            </aside>
-          </section>
-        </div>
-      </div>
-      <div className="journey-chapters">{chapters.map((chapter, index) => <article className={`journey-chapter workflow-chapter reveal-on-scroll ${activeStage === index ? "chapter-active" : ""}`} data-stage={index} key={chapter.number} onMouseEnter={() => setWorkflowStage(index)}><button className="workflow-chapter-selector" type="button" aria-pressed={activeStage === index} onFocus={() => setWorkflowStage(index)} onClick={() => setWorkflowStage(index)}><span>{chapter.number}</span><small>{chapter.label}</small><i aria-hidden="true"/></button><h3>{chapter.title}</h3><p>{chapter.body}</p><footer>{chapter.meta}</footer></article>)}</div>
-    </div>
-  </section>;
-}
-
-function EnterpriseProof() {
-  const proofCase = cases[0];
-  const proofApps: { name: ApplicationName; role: string; state: "Registered" | "Planned" }[] = [
-    { name: "SharePoint", role: "Authority", state: "Registered" },
-    { name: "Entra", role: "Identity", state: "Registered" },
-    { name: "Pinecone", role: "Vector state", state: "Registered" },
-    { name: "Redis", role: "Cache state", state: "Registered" },
-    { name: "Slack", role: "Workflow", state: "Planned" },
-    { name: "Confluence", role: "Knowledge", state: "Planned" },
-  ];
-  const proofPath = [
-    ["What changed", "Entra access revoked"],
-    ["What was affected", "144 registered artifacts"],
-    ["What was repaired", "128 vectors · 16 cache keys"],
-    ["What was read back", "144 destinations invalidated"],
-    ["What was proven", "0 protected results"],
-  ];
-
-  return <section className="enterprise-proof cinematic-host" id="proof" aria-labelledby="enterprise-proof-title" data-motion-section="verification">
-    <CinematicEnvironment scene="verification"/>
-    <header className="enterprise-proof-heading reveal-on-scroll">
-      <p className="terrain-kicker"><span>003/</span> Enterprise value and proof</p>
-      <div><h2 id="enterprise-proof-title">One change.<br/><em>One defensible record.</em></h2><p>Security, AI-platform, governance, application, and FinOps teams see the same bounded story: what changed, what Concord repaired, what the destination returned, and what the affected identity could actually retrieve.</p></div>
-    </header>
-
-    <article className="assurance-record reveal-on-scroll" aria-label="Demonstration assurance record">
-      <header><div><span className="micro-label">Guided proof · Demo data</span><h3>{proofCase.id} · {proofCase.source}</h3></div><StatusPill status={proofCase.status}/></header>
-      <div className="assurance-record-path">{proofPath.map(([label, value], index) => <div key={label}><span>{String(index + 1).padStart(2, "0")}</span><small>{label}</small><strong>{value}</strong><i aria-hidden="true"/></div>)}</div>
-      <footer><div><span>Invalid-state exposure</span><strong>{proofCase.exposure}</strong></div><div><span>Registered coverage</span><strong>{proofCase.coverage}%</strong></div><div><span>Proof level</span><strong>{proofCase.proofLevel}</strong></div><p><Icon name="shield" size={18}/>{proofCase.risk}</p></footer>
-    </article>
-
-    <div className="enterprise-outcomes reveal-on-scroll" aria-label="Enterprise outcomes">
-      <article><span>01</span><div><h3>Reduce stale exposure</h3><p>Detect invalid AI-derived state when the authority changes—not after an incident or audit.</p></div><small>Security · Governance</small></article>
-      <article><span>02</span><div><h3>Repair only what changed</h3><p>Replace broad rebuilds with registered, policy-specific remediation and measurable execution.</p></div><small>AI Platform · FinOps</small></article>
-      <article><span>03</span><div><h3>Prove the real outcome</h3><p>Give application owners and auditors a trace from source event to user-level retrieval behavior.</p></div><small>Application owners · Compliance</small></article>
-    </div>
-
-    <div className="proof-coverage-rail reveal-on-scroll">
-      <div><span className="micro-label">Registered assurance boundary</span><p>Coverage is explicit. Planned and unsupported systems never inherit a verified state.</p></div>
-      <div className="proof-apps" role="list" aria-label="Supported and planned integrations">{proofApps.map((app) => <article role="listitem" key={app.name}><span><ApplicationIcon name={app.name}/></span><div><strong>{app.name}</strong><small>{app.role}</small></div><b className={app.state === "Registered" ? "proof-app-live" : "proof-app-planned"}>{app.state}</b></article>)}</div>
-    </div>
-
-    <div className="proof-disclosures" aria-label="Detailed Concord product evidence">
-      <details id="proof-control">
-        <summary><span>01</span><div><strong>Open the assurance control surface</strong><small>Cases, coverage ledger, replay, and safe simulation</small></div><i aria-hidden="true">+</i></summary>
-        <div className="proof-disclosure-content"><ProductConsole/></div>
-      </details>
-      <details>
-        <summary><span>02</span><div><strong>Inspect coverage and adapter roles</strong><small>Authorities, derivatives, proof endpoints, registered and planned states</small></div><i aria-hidden="true">+</i></summary>
-        <div className="proof-disclosure-content"><EnterpriseBoundary/><AdapterRegistry/></div>
-      </details>
-      <details>
-        <summary><span>03</span><div><strong>Review readiness and operating boundaries</strong><small>Design-partner staging only · evidence gaps remain visible</small></div><i aria-hidden="true">+</i></summary>
-        <div className="proof-disclosure-content"><ReadinessPanel/><LaunchGates/></div>
-      </details>
-    </div>
-
-    <nav className="enterprise-proof-links" aria-label="Explore Concord commercial evidence"><a href="/value">Value &amp; FinOps <Icon name="arrow" size={17}/></a><a href="/pricing">Pricing model <Icon name="arrow" size={17}/></a><a href="/intelligence">Market intelligence <Icon name="arrow" size={17}/></a></nav>
-    <div className="proof-commercial-note"><div><span>Start with one registered control loop</span><p>The first eligible production application has a $0 application fee. Expand only after the evidence is clear.</p></div><a href="/workspace">Connect your first application free <Icon name="arrow" size={17}/></a></div>
-    <p className="proof-boundary"><Icon name="shield" size={17}/>Bounded consistency for registered artifacts and supported adapters. Accepted risk is never presented as verified safety.</p>
-  </section>;
+function SiteFooter() {
+  return <footer className="cc-footer"><ConcordMark/><nav aria-label="Product routes"><a href="/coverage">Coverage</a><a href="/consistency-engine">Engine</a><a href="/pricing">Pricing</a><a href="/value">Value &amp; FinOps</a><a href="/intelligence">Market radar</a><a href="/deployment-agent">Architecture agent</a></nav><p>Product simulation · No external systems are modified</p><a href="#top">Back to top ↑</a></footer>;
 }
 
 export default function ConcordApp() {
-  useEffect(() => {
-    const root = document.documentElement;
-    const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    let frame = 0;
-    const updateScroll = () => {
-      if (frame || reduced) return;
-      frame = window.requestAnimationFrame(() => {
-        root.style.setProperty("--terrain-scroll", String(Math.min(window.scrollY, 1200)));
-        frame = 0;
-      });
-    };
-    const observer = new IntersectionObserver((entries) => entries.forEach((entry) => {
-      if (entry.isIntersecting) entry.target.classList.add("is-visible");
-    }), { threshold: .14 });
-    document.querySelectorAll(".reveal-on-scroll").forEach((element) => observer.observe(element));
-    updateScroll();
-    window.addEventListener("scroll", updateScroll, { passive: true });
-    return () => {
-      window.removeEventListener("scroll", updateScroll);
-      observer.disconnect();
-      if (frame) window.cancelAnimationFrame(frame);
-    };
-  }, []);
-
-  return <main className="immersive-home">
-    <section className="hero terrain-hero cinematic-host" id="top" data-motion-section="hero">
-      <CinematicEnvironment scene="hero"/>
-      <div className="hero-guides" aria-hidden="true"/>
-      <div className="hero-signal" aria-hidden="true"><span>LIVE / SOURCE TRUTH</span><i/><span>32.0853° N</span></div>
-      <div className="hero-orbit" aria-hidden="true"><span>CONCORD</span><b>∞</b></div>
-      <nav className="site-nav" aria-label="Primary navigation">
-        <a href="#top" aria-label="Concord home"><ConcordMark/></a>
-        <div className="nav-links"><a href="#problem">The risk</a><a href="#how-it-works">How it works</a><a href="#proof">Proof</a><a href="/coverage">Coverage</a><a href="/consistency-engine">Engine</a><a href="/pricing">Pricing</a></div>
-        <div className="nav-actions"><button className="nav-contact" type="button" data-contact-trigger>Contact</button><a className="nav-cta" href="/workspace">Open workspace <Icon name="arrow" size={16}/></a></div>
-      </nav>
-      <div className="hero-center merged-hero-center">
-        <p className="hero-chapter"><span>000/</span> Independent assurance for security and AI-platform teams</p>
-        <h1><span>Keep AI-derived state</span><span>aligned with the truth.</span></h1>
-        <p className="hero-promise">Keep enterprise AI aligned with the truth. When access or authoritative information changes, Concord finds every registered AI-derived artifact affected, repairs the invalid state, verifies the real retrieval outcome, and preserves the evidence.</p>
-        <div className="hero-actions"><a href="#how-it-works">See the control loop <i>↗</i></a><a href="#proof">Inspect the proof <i>↓</i></a></div>
-        <div className="hero-assurance-dock"><HeroAssuranceField/></div>
-        <p className="hero-boundary-note"><Icon name="shield" size={16}/>Bounded consistency for registered artifacts and supported adapters.</p>
-      </div>
-      <div className="hero-values" aria-label="Concord assurance principles"><span>Source truth</span><span>Registered lineage</span><span>Behavioral proof</span></div>
-      <a className="explore-link" href="#problem" aria-label="Scroll to understand the problem"><span>Explore</span><b>001</b><i>↓</i></a>
-    </section>
-    <ProblemLandscape/>
-    <PropagationJourney/>
-    <EnterpriseProof/>
-    <section className="final-cta terrain-final cinematic-host" id="contact" data-motion-section="stable">
-      <CinematicEnvironment scene="stable"/>
-      <div className="final-cta-brand"><ConcordMark/><p>004/ Start with one real control loop. Expand when the evidence is clear.</p></div>
-      <h2>Carry one change<br/>all the way to <em>proof.</em></h2>
-      <button className="button button-amber final-contact-action" type="button" data-contact-trigger>Contact the Ralph Team <Icon name="arrow" size={18}/></button>
-    </section>
-    <footer className="site-footer"><span>Concord · Enterprise AI Assurance</span><p>Product simulation · No external systems are modified</p><a href="#top">Back to top ↑</a></footer>
+  return <main className="cc-site">
+    <EcosystemLineage/>
+    <section className="cc-hero" id="top" aria-labelledby="hero-title"><SiteHeader/><div className="cc-hero-grid"><div className="cc-hero-copy cc-reveal"><p className="cc-kicker">AI state assurance for security and platform teams</p><h1 id="hero-title">Keep AI answers<br/><em>aligned with the source.</em></h1><p>Concord detects authoritative access or content changes, traces every affected registered artifact, repairs supported destinations, and verifies the result through the real retrieval path.</p><div className="cc-hero-actions"><a href="#how-it-works">See how it works <Icon name="arrow"/></a><button type="button" data-contact-trigger>Talk to Ralph Team</button></div></div><HeroInstrument/></div><div className="cc-hero-rail" aria-label="Concord assurance control loop"><span>Detect</span><span>Trace</span><span>Repair</span><span>Read back</span><span>Prove</span></div></section>
+    <span id="problem" className="cc-anchor" aria-hidden="true"/>
+    <RiskChapter/><WorkflowChapter/><EvidenceChapter/><BoundaryChapter/><FinalChapter/><SiteFooter/>
   </main>;
 }

@@ -72,12 +72,8 @@ export function ContactDialog() {
     <div className="contact-backdrop" role="presentation" onMouseDown={(event) => { if (event.currentTarget === event.target) close(); }}>
       <section ref={dialogRef} className="contact-dialog" role="dialog" aria-modal="true" aria-labelledby="contact-title" aria-describedby="contact-description">
         <div className="contact-environment" aria-hidden="true">
-          <span className="contact-light"/>
-          <svg viewBox="0 0 640 220" preserveAspectRatio="none">
-            <path d="M-10 184 C112 168 130 124 224 142 C307 158 344 75 430 100 C510 122 540 65 660 38"/>
-            <circle cx="96" cy="164" r="4"/><circle cx="224" cy="142" r="4"/><circle cx="430" cy="100" r="4"/><circle cx="572" cy="60" r="4"/>
-          </svg>
-          <i/><i/><i/><i/>
+          <span className="contact-aperture"><i/><i/><i/><i/><i/></span>
+          <span className="contact-trace"><i/><i/><i/></span>
         </div>
         <button className="contact-close" type="button" onClick={close} aria-label="Close contact window">×</button>
         <div className="contact-copy">

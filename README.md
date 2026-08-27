@@ -47,11 +47,11 @@ The repository includes a safe project-scoped `.codex/config.toml`. It connects
 Codex to the remote 21st MCP server but never stores the API key in Git.
 
 Create a fresh 21st API key and store it in the local environment as
-`TWENTY_FIRST_API_KEY`. On Windows PowerShell:
+`API_KEY_21ST`. On Windows PowerShell:
 
 ```powershell
 [Environment]::SetEnvironmentVariable(
-  "TWENTY_FIRST_API_KEY",
+  "API_KEY_21ST",
   "<NEW_API_KEY>",
   "User"
 )

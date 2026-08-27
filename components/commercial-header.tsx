@@ -4,7 +4,7 @@ export function CommercialHeader({ active }: { active?: "coverage" | "engine" | 
   return (
     <header className="commercial-header">
       <Link className="commercial-brand" href="/" aria-label="Concord home">
-        <span className="brand-glyph" aria-hidden="true"><i/><i/><i/></span><strong>Concord</strong>
+        <span className="commercial-brand-aperture" aria-hidden="true"><i/><i/><i/></span><strong>Concord</strong>
       </Link>
       <nav aria-label="Commercial navigation">
         <a className={active === "coverage" ? "active" : ""} href="/coverage">Coverage</a>
@@ -23,5 +23,5 @@ export function CommercialHeader({ active }: { active?: "coverage" | "engine" | 
 }
 
 export function CommercialFooter() {
-  return <footer className="commercial-footer"><span>Concord · AI Assurance</span><p>Transparent coverage. Traceable value. No hidden fees.</p><Link href="/">Product overview ↑</Link></footer>;
+  return <footer className="commercial-footer"><span>Concord · AI Assurance</span><p>Registered coverage. Behavioral proof. Visible exceptions.</p><Link href="/">Product overview ↑</Link></footer>;
 }

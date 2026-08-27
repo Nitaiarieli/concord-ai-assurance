@@ -29,11 +29,12 @@ test("renders the bounded launch verdict and product positioning", async () => {
   const response = await fetchFromWorker("/", { headers: { accept: "text/html" } });
   const html = await response.text();
   assert.equal(response.status, 200);
-  assert.match(html, /Keep enterprise AI/);
+  assert.match(html, /Keep AI answers/);
+  assert.match(html, /aligned with the source/i);
   assert.match(html, /Bounded consistency for registered artifacts/i);
-  assert.match(html, /Permissions change/);
+  assert.match(html, /A source can change\. Its AI copies may not/i);
   assert.match(html, /How Concord works/);
-  assert.match(html, /Design-partner staging only/i);
+  assert.match(html, /Ready for controlled design-partner staging/i);
   assert.match(html, /Demo data/i);
   assert.match(html, /href="\/pricing"/);
   assert.match(html, /Connect your first application free/i);
@@ -57,10 +58,14 @@ test("renders the compressed five-chapter landing story with progressive disclos
   assert.match(html, /Open the assurance control surface/i);
   assert.match(html, /Inspect coverage and adapter roles/i);
   assert.match(html, /Review readiness and operating boundaries/i);
-  assert.match(html, /Explore the control contract/i);
-  assert.match(html, /Registered boundary and business value/i);
+  assert.match(html, /One change\. Five controlled handoffs/i);
+  assert.match(html, /Open any object to inspect its risk/i);
   assert.match(html, /Risk<\/button>.*Action<\/button>.*Proof<\/button>/is);
+  assert.match(html, /Previous.*Run trace.*Next/is);
+  assert.match(html, /Verified.*Repairing.*Unresolved.*Unsupported.*Accepted risk/is);
+  assert.match(html, /Talk to Ralph Team/i);
   assert.doesNotMatch(html, /Less rebuilding/i);
+  assert.doesNotMatch(html, /forest|desert|terrain/i);
 });
 
 for (const [path, expected] of [
