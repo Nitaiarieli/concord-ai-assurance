@@ -53,16 +53,16 @@ const structure = await evaluate(`(() => ({
 await evaluate(`document.querySelector('.cc-stage-rail [role="tab"]')?.focus()`);
 await send("Input.dispatchKeyEvent", { type: "keyDown", key: "ArrowRight", code: "ArrowRight" });
 await send("Input.dispatchKeyEvent", { type: "keyUp", key: "ArrowRight", code: "ArrowRight" });
-await pause();
+await pause(650);
 const keyboardStage = await evaluate(`document.querySelector('.cc-stage-rail [aria-selected="true"]')?.textContent.trim()`);
 
 await evaluate(`document.querySelector('.cc-object-strip button')?.click()`);
 await pause(180);
-const inspectorOpen = await evaluate(`(() => { const layer=document.querySelector('.cc-inspector-layer'); return { hidden: layer.hidden, role: document.querySelector('.cc-inspector')?.getAttribute('role'), focus: document.activeElement?.getAttribute('aria-label') }; })()`);
+const inspectorOpen = await evaluate(`(() => { const layer=document.querySelector('.cc-inspector-layer'); return { hidden: layer.hidden, role: document.querySelector('.cc-inspector')?.getAttribute('role'), focus: document.activeElement?.getAttribute('aria-label'), tabs:[...document.querySelectorAll('.cc-detail-tabs button')].map((button)=>button.textContent.trim()) }; })()`);
 await send("Input.dispatchKeyEvent", { type: "keyDown", key: "Escape", code: "Escape" });
 await send("Input.dispatchKeyEvent", { type: "keyUp", key: "Escape", code: "Escape" });
 await pause(180);
-const inspectorClosed = await evaluate(`(() => ({ hidden: document.querySelector('.cc-inspector-layer').hidden, focusReturned: document.activeElement === document.querySelector('.cc-object-strip button') }))()`);
+const inspectorClosed = await evaluate(`(() => { const layer=document.querySelector('.cc-inspector-layer'); return { hidden: !layer || layer.hidden, focusReturned: document.activeElement === document.querySelector('.cc-object-strip button') }; })()`);
 
 await evaluate(`document.querySelector('.cc-hero-actions button')?.click()`);
 await pause(180);
@@ -104,6 +104,7 @@ const passed = structure.h1Count === 1
   && inspectorOpen.hidden === false
   && inspectorOpen.role === "dialog"
   && inspectorOpen.focus === "Close object details"
+  && inspectorOpen.tabs.join(",") === "Risk,Action,Proof"
   && inspectorClosed.hidden
   && inspectorClosed.focusReturned
   && contactOpen.open

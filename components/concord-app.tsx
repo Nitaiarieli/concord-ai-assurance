@@ -1,32 +1,205 @@
 "use client";
 
-import { KeyboardEvent as ReactKeyboardEvent, useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { AnimatePresence, motion, useReducedMotion } from "motion/react";
+import { KeyboardEvent as ReactKeyboardEvent, Suspense, lazy, useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
 import { cases, integrations, readinessReport } from "@/lib/concord";
+
+const ValidityBiome = lazy(() => import("@/components/validity-biome"));
+
+function useClientReady() {
+  return useSyncExternalStore(() => () => undefined, () => true, () => false);
+}
 
 type StageId = "detect" | "trace" | "repair" | "verify" | "prove";
 type ObjectId = "authority" | "vector" | "cache" | "memory" | "probe" | "evidence";
 type DetailId = "risk" | "action" | "proof";
 type ProofState = "Verified" | "Repairing" | "Unresolved" | "Unsupported" | "Accepted risk";
-type Stage = { id: StageId; number: string; label: string; headline: string; body: string; input: string; action: string; output: string; detail: string; objects: ObjectId[] };
-
-const stages: Stage[] = [
-  { id: "detect", number: "01", label: "Detect", headline: "Capture the change at its authority.", body: "Concord records the permission, identity, retention, or content event—together with the source object, principal, policy, and version.", input: "BookStack · strategy-page", action: "Validity event captured", output: "Policy access-revocation/v3", detail: "The authority stays customer-controlled. Observation does not imply that Concord can alter the source.", objects: ["authority"] },
-  { id: "trace", number: "02", label: "Trace", headline: "Find the registered copies affected.", body: "Versioned lineage resolves the changed source to the derivative records, cache keys, memories, and retrieval paths registered with Concord.", input: "1 authority event", action: "Registered lineage resolved", output: "144 affected artifacts", detail: "Unknown or unregistered dependencies remain visible as coverage gaps. Concord never turns absence of evidence into a safety claim.", objects: ["authority", "vector", "cache", "memory"] },
-  { id: "repair", number: "03", label: "Repair", headline: "Apply the smallest safe repair.", body: "Concord selects the policy-specific action supported by each adapter: quarantine, update, delete, invalidate, recompute, change access, or invoke a controlled callback.", input: "144 selected artifacts", action: "Bounded repair executed", output: "128 vectors · 16 cache keys", detail: "An accepted write is progress, not proof. Every supported destination must still be read back.", objects: ["vector", "cache", "memory"] },
-  { id: "verify", number: "04", label: "Verify", headline: "Read it back. Test retrieval.", body: "Concord confirms the destination state, then runs the registered end-to-end retrieval path as the affected identity.", input: "Destination read-back", action: "Identity-aware probe", output: "0 protected results", detail: "A successful API response alone is never presented as assurance. Verification depends on the behavior observed at the consumption boundary.", objects: ["vector", "cache", "probe"] },
-  { id: "prove", number: "05", label: "Prove", headline: "Preserve the outcome and the gaps.", body: "One record connects the source event, impact calculation, actions, read-backs, retrieval probe, exposure time, and unresolved coverage.", input: "Complete event trail", action: "Evidence sealed", output: "Bounded assurance record", detail: "Verified, repairing, unresolved, unsupported, and accepted-risk states stay distinct in every report.", objects: ["probe", "evidence"] },
-];
-
-const objectDetails: Record<ObjectId, { name: string; kind: string; registration: string; state: ProofState; summary: string; risk: string; action: string; proof: string }> = {
-  authority: { name: "BookStack", kind: "Authoritative source", registration: "Foundation contract", state: "Verified", summary: "The registered system that owns the current source object and effective permission state.", risk: "A source permission or document can change after AI derivatives have already been created.", action: "Observe the event, reconcile current source state, and calculate registered downstream impact.", proof: "Preserve the authoritative object version, permission observation, policy, and event receipt." },
-  vector: { name: "Pinecone", kind: "Vector destination", registration: "MVP contract", state: "Repairing", summary: "Embeddings and vector records derived from the affected source object.", risk: "A semantically searchable copy can remain retrievable after its source access changes.", action: "Quarantine, delete, update, or recompute only the registered records selected by policy.", proof: "Read back each destination record, then include it in the affected-identity retrieval probe." },
-  cache: { name: "Redis", kind: "Cache destination", registration: "MVP contract", state: "Repairing", summary: "Registered cache keys that can preserve a result after its authority changes.", risk: "A valid-looking response can outlive the permission, retention rule, or source data that created it.", action: "Invalidate or update affected keys with an idempotent, policy-specific operation.", proof: "Read back invalidation and test the same application retrieval path used by the affected identity." },
-  memory: { name: "Agent memory", kind: "Persistent derivative", registration: "Adapter required", state: "Unsupported", summary: "Persistent agent state derived from enterprise knowledge or earlier interactions.", risk: "An agent can continue using remembered content after that content is no longer valid.", action: "Update, delete, recompute, change access, or invoke a controlled callback only when a supported adapter exists.", proof: "No adapter is registered in this demonstration, so this object remains explicitly unsupported." },
-  probe: { name: "Retrieval probe", kind: "Behavioral verification", registration: "Registered path", state: "Verified", summary: "A final test of what the affected identity can retrieve after remediation.", risk: "A clean destination record can still produce the wrong behavior through a different retrieval layer.", action: "Run the real registered retrieval path using the affected identity and expected source version.", proof: "Preserve the query, identity, consumed version, returned results, and policy decision." },
-  evidence: { name: "Assurance record", kind: "Evidence package", registration: "Preserved", state: "Verified", summary: "A bounded record connecting the event, impact, repair, read-back, retrieval result, and exceptions.", risk: "Without one evidence chain, operators and auditors must reconstruct whether the incident actually closed.", action: "Seal the result without upgrading unresolved, unsupported, or accepted-risk scope.", proof: "Expose timestamps, policy, artifacts, receipts, probe behavior, exposure time, and remaining gaps." },
+type ProofView = "outcome" | "coverage" | "evidence" | "integrations" | "value";
+type Stage = {
+  id: StageId;
+  number: string;
+  label: string;
+  headline: string;
+  body: string;
+  input: string;
+  action: string;
+  output: string;
+  detail: string;
+  objects: ObjectId[];
 };
 
-const evidenceEvents: Array<{ id: string; time: string; category: "Authority" | "Control" | "Proof"; title: string; state: ProofState; evidence: string; boundary: string }> = [
+const stages: Stage[] = [
+  {
+    id: "detect",
+    number: "01",
+    label: "Detect",
+    headline: "Capture the change where authority lives.",
+    body: "Concord records the permission, identity, retention, or content event with its source object, principal, policy, and version.",
+    input: "BookStack · strategy-page",
+    action: "Validity event captured",
+    output: "Policy access-revocation/v3",
+    detail: "The authority stays customer-controlled. Observation does not imply that Concord can alter the source.",
+    objects: ["authority"],
+  },
+  {
+    id: "trace",
+    number: "02",
+    label: "Trace",
+    headline: "Expose every registered derivative in range.",
+    body: "Versioned lineage resolves the changed source to registered vector records, cache keys, memories, and retrieval paths.",
+    input: "1 authority event",
+    action: "Registered lineage resolved",
+    output: "144 affected artifacts",
+    detail: "Unknown or unregistered dependencies remain visible as coverage gaps. Absence of evidence is never presented as safety.",
+    objects: ["authority", "vector", "cache", "memory"],
+  },
+  {
+    id: "repair",
+    number: "03",
+    label: "Repair",
+    headline: "Apply the smallest policy-safe repair.",
+    body: "Each supported adapter receives the action it can prove: quarantine, update, delete, invalidate, recompute, or change access.",
+    input: "144 selected artifacts",
+    action: "Bounded repair executed",
+    output: "128 vectors · 16 cache keys",
+    detail: "An accepted write is progress, not proof. Every supported destination must still be read back.",
+    objects: ["vector", "cache", "memory"],
+  },
+  {
+    id: "verify",
+    number: "04",
+    label: "Verify",
+    headline: "Read it back. Then test the real path.",
+    body: "Concord confirms destination state, then executes the registered end-to-end retrieval path as the affected identity.",
+    input: "Destination read-back",
+    action: "Identity-aware probe",
+    output: "0 protected results",
+    detail: "A successful API response alone is never assurance. Verification depends on behavior at the consumption boundary.",
+    objects: ["vector", "cache", "probe"],
+  },
+  {
+    id: "prove",
+    number: "05",
+    label: "Prove",
+    headline: "Seal the outcome without hiding the gaps.",
+    body: "One durable record connects the event, impact calculation, actions, read-backs, retrieval probe, exposure time, and unresolved scope.",
+    input: "Complete event trail",
+    action: "Evidence sealed",
+    output: "Bounded assurance record",
+    detail: "Verified, repairing, unresolved, unsupported, and accepted-risk states stay distinct in every report.",
+    objects: ["probe", "evidence"],
+  },
+];
+
+const objectDetails: Record<ObjectId, {
+  name: string;
+  kind: string;
+  registration: string;
+  capability: string;
+  policy: string;
+  readBack: string;
+  retrieval: string;
+  state: ProofState;
+  summary: string;
+  risk: string;
+  action: string;
+  proof: string;
+}> = {
+  authority: {
+    name: "BookStack",
+    kind: "Authoritative source",
+    registration: "Foundation contract",
+    capability: "Observe and reconcile",
+    policy: "access-revocation/v3",
+    readBack: "Source version 0042",
+    retrieval: "Not a destination",
+    state: "Verified",
+    summary: "The registered system that owns the current source object and effective permission state.",
+    risk: "A source permission or document can change after AI derivatives have already been created.",
+    action: "Observe the event, reconcile current source state, and calculate registered downstream impact.",
+    proof: "Preserve the authoritative object version, permission observation, policy, and event receipt.",
+  },
+  vector: {
+    name: "Pinecone",
+    kind: "Vector destination",
+    registration: "MVP contract",
+    capability: "Quarantine, delete, read back",
+    policy: "targeted-quarantine/v2",
+    readBack: "128 / 128 expected",
+    retrieval: "Included in affected-user probe",
+    state: "Repairing",
+    summary: "Embeddings and vector records derived from the affected source object.",
+    risk: "A semantically searchable copy can remain retrievable after its source access changes.",
+    action: "Quarantine, delete, update, or recompute only the registered records selected by policy.",
+    proof: "Read back each destination record, then include it in the affected-identity retrieval probe.",
+  },
+  cache: {
+    name: "Redis",
+    kind: "Cache destination",
+    registration: "MVP contract",
+    capability: "Invalidate, update, read back",
+    policy: "cache-invalidation/v4",
+    readBack: "Pending",
+    retrieval: "Blocked until read-back",
+    state: "Repairing",
+    summary: "Registered cache keys that can preserve a result after its authority changes.",
+    risk: "A valid-looking response can outlive the permission, retention rule, or source data that created it.",
+    action: "Invalidate or update affected keys with an idempotent, policy-specific operation.",
+    proof: "Read back invalidation and test the application path used by the affected identity.",
+  },
+  memory: {
+    name: "Agent memory",
+    kind: "Persistent derivative",
+    registration: "Adapter required",
+    capability: "No supported adapter",
+    policy: "No executable action",
+    readBack: "Unavailable",
+    retrieval: "Outside this proof",
+    state: "Unsupported",
+    summary: "Persistent agent state derived from enterprise knowledge or earlier interactions.",
+    risk: "An agent can continue using remembered content after that content is no longer valid.",
+    action: "Update, delete, recompute, change access, or invoke a callback only when a supported adapter exists.",
+    proof: "No adapter is registered in this demonstration, so this object remains explicitly unsupported.",
+  },
+  probe: {
+    name: "Retrieval probe",
+    kind: "Behavioral verification",
+    registration: "Registered path",
+    capability: "Affected-identity retrieval",
+    policy: "consumption-boundary/v2",
+    readBack: "Destination state confirmed",
+    retrieval: "0 protected results",
+    state: "Verified",
+    summary: "A final test of what the affected identity can retrieve after remediation.",
+    risk: "A clean destination record can still produce the wrong behavior through another retrieval layer.",
+    action: "Run the registered retrieval path using the affected identity and expected source version.",
+    proof: "Preserve the query, identity, consumed version, returned results, and policy decision.",
+  },
+  evidence: {
+    name: "Assurance record",
+    kind: "Evidence package",
+    registration: "Preserved",
+    capability: "Seal and export",
+    policy: "evidence-retention/v1",
+    readBack: "Record hash confirmed",
+    retrieval: "Probe linked",
+    state: "Verified",
+    summary: "A bounded record connecting the event, impact, repair, read-back, retrieval result, and exceptions.",
+    risk: "Without one evidence chain, operators and auditors must reconstruct whether the incident actually closed.",
+    action: "Seal the result without upgrading unresolved, unsupported, or accepted-risk scope.",
+    proof: "Expose timestamps, policy, artifacts, receipts, probe behavior, exposure time, and remaining gaps.",
+  },
+};
+
+const evidenceEvents: Array<{
+  id: string;
+  time: string;
+  category: "Authority" | "Control" | "Proof";
+  title: string;
+  state: ProofState;
+  evidence: string;
+  boundary: string;
+}> = [
   { id: "EVT-441", time: "09:42:16.021", category: "Authority", title: "Access revoked at the source", state: "Verified", evidence: "Source event · strategy-page · finance-leadership", boundary: "Authority observation is registered. Concord does not alter the source permission." },
   { id: "CALC-118", time: "09:42:16.184", category: "Control", title: "Registered impact calculated", state: "Verified", evidence: "144 artifacts · lineage revision 86 · access-revocation/v3", boundary: "Only registered edges are included. Agent memory remains outside this example." },
   { id: "ACT-207", time: "09:42:18.902", category: "Control", title: "Targeted remediation acknowledged", state: "Repairing", evidence: "128 quarantine receipts · 16 invalidation acknowledgements", boundary: "Accepted writes are progress. Destination read-back is still required." },
@@ -34,8 +207,23 @@ const evidenceEvents: Array<{ id: string; time: string; category: "Authority" | 
   { id: "PROBE-51", time: "09:50:58.772", category: "Proof", title: "Affected identity retrieved zero protected results", state: "Verified", evidence: "12 retrieval attempts · 0 protected results", boundary: "This proves the registered path tested in this run—not universal safety." },
 ];
 
+const proofViews: Array<{ id: ProofView; label: string }> = [
+  { id: "outcome", label: "Current outcome" },
+  { id: "coverage", label: "Coverage" },
+  { id: "evidence", label: "Evidence" },
+  { id: "integrations", label: "Integrations" },
+  { id: "value", label: "Organizational value" },
+];
+
 function Icon({ name }: { name: "arrow" | "close" | "next" | "pause" | "play" | "shield" }) {
-  const path = { arrow: <><path d="M5 12h14"/><path d="m13 6 6 6-6 6"/></>, close: <><path d="m6 6 12 12"/><path d="M18 6 6 18"/></>, next: <path d="m9 6 6 6-6 6"/>, pause: <><path d="M9 6v12"/><path d="M15 6v12"/></>, play: <path d="m8 5 11 7-11 7z"/>, shield: <><path d="M12 3 5 6v5c0 5 3 8 7 10 4-2 7-5 7-10V6z"/><path d="m9 12 2 2 4-4"/></> }[name];
+  const path = {
+    arrow: <><path d="M5 12h14"/><path d="m13 6 6 6-6 6"/></>,
+    close: <><path d="m6 6 12 12"/><path d="M18 6 6 18"/></>,
+    next: <path d="m9 6 6 6-6 6"/>,
+    pause: <><path d="M9 6v12"/><path d="M15 6v12"/></>,
+    play: <path d="m8 5 11 7-11 7z"/>,
+    shield: <><path d="M12 3 5 6v5c0 5 3 8 7 10 4-2 7-5 7-10V6z"/><path d="m9 12 2 2 4-4"/></>,
+  }[name];
   return <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">{path}</svg>;
 }
 
@@ -43,9 +231,16 @@ function ConcordMark({ compact = false }: { compact?: boolean }) {
   return <span className="cc-brand-mark"><span className="cc-brand-aperture" aria-hidden="true"><i/><i/><i/></span>{!compact && <strong>Concord</strong>}</span>;
 }
 
-function AppMark({ id }: { id: ObjectId }) {
-  const labels: Record<ObjectId, string> = { authority: "B", vector: "P", cache: "R", memory: "M", probe: "✓", evidence: "E" };
-  return <span className={`cc-app-mark cc-app-${id}`} aria-hidden="true">{labels[id]}</span>;
+function SystemGlyph({ id }: { id: ObjectId }) {
+  const paths: Record<ObjectId, React.ReactNode> = {
+    authority: <><path d="M5 4h11a3 3 0 0 1 3 3v13H8a3 3 0 0 1-3-3z"/><path d="M8 8h7M8 12h7"/></>,
+    vector: <><circle cx="6" cy="12" r="2"/><circle cx="18" cy="6" r="2"/><circle cx="18" cy="18" r="2"/><path d="m8 11 8-4M8 13l8 4"/></>,
+    cache: <><ellipse cx="12" cy="6" rx="7" ry="3"/><path d="M5 6v6c0 1.7 3.1 3 7 3s7-1.3 7-3V6M5 12v6c0 1.7 3.1 3 7 3s7-1.3 7-3v-6"/></>,
+    memory: <><path d="M4 15c3-7 5 3 8-4s5 3 8-4"/><path d="M4 20c3-7 5 3 8-4s5 3 8-4"/></>,
+    probe: <><circle cx="12" cy="12" r="7"/><path d="M12 2v4M12 18v4M2 12h4M18 12h4"/><circle cx="12" cy="12" r="2"/></>,
+    evidence: <><path d="M6 3h9l3 3v15H6z"/><path d="M14 3v4h4M9 12h6M9 16h6"/></>,
+  };
+  return <span className={`cc-app-mark cc-app-${id}`} aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.55" strokeLinecap="round" strokeLinejoin="round">{paths[id]}</svg></span>;
 }
 
 function StateBadge({ state }: { state: ProofState }) {
@@ -54,48 +249,102 @@ function StateBadge({ state }: { state: ProofState }) {
   return <span className={`cc-state cc-state-${slug}`}><i aria-hidden="true">{symbol[state]}</i>{state}</span>;
 }
 
+function SectionIndex({ number, label }: { number: string; label: string }) {
+  return <div className="cc-section-index"><span>{number}</span><p>{label}</p><i aria-hidden="true"/></div>;
+}
+
 function SiteHeader() {
   return <header className="cc-header">
     <a href="#top" aria-label="Concord home"><ConcordMark/></a>
-    <nav aria-label="Primary navigation"><a href="#problem">The risk</a><a href="#how-it-works">How it works</a><a href="#proof">Proof</a><a href="/coverage">Coverage</a><a href="/pricing">Pricing</a></nav>
-    <details className="cc-mobile-menu"><summary>Menu</summary><div><a href="#problem">The risk</a><a href="#how-it-works">How it works</a><a href="#proof">Proof</a><a href="/coverage">Coverage</a><a href="/consistency-engine">Engine</a><a href="/pricing">Pricing</a><a href="/value">Value &amp; FinOps</a><a href="/intelligence">Market radar</a><a href="/deployment-agent">Architecture agent</a><button type="button" data-contact-trigger>Contact</button></div></details>
-    <div className="cc-header-actions"><button type="button" data-contact-trigger>Contact</button><a href="/workspace">Open workspace <Icon name="arrow"/></a></div>
+    <nav aria-label="Primary navigation"><a href="#problem">The risk</a><a href="#how-it-works">Control loop</a><a href="#proof">Proof</a><a href="/coverage">Coverage</a><a href="/pricing">Pricing</a></nav>
+    <details className="cc-mobile-menu"><summary>Menu</summary><div><a href="#problem">The risk</a><a href="#how-it-works">Control loop</a><a href="#proof">Proof</a><a href="/coverage">Coverage</a><a href="/consistency-engine">Engine</a><a href="/pricing">Pricing</a><a href="/value">Value &amp; FinOps</a><a href="/intelligence">Market radar</a><a href="/deployment-agent">Architecture agent</a><button type="button" data-contact-trigger>Contact</button></div></details>
+    <div className="cc-header-actions"><button type="button" data-contact-trigger>Talk to us</button><a href="/workspace">Open workspace <Icon name="arrow"/></a></div>
   </header>;
 }
 
-function EcosystemLineage() {
+function LineageFallback() {
   return <div className="cc-lineage-system" aria-hidden="true">
     <svg viewBox="0 0 1000 6000" preserveAspectRatio="none">
       <path className="cc-root-shadow" pathLength="1" d="M842 0C824 360 906 720 815 1080C728 1424 604 1615 636 1990C668 2366 829 2557 728 2930C622 3320 478 3505 541 3890C598 4236 730 4500 624 4860C538 5150 391 5480 442 6000"/>
       <path className="cc-root-main" pathLength="1" d="M842 0C824 360 906 720 815 1080C728 1424 604 1615 636 1990C668 2366 829 2557 728 2930C622 3320 478 3505 541 3890C598 4236 730 4500 624 4860C538 5150 391 5480 442 6000"/>
-      <path className="cc-root-branch cc-root-branch-a" pathLength="1" d="M811 1090C718 1022 645 914 548 786C486 704 399 638 302 606"/>
-      <path className="cc-root-branch cc-root-branch-b" pathLength="1" d="M635 1992C544 1898 455 1815 344 1780C262 1754 193 1680 151 1585"/>
-      <path className="cc-root-branch cc-root-branch-c" pathLength="1" d="M729 2934C814 2850 861 2744 902 2626C923 2565 951 2519 985 2490"/>
-      <path className="cc-root-branch cc-root-branch-d" pathLength="1" d="M541 3893C444 3806 344 3744 223 3721C141 3705 79 3657 22 3574"/>
-      <path className="cc-root-branch cc-root-branch-e" pathLength="1" d="M625 4862C720 4780 807 4680 843 4543C864 4461 911 4407 980 4360"/>
-      {[{x:842,y:248},{x:815,y:1080},{x:636,y:1990},{x:728,y:2930},{x:541,y:3890},{x:624,y:4860},{x:442,y:5740}].map((node) => <circle key={`${node.x}-${node.y}`} cx={node.x} cy={node.y} r="9"/>)}
+      <path className="cc-root-branch" pathLength="1" d="M811 1090C718 1022 645 914 548 786C486 704 399 638 302 606"/>
+      <path className="cc-root-branch" pathLength="1" d="M635 1992C544 1898 455 1815 344 1780C262 1754 193 1680 151 1585"/>
+      <path className="cc-root-branch" pathLength="1" d="M729 2934C814 2850 861 2744 902 2626C923 2565 951 2519 985 2490"/>
+      <path className="cc-root-branch" pathLength="1" d="M541 3893C444 3806 344 3744 223 3721C141 3705 79 3657 22 3574"/>
+      <path className="cc-root-branch" pathLength="1" d="M625 4862C720 4780 807 4680 843 4543C864 4461 911 4407 980 4360"/>
     </svg>
-    <Fauna kind="bird"/>
-    <Fauna kind="oryx"/>
-    <Fauna kind="gecko"/>
+    <span className="cc-fauna cc-fauna-bird">
+      <svg viewBox="0 0 160 80"><path d="M4 48c22-4 37-15 51-32 8 9 16 16 25 20 9-4 18-11 26-20 13 17 29 28 50 32-19 2-36 0-52-8-8 8-16 14-24 18-9-4-17-10-24-18-16 8-33 10-52 8Z"/></svg>
+    </span>
+    <span className="cc-fauna cc-fauna-oryx">
+      <svg viewBox="0 0 190 126"><path d="M34 73c19-18 44-28 76-25l18-14 21 5 8 17-15 17-27 8-10 31-8-1 2-31-44 3-7 29-8-1 1-32-17 5-13-5 23-6Z"/><path d="M132 37c-5-18-4-28 2-35 1 17 6 28 15 36M143 39c6-18 13-28 23-34-5 16-6 29-3 39" fill="none" stroke="currentColor" strokeWidth="5" strokeLinecap="round"/></svg>
+    </span>
+    <span className="cc-fauna cc-fauna-gecko">
+      <svg viewBox="0 0 170 90"><path d="M10 59c18 3 33-1 45-13 13-13 28-18 45-14 14 3 23 12 26 26 9-8 18-12 28-11-10 8-14 17-11 28-11-7-21-8-31-3-15 8-31 7-47-2-17-10-35-14-55-11Z"/><circle cx="103" cy="44" r="3" fill="var(--cc-carbon)"/></svg>
+    </span>
   </div>;
 }
 
-function Fauna({ kind }: { kind: "bird" | "oryx" | "gecko" }) {
-  if (kind === "bird") return <span className="cc-fauna cc-fauna-bird" aria-hidden="true"><svg viewBox="0 0 160 80"><path d="M4 48c21-4 39-16 57-31 5-4 11-1 10 5l-2 14c17-9 35-14 54-12l30 5-27 9c-15 5-27 15-34 29l-6 11-6-15c-5-12-14-18-27-16L4 53z"/><path d="m69 36 18-31 8 2-7 30z"/></svg></span>;
-  if (kind === "oryx") return <span className="cc-fauna cc-fauna-oryx" aria-hidden="true"><svg viewBox="0 0 190 126"><path d="M33 72c18-18 43-27 73-24l31 4 18-13 8 3-13 17 7 16-5 23-7-1-1-20-21 3-8 38-8 1-4-38-42 2-7 35-8 1-3-39-21-6z"/><path d="m142 44 10-38 5-4-5 44zm9 0 21-33 5-2-18 41z"/><circle cx="157" cy="48" r="2" fill="var(--cc-sand-light)"/></svg></span>;
-  return <span className="cc-fauna cc-fauna-gecko" aria-hidden="true"><svg viewBox="0 0 170 90"><path d="M10 59c18 2 31-4 41-17 13-17 35-21 53-12 10 5 20 5 30-1l23-15-17 21c12 5 20 14 22 28-13-9-25-12-37-8-14 5-29 5-43-1-11-5-20-2-27 8-10 16-27 23-48 18 11-5 17-12 18-21z"/><path d="m74 54-19 25-9 3 18-32zm50-8 25 21 3 8-33-22z"/></svg></span>;
+function HeroInstrument() {
+  const [focus, setFocus] = useState<"change" | "impact" | "proof">("impact");
+  const messages = {
+    change: ["Authority event", "Access revoked", "Source version 0042 captured"],
+    impact: ["Registered impact", "144 artifacts", "Policy-safe repair calculated"],
+    proof: ["Retrieval outcome", "0 protected results", "Behavior preserved as evidence"],
+  } as const;
+  const message = messages[focus];
+  return <aside className={`cc-hero-instrument cc-focus-${focus}`} aria-label="Interactive assurance trace">
+    <header><span><i aria-hidden="true"/> Live guided trace</span><strong>CR-0841</strong></header>
+    <div className="cc-instrument-orbit" aria-hidden="true"><i/><i/><i/></div>
+    <div className="cc-instrument-nodes">
+      <button type="button" aria-pressed={focus === "change"} onClick={() => setFocus("change")}><SystemGlyph id="authority"/><span><small>Authority</small><strong>BookStack</strong></span></button>
+      <button type="button" aria-pressed={focus === "impact"} onClick={() => setFocus("impact")}><ConcordMark compact/><span><small>Assurance boundary</small><strong>Concord</strong></span></button>
+      <button type="button" aria-pressed={focus === "proof"} onClick={() => setFocus("proof")}><SystemGlyph id="probe"/><span><small>Consumption boundary</small><strong>Retrieval path</strong></span></button>
+    </div>
+    <AnimatePresence mode="wait"><motion.div className="cc-instrument-readout" key={focus} initial={{ opacity: 0, y: 18 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -12 }} transition={{ duration: .32 }} aria-live="polite"><span>{message[0]}</span><strong>{message[1]}</strong><p>{message[2]}</p></motion.div></AnimatePresence>
+    <footer><StateBadge state="Verified"/><span>Demonstration data · registered path only</span></footer>
+  </aside>;
 }
 
-function HeroInstrument() {
-  const [focus, setFocus] = useState<"change" | "repair" | "proof">("repair");
-  const messages = { change: ["Authority event", "Access revoked", "Source version 0042 captured"], repair: ["Registered impact", "144 artifacts", "Policy-safe remediation calculated"], proof: ["Retrieval outcome", "0 protected results", "Behavior preserved as evidence"] } as const;
-  const message = messages[focus];
-  return <aside className={`cc-hero-instrument cc-focus-${focus}`} aria-label="Interactive assurance trace"><header><span><i aria-hidden="true"/> Guided trace · Demo data</span><strong>CR-0841</strong></header><div className="cc-instrument-stage"><div className="cc-aperture-stack" aria-hidden="true"><i/><i/><i/><i/><i/></div><button type="button" className="cc-instrument-node cc-node-source" aria-pressed={focus === "change"} onClick={() => setFocus("change")}><AppMark id="authority"/><span><small>Authority</small><strong>BookStack</strong></span></button><button type="button" className="cc-instrument-node cc-node-control" aria-pressed={focus === "repair"} onClick={() => setFocus("repair")}><ConcordMark compact/><span><small>Assurance plane</small><strong>Concord</strong></span></button><button type="button" className="cc-instrument-node cc-node-proof" aria-pressed={focus === "proof"} onClick={() => setFocus("proof")}><AppMark id="probe"/><span><small>Retrieval test</small><strong>Application path</strong></span></button><span className="cc-signal cc-signal-one" aria-hidden="true"><i/></span><span className="cc-signal cc-signal-two" aria-hidden="true"><i/></span></div><div className="cc-instrument-readout" aria-live="polite"><span>{message[0]}</span><strong>{message[1]}</strong><p>{message[2]}</p></div><footer><StateBadge state="Verified"/><span>Registered path only</span></footer></aside>;
+function HeroChapter() {
+  const reduced = useReducedMotion();
+  return <section className="cc-hero" id="top" aria-labelledby="hero-title">
+    <SiteHeader/>
+    <div className="cc-hero-coordinate" aria-hidden="true"><span>31.0461° N</span><span>34.8516° E</span><span>VALIDITY BIOME / 001</span></div>
+    <div className="cc-hero-grid">
+      <motion.div className="cc-hero-copy" initial={reduced ? false : { opacity: 0, y: 42 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: .9, ease: [.16, 1, .3, 1] }}>
+        <p className="cc-kicker">Independent assurance for registered AI-derived state</p>
+        <h1 id="hero-title"><span>The source changed.</span><em>Concord finds what must change with it.</em></h1>
+        <p>Detect the authoritative event. Trace every affected registered artifact. Repair supported destinations. Read them back. Test the real retrieval path. Preserve the evidence.</p>
+        <div className="cc-hero-actions"><a href="#how-it-works">Enter the control loop <Icon name="arrow"/></a><button type="button" data-contact-trigger>Talk to Ralph Team</button></div>
+      </motion.div>
+      <HeroInstrument/>
+    </div>
+    <div className="cc-hero-rail" aria-label="Concord assurance control loop">{stages.map((stage) => <span key={stage.id}><i>{stage.number}</i>{stage.label}</span>)}</div>
+  </section>;
 }
 
 function RiskChapter() {
-  return <section className="cc-risk" id="risk" aria-labelledby="risk-title"><div className="cc-section-index"><span>01</span><p>The mismatch</p></div><div className="cc-risk-copy cc-reveal"><p className="cc-kicker">When authority changes</p><h2 id="risk-title">A source can change. Its AI copies may not.</h2><p>Vectors, caches, retrieval layers, and agent memory can retain content after access or authoritative information changes. That gap is where invalid answers persist.</p></div><div className="cc-revision-object cc-reveal" aria-label="Example of source and derivative state diverging"><article className="cc-revision-authority"><header><AppMark id="authority"/><span><small>Authoritative source</small><strong>Access removed</strong></span><time>09:42:16</time></header><div><span className="cc-revision-line cc-line-current"/><span className="cc-revision-line"/><span className="cc-revision-line"/></div><footer>Version 0042 · current</footer></article><div className="cc-revision-gap"><span>Validity gap</span><i aria-hidden="true"/><strong>02:18 exposed</strong></div><article className="cc-revision-derivative"><header><AppMark id="vector"/><span><small>AI-derived state</small><strong>Old access retained</strong></span><time>09:42:17</time></header><div><span className="cc-revision-line cc-line-invalid"/><span className="cc-revision-line"/><span className="cc-revision-line"/></div><footer><StateBadge state="Unresolved"/></footer></article></div><p className="cc-risk-boundary"><Icon name="shield"/> Assurance applies only to registered artifacts and supported adapters. Unregistered state remains outside the guarantee.</p></section>;
+  return <section className="cc-risk" id="risk" aria-labelledby="risk-title">
+    <SectionIndex number="01" label="The validity gap"/>
+    <motion.div className="cc-risk-copy" initial={{ opacity: 0, y: 56 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ amount: .35 }} transition={{ duration: .75, ease: [.16, 1, .3, 1] }}>
+      <p className="cc-kicker">Changing the source is only the beginning</p>
+      <h2 id="risk-title">An old answer can survive a new truth.</h2>
+      <p>Vectors, caches, retrieval layers, and agent memory can retain content after access or authoritative information changes. That gap is where invalid answers persist.</p>
+    </motion.div>
+    <div className="cc-revision-object" aria-label="Example of source and derivative state diverging">
+      <motion.article className="cc-revision-authority" whileHover={{ y: -8, rotateX: 1.5 }} transition={{ type: "spring", stiffness: 260, damping: 20 }}>
+        <header><SystemGlyph id="authority"/><span><small>Authoritative source</small><strong>Access removed</strong></span><time>09:42:16</time></header>
+        <div className="cc-revision-field"><span/><span/><span/></div><footer>Version 0042 · current</footer>
+      </motion.article>
+      <div className="cc-revision-gap"><span>Validity gap</span><i aria-hidden="true"/><strong>02:18 exposed</strong></div>
+      <motion.article className="cc-revision-derivative" whileHover={{ y: -8, rotateX: -1.5 }} transition={{ type: "spring", stiffness: 260, damping: 20 }}>
+        <header><SystemGlyph id="vector"/><span><small>AI-derived state</small><strong>Old access retained</strong></span><time>09:42:17</time></header>
+        <div className="cc-revision-field"><span/><span/><span/></div><footer><StateBadge state="Unresolved"/></footer>
+      </motion.article>
+    </div>
+    <p className="cc-risk-boundary"><Icon name="shield"/> Assurance applies only to registered artifacts and supported adapters. Unregistered state remains outside the guarantee.</p>
+  </section>;
 }
 
 function WorkflowChapter() {
@@ -104,36 +353,171 @@ function WorkflowChapter() {
   const [selectedObject, setSelectedObject] = useState<ObjectId>("authority");
   const [detail, setDetail] = useState<DetailId>("risk");
   const [inspectorOpen, setInspectorOpen] = useState(false);
+  const sectionRef = useRef<HTMLElement>(null);
   const tabRefs = useRef<Array<HTMLButtonElement | null>>([]);
   const inspectorRef = useRef<HTMLElement>(null);
   const returnFocusRef = useRef<HTMLButtonElement | null>(null);
+  const returnObjectRef = useRef<ObjectId>("authority");
+  const hasOpenedInspector = useRef(false);
+  const manualUntil = useRef(0);
   const active = stages[activeIndex];
   const object = objectDetails[selectedObject];
-  const chooseStage = useCallback((index: number) => { setActiveIndex(Math.max(0, Math.min(stages.length - 1, index))); setPlaying(false); }, []);
-  useEffect(() => { if (!playing) return; const timer = window.setInterval(() => setActiveIndex((current) => { if (current === stages.length - 1) { setPlaying(false); return current; } return current + 1; }), 2800); return () => window.clearInterval(timer); }, [playing]);
-  const closeInspector = useCallback(() => { setInspectorOpen(false); window.setTimeout(() => returnFocusRef.current?.focus(), 0); }, []);
-  useEffect(() => { if (!inspectorOpen) return; const panel = inspectorRef.current; if (!panel) return; const focusable = Array.from(panel.querySelectorAll<HTMLElement>('button:not([disabled]), a[href], [tabindex]:not([tabindex="-1"])')); focusable[0]?.focus(); const onKeyDown = (event: globalThis.KeyboardEvent) => { if (event.key === "Escape") { event.preventDefault(); closeInspector(); return; } if (event.key !== "Tab" || focusable.length === 0) return; const first = focusable[0]; const last = focusable[focusable.length - 1]; if (event.shiftKey && document.activeElement === first) { event.preventDefault(); last.focus(); } if (!event.shiftKey && document.activeElement === last) { event.preventDefault(); first.focus(); } }; document.addEventListener("keydown", onKeyDown); return () => document.removeEventListener("keydown", onKeyDown); }, [closeInspector, inspectorOpen]);
-  const handleStageKey = (event: ReactKeyboardEvent<HTMLButtonElement>, index: number) => { let next = index; if (event.key === "ArrowRight" || event.key === "ArrowDown") next = (index + 1) % stages.length; else if (event.key === "ArrowLeft" || event.key === "ArrowUp") next = (index - 1 + stages.length) % stages.length; else if (event.key === "Home") next = 0; else if (event.key === "End") next = stages.length - 1; else return; event.preventDefault(); chooseStage(next); tabRefs.current[next]?.focus(); };
-  const openObject = (id: ObjectId, button: HTMLButtonElement) => { returnFocusRef.current = button; setSelectedObject(id); setDetail("risk"); setInspectorOpen(true); };
-  return <section className="cc-workflow" id="how-it-works" aria-labelledby="workflow-title"><header className="cc-workflow-heading cc-reveal"><div className="cc-section-index"><span>02</span><p>How Concord works</p></div><div><p className="cc-kicker">One change. Five controlled handoffs.</p><h2 id="workflow-title">From authority<br/>to evidence.</h2></div><p>Select a stage to follow one registered control loop. Open any object to inspect its risk, permitted action, and proof requirement.</p></header><div className="cc-stage-rail" role="tablist" aria-label="Assurance workflow stages">{stages.map((stage, index) => <button ref={(node) => { tabRefs.current[index] = node; }} id={`cc-stage-tab-${stage.id}`} key={stage.id} type="button" role="tab" tabIndex={activeIndex === index ? 0 : -1} aria-selected={activeIndex === index} aria-controls="cc-stage-panel" onKeyDown={(event) => handleStageKey(event, index)} onClick={() => chooseStage(index)}><span>{stage.number}</span><strong>{stage.label}</strong><i aria-hidden="true"/></button>)}</div><div id="cc-stage-panel" className={`cc-stage-panel cc-stage-${active.id}`} role="tabpanel" aria-labelledby={`cc-stage-tab-${active.id}`} key={active.id}><div className="cc-stage-story"><span className="cc-kicker">{active.number} / {active.label}</span><h3>{active.headline}</h3><p>{active.body}</p><div className="cc-stage-controls"><button type="button" onClick={() => chooseStage(activeIndex - 1)} disabled={activeIndex === 0} aria-label="Previous stage"><Icon name="next"/> Previous</button><button type="button" className="cc-play" onClick={() => { if (activeIndex === stages.length - 1) setActiveIndex(0); setPlaying((current) => !current); }} aria-pressed={playing}><Icon name={playing ? "pause" : "play"}/>{playing ? "Pause trace" : "Run trace"}</button><button type="button" onClick={() => chooseStage(activeIndex === stages.length - 1 ? 0 : activeIndex + 1)}>{activeIndex === stages.length - 1 ? "Replay" : "Next"} <Icon name="next"/></button></div></div><div className="cc-stage-chamber" aria-label={`${active.label} stage product demonstration`}><header><span>Guided product proof</span><strong>Demonstration data</strong></header><div className="cc-chamber-path"><article><small>Input</small><strong>{active.input}</strong></article><span className="cc-chamber-route" aria-hidden="true"><i/></span><div className="cc-chamber-core"><ConcordMark compact/><small>{active.action}</small></div><span className="cc-chamber-route" aria-hidden="true"><i/></span><article><small>Observed output</small><strong>{active.output}</strong></article></div><p className="cc-stage-boundary"><Icon name="shield"/>{active.detail}</p><div className="cc-object-strip" aria-label="Registered assurance objects">{(Object.keys(objectDetails) as ObjectId[]).map((id) => { const item = objectDetails[id]; const stageActive = active.objects.includes(id); return <button key={id} type="button" className={stageActive ? "is-active" : ""} aria-haspopup="dialog" aria-expanded={inspectorOpen && selectedObject === id} onClick={(event) => openObject(id, event.currentTarget)}><AppMark id={id}/><span><small>{item.kind}</small><strong>{item.name}</strong></span><i aria-hidden="true">+</i></button>; })}</div></div></div><div className="cc-inspector-layer" hidden={!inspectorOpen} role="presentation" onMouseDown={(event) => { if (event.currentTarget === event.target) closeInspector(); }}><aside ref={inspectorRef} className="cc-inspector" role="dialog" aria-modal="true" aria-labelledby="cc-inspector-title" aria-describedby="cc-inspector-summary"><div className="cc-inspector-grip" aria-hidden="true"/><button className="cc-inspector-close" type="button" onClick={closeInspector} aria-label="Close object details"><Icon name="close"/></button><header><AppMark id={selectedObject}/><span><small>{object.kind}</small><h3 id="cc-inspector-title">{object.name}</h3></span></header><p id="cc-inspector-summary">{object.summary}</p><div className="cc-inspector-state"><StateBadge state={object.state}/><span>{object.registration}</span></div><div className="cc-detail-tabs" role="tablist" aria-label="Object detail categories">{(["risk", "action", "proof"] as DetailId[]).map((item) => <button id={`cc-detail-tab-${item}`} key={item} type="button" role="tab" aria-selected={detail === item} aria-controls="cc-detail-panel" onClick={() => setDetail(item)}>{item === "risk" ? "Risk" : item === "action" ? "Action" : "Proof"}</button>)}</div><div id="cc-detail-panel" role="tabpanel" aria-labelledby={`cc-detail-tab-${detail}`}><span>{detail === "risk" ? "What can fail" : detail === "action" ? "What Concord can do" : "What closes the loop"}</span><p>{object[detail]}</p></div><footer><span>Evidence reference</span><strong>CR-0841/{selectedObject}</strong></footer></aside></div></section>;
+
+  const chooseStage = useCallback((index: number, manual = true) => {
+    if (manual) manualUntil.current = performance.now() + 1400;
+    setActiveIndex(Math.max(0, Math.min(stages.length - 1, index)));
+    if (manual) setPlaying(false);
+  }, []);
+
+  useEffect(() => {
+    window.dispatchEvent(new CustomEvent("concord:stage", { detail: { stage: activeIndex } }));
+  }, [activeIndex]);
+
+  useEffect(() => {
+    const onScroll = () => {
+      if (playing || performance.now() < manualUntil.current || !sectionRef.current) return;
+      const rect = sectionRef.current.getBoundingClientRect();
+      const range = Math.max(1, rect.height - window.innerHeight);
+      const progress = Math.min(1, Math.max(0, -rect.top / range));
+      if (rect.top <= window.innerHeight * .1 && rect.bottom >= window.innerHeight * .75) {
+        setActiveIndex(Math.min(stages.length - 1, Math.floor(progress * stages.length)));
+      }
+    };
+    window.addEventListener("scroll", onScroll, { passive: true });
+    onScroll();
+    return () => window.removeEventListener("scroll", onScroll);
+  }, [playing]);
+
+  useEffect(() => {
+    if (!playing) return;
+    const timer = window.setInterval(() => setActiveIndex((current) => {
+      if (current === stages.length - 1) {
+        setPlaying(false);
+        return current;
+      }
+      return current + 1;
+    }), 2500);
+    return () => window.clearInterval(timer);
+  }, [playing]);
+
+  const closeInspector = useCallback(() => {
+    setInspectorOpen(false);
+  }, []);
+
+  useEffect(() => {
+    if (inspectorOpen || !hasOpenedInspector.current) return;
+    const objectId = returnObjectRef.current;
+    const currentTarget = document.querySelector<HTMLButtonElement>(`.cc-object-strip button[data-object-id="${objectId}"]`);
+    const restoreFocus = () => (currentTarget ?? returnFocusRef.current)?.focus({ preventScroll: true });
+    restoreFocus();
+    const timer = window.setTimeout(restoreFocus, 0);
+    return () => window.clearTimeout(timer);
+  }, [inspectorOpen]);
+
+  useEffect(() => {
+    if (!inspectorOpen) return;
+    const panel = inspectorRef.current;
+    if (!panel) return;
+    const focusable = Array.from(panel.querySelectorAll<HTMLElement>('button:not([disabled]), a[href], [tabindex]:not([tabindex="-1"])'));
+    focusable[0]?.focus();
+    const onKeyDown = (event: globalThis.KeyboardEvent) => {
+      if (event.key === "Escape") {
+        event.preventDefault();
+        return;
+      }
+      if (event.key !== "Tab" || focusable.length === 0) return;
+      const first = focusable[0];
+      const last = focusable[focusable.length - 1];
+      if (event.shiftKey && document.activeElement === first) {
+        event.preventDefault();
+        last.focus();
+      } else if (!event.shiftKey && document.activeElement === last) {
+        event.preventDefault();
+        first.focus();
+      }
+    };
+    const onKeyUp = (event: globalThis.KeyboardEvent) => {
+      if (event.key !== "Escape") return;
+      event.preventDefault();
+      closeInspector();
+    };
+    document.addEventListener("keydown", onKeyDown);
+    document.addEventListener("keyup", onKeyUp);
+    return () => {
+      document.removeEventListener("keydown", onKeyDown);
+      document.removeEventListener("keyup", onKeyUp);
+    };
+  }, [closeInspector, inspectorOpen]);
+
+  const handleStageKey = (event: ReactKeyboardEvent<HTMLButtonElement>, index: number) => {
+    let next = index;
+    if (event.key === "ArrowRight" || event.key === "ArrowDown") next = (index + 1) % stages.length;
+    else if (event.key === "ArrowLeft" || event.key === "ArrowUp") next = (index - 1 + stages.length) % stages.length;
+    else if (event.key === "Home") next = 0;
+    else if (event.key === "End") next = stages.length - 1;
+    else return;
+    event.preventDefault();
+    chooseStage(next);
+    tabRefs.current[next]?.focus();
+  };
+
+  const openObject = (id: ObjectId, button: HTMLButtonElement) => {
+    returnFocusRef.current = button;
+    returnObjectRef.current = id;
+    hasOpenedInspector.current = true;
+    setSelectedObject(id);
+    setDetail("risk");
+    setInspectorOpen(true);
+  };
+
+  return <section ref={sectionRef} className="cc-workflow" id="how-it-works" aria-labelledby="workflow-title">
+    <div className="cc-workflow-sticky">
+      <header className="cc-workflow-heading"><SectionIndex number="02" label="The control loop"/><div><p className="cc-kicker">One event. Five controlled transformations.</p><h2 id="workflow-title">Watch assurance move through the system.</h2></div></header>
+      <div className="cc-workflow-console">
+        <div className="cc-stage-rail" role="tablist" aria-label="Assurance workflow stages">{stages.map((stage, index) => <button ref={(node) => { tabRefs.current[index] = node; }} id={`cc-stage-tab-${stage.id}`} key={stage.id} type="button" role="tab" tabIndex={activeIndex === index ? 0 : -1} aria-selected={activeIndex === index} aria-controls="cc-stage-panel" onKeyDown={(event) => handleStageKey(event, index)} onClick={() => chooseStage(index)}><span>{stage.number}</span><strong>{stage.label}</strong><i aria-hidden="true"/></button>)}</div>
+        <AnimatePresence mode="wait"><motion.div id="cc-stage-panel" className={`cc-stage-panel cc-stage-${active.id}`} role="tabpanel" aria-labelledby={`cc-stage-tab-${active.id}`} key={active.id} initial={{ opacity: 0, x: 55, filter: "blur(12px)" }} animate={{ opacity: 1, x: 0, filter: "blur(0px)" }} exit={{ opacity: 0, x: -45, filter: "blur(10px)" }} transition={{ duration: .5, ease: [.16, 1, .3, 1] }}>
+          <div className="cc-stage-story"><span className="cc-kicker">{active.number} / {active.label}</span><h3>{active.headline}</h3><p>{active.body}</p><div className="cc-stage-controls"><button type="button" onClick={() => chooseStage(activeIndex - 1)} disabled={activeIndex === 0} aria-label="Previous stage"><Icon name="next"/> Previous</button><button type="button" className="cc-play" onClick={() => { if (activeIndex === stages.length - 1) setActiveIndex(0); setPlaying((current) => !current); }} aria-pressed={playing}><Icon name={playing ? "pause" : "play"}/>{playing ? "Pause trace" : "Run trace"}</button><button type="button" onClick={() => chooseStage(activeIndex === stages.length - 1 ? 0 : activeIndex + 1)}>{activeIndex === stages.length - 1 ? "Replay" : "Next"} <Icon name="next"/></button></div></div>
+          <div className="cc-stage-chamber" aria-label={`${active.label} stage product demonstration`}><header><span>Guided product proof</span><strong>Demonstration data</strong></header><div className="cc-chamber-path"><article><small>Input</small><strong>{active.input}</strong></article><span className="cc-chamber-route" aria-hidden="true"><i/></span><div className="cc-chamber-core"><ConcordMark compact/><small>{active.action}</small></div><span className="cc-chamber-route" aria-hidden="true"><i/></span><article><small>Observed output</small><strong>{active.output}</strong></article></div><p className="cc-stage-boundary"><Icon name="shield"/>{active.detail}</p><div className="cc-object-strip" aria-label="Registered assurance objects">{(Object.keys(objectDetails) as ObjectId[]).map((id) => { const item = objectDetails[id]; const stageActive = active.objects.includes(id); return <motion.button whileHover={{ y: -5 }} key={id} type="button" data-object-id={id} className={stageActive ? "is-active" : ""} aria-haspopup="dialog" aria-expanded={inspectorOpen && selectedObject === id} onClick={(event) => openObject(id, event.currentTarget)}><SystemGlyph id={id}/><span><small>{item.kind}</small><strong>{item.name}</strong></span><i aria-hidden="true">+</i></motion.button>; })}</div></div>
+        </motion.div></AnimatePresence>
+      </div>
+    </div>
+    {inspectorOpen && <div className="cc-inspector-layer" role="presentation" onMouseDown={(event) => { if (event.currentTarget === event.target) closeInspector(); }}><aside ref={inspectorRef} className="cc-inspector" role="dialog" aria-modal="true" aria-labelledby="cc-inspector-title" aria-describedby="cc-inspector-summary"><div className="cc-inspector-grip" aria-hidden="true"/><button className="cc-inspector-close" type="button" onClick={closeInspector} aria-label="Close object details"><Icon name="close"/></button><header><SystemGlyph id={selectedObject}/><span><small>{object.kind}</small><h3 id="cc-inspector-title">{object.name}</h3></span></header><p id="cc-inspector-summary">{object.summary}</p><div className="cc-inspector-state"><StateBadge state={object.state}/><span>{object.registration}</span></div><dl className="cc-inspector-facts"><div><dt>Adapter capability</dt><dd>{object.capability}</dd></div><div><dt>Applied policy</dt><dd>{object.policy}</dd></div><div><dt>Read-back</dt><dd>{object.readBack}</dd></div><div><dt>Retrieval test</dt><dd>{object.retrieval}</dd></div></dl><div className="cc-detail-tabs" role="tablist" aria-label="Object detail categories">{(["risk", "action", "proof"] as DetailId[]).map((item) => <button id={`cc-detail-tab-${item}`} key={item} type="button" role="tab" aria-selected={detail === item} aria-controls="cc-detail-panel" onClick={() => setDetail(item)}>{item === "risk" ? "Risk" : item === "action" ? "Action" : "Proof"}</button>)}</div><div id="cc-detail-panel" role="tabpanel" aria-labelledby={`cc-detail-tab-${detail}`}><span>{detail === "risk" ? "What can fail" : detail === "action" ? "What Concord can do" : "What closes the loop"}</span><p>{object[detail]}</p></div><footer><span>Evidence reference</span><strong>CR-0841/{selectedObject}</strong></footer></aside></div>}
+  </section>;
+}
+
+function EvidenceTimeline() {
+  const [filter, setFilter] = useState<"All" | "Authority" | "Control" | "Proof">("All");
+  const filtered = useMemo(() => filter === "All" ? evidenceEvents : evidenceEvents.filter((event) => event.category === filter), [filter]);
+  const [selectedId, setSelectedId] = useState(evidenceEvents.at(-1)?.id ?? evidenceEvents[0].id);
+  const selected = filtered.find((event) => event.id === selectedId) ?? filtered[0] ?? evidenceEvents[0];
+  const chooseFilter = (nextFilter: "All" | "Authority" | "Control" | "Proof") => {
+    setFilter(nextFilter);
+    const nextEvents = nextFilter === "All" ? evidenceEvents : evidenceEvents.filter((event) => event.category === nextFilter);
+    if (!nextEvents.some((event) => event.id === selectedId)) setSelectedId(nextEvents[0]?.id ?? evidenceEvents[0].id);
+  };
+  return <div className="cc-evidence-timeline"><div className="cc-evidence-filters" aria-label="Filter evidence events">{(["All", "Authority", "Control", "Proof"] as const).map((item) => <button key={item} type="button" aria-pressed={filter === item} onClick={() => chooseFilter(item)}>{item}</button>)}</div><div className="cc-evidence-body"><div className="cc-evidence-list" role="list" aria-label="Timestamped evidence events">{filtered.map((event) => <button key={event.id} type="button" className={selected.id === event.id ? "is-selected" : ""} aria-pressed={selected.id === event.id} onClick={() => setSelectedId(event.id)}><time>{event.time}</time><span><small>{event.category} · {event.id}</small><strong>{event.title}</strong></span><StateBadge state={event.state}/></button>)}</div><aside className="cc-evidence-detail" aria-live="polite"><span>Selected evidence</span><h3>{selected.title}</h3><StateBadge state={selected.state}/><dl><div><dt>Observation</dt><dd>{selected.evidence}</dd></div><div><dt>Assurance boundary</dt><dd>{selected.boundary}</dd></div></dl></aside></div></div>;
+}
+
+function ProofViewPanel({ view }: { view: ProofView }) {
+  const currentIntegrations = integrations.slice(0, 6);
+  if (view === "coverage") return <div className="cc-proof-view cc-proof-coverage"><div><span>Registered artifacts</span><strong>144</strong><p>Demonstration scope only</p></div><div><span>Supported repair</span><strong>144</strong><p>Pinecone and Redis contracts</p></div><div><span>Outside coverage</span><strong>1</strong><p>Agent memory remains unsupported</p></div><a href="/coverage">Inspect the complete coverage model <Icon name="arrow"/></a></div>;
+  if (view === "evidence") return <EvidenceTimeline/>;
+  if (view === "integrations") return <div className="cc-proof-view cc-proof-integrations">{currentIntegrations.map((integration, index) => <a href="/coverage" key={integration.name}><span>{String(index + 1).padStart(2, "0")}</span><SystemGlyph id={index % 2 ? "vector" : "authority"}/><div><strong>{integration.name}</strong><small>{integration.role}</small></div><em>{integration.state}</em></a>)}</div>;
+  if (view === "value") return <div className="cc-proof-view cc-proof-value"><article><span>Security</span><h3>See invalid-state exposure without inventing a safety score.</h3></article><article><span>AI platform</span><h3>Repair only the registered artifacts selected by policy.</h3></article><article><span>Audit</span><h3>Keep the event, action, read-back, retrieval result, and exception together.</h3></article><a href="/value">Open Value &amp; FinOps <Icon name="arrow"/></a></div>;
+  return <div className="cc-proof-view cc-proof-outcome"><header><div><span>CR-0841</span><strong>Bounded assurance record</strong><small>Guided proof · demonstration data</small></div><StateBadge state="Verified"/></header><div className="cc-evidence-summary"><div><span>Authority event</span><strong>Access revoked</strong></div><div><span>Registered impact</span><strong>144 artifacts</strong></div><div><span>Observed retrieval</span><strong>0 protected results</strong></div><div><span>Invalid-state exposure</span><strong>{cases[0].exposure}</strong></div></div><EvidenceTimeline/><footer><Icon name="shield"/><p>Bounded consistency for registered artifacts and supported adapters. Accepted risk is never presented as verified safety.</p></footer></div>;
 }
 
 function EvidenceChapter() {
-  const filters = ["All", "Authority", "Control", "Proof"] as const;
-  const [filter, setFilter] = useState<(typeof filters)[number]>("All");
-  const filtered = useMemo(() => filter === "All" ? evidenceEvents : evidenceEvents.filter((event) => event.category === filter), [filter]);
-  const [selectedId, setSelectedId] = useState(evidenceEvents[0].id);
-  const selected = filtered.find((event) => event.id === selectedId) ?? filtered[0];
-  return <section className="cc-proof" id="proof" aria-labelledby="proof-title"><header className="cc-proof-heading cc-reveal"><div className="cc-section-index"><span>03</span><p>Proof, not process</p></div><p className="cc-kicker">An API success response is not proof.</p><h2 id="proof-title">Test the outcome.<br/>Keep the record.</h2><p>Concord closes a case only after destination read-back and a real retrieval test. Everything else stays visibly in progress or outside coverage.</p></header><div className="cc-evidence-instrument cc-reveal"><header><div><span>CR-0841</span><strong>Bounded assurance record</strong><small>Guided proof · Demo data</small></div><StateBadge state="Verified"/></header><div className="cc-evidence-summary"><div><span>Authority event</span><strong>Access revoked</strong></div><div><span>Registered impact</span><strong>144 artifacts</strong></div><div><span>Observed retrieval</span><strong>0 protected results</strong></div><div><span>Invalid-state exposure</span><strong>{cases[0].exposure}</strong></div></div><div className="cc-evidence-filters" aria-label="Filter evidence events">{filters.map((item) => <button key={item} type="button" aria-pressed={filter === item} onClick={() => setFilter(item)}>{item}</button>)}</div><div className="cc-evidence-body"><div className="cc-evidence-list" role="list" aria-label="Timestamped evidence events">{filtered.map((event) => <button key={event.id} type="button" className={selected.id === event.id ? "is-selected" : ""} aria-pressed={selected.id === event.id} onClick={() => setSelectedId(event.id)}><time>{event.time}</time><span><small>{event.category} · {event.id}</small><strong>{event.title}</strong></span><StateBadge state={event.state}/></button>)}</div><aside className="cc-evidence-detail" aria-live="polite"><span>Selected evidence</span><h3>{selected.title}</h3><StateBadge state={selected.state}/><dl><div><dt>Observation</dt><dd>{selected.evidence}</dd></div><div><dt>Assurance boundary</dt><dd>{selected.boundary}</dd></div></dl></aside></div><footer><Icon name="shield"/><p>Bounded consistency for registered artifacts and supported adapters. Accepted risk is never presented as verified safety.</p></footer></div></section>;
+  const [view, setView] = useState<ProofView>("outcome");
+  return <section className="cc-proof" id="proof" aria-labelledby="proof-title"><header className="cc-proof-heading"><SectionIndex number="03" label="Proof at the boundary"/><p className="cc-kicker">An API success response is not proof</p><h2 id="proof-title">Test what the affected user can retrieve.</h2><p>Concord closes a case only after destination read-back and a real retrieval test. Everything else remains visibly in progress or outside coverage.</p></header><div className="cc-proof-shell"><div className="cc-proof-tabs" role="tablist" aria-label="Enterprise proof views">{proofViews.map((item) => <button key={item.id} type="button" role="tab" aria-selected={view === item.id} aria-controls="cc-proof-view" onClick={() => setView(item.id)}>{item.label}</button>)}</div><AnimatePresence mode="wait"><motion.div id="cc-proof-view" key={view} role="tabpanel" initial={{ opacity: 0, y: 35, scale: .985 }} animate={{ opacity: 1, y: 0, scale: 1 }} exit={{ opacity: 0, y: -22, scale: .99 }} transition={{ duration: .42, ease: [.16, 1, .3, 1] }}><ProofViewPanel view={view}/></motion.div></AnimatePresence></div></section>;
 }
 
 function BoundaryChapter() {
-  const currentIntegrations = integrations.slice(0, 4);
-  return <section className="cc-boundary" id="boundary" aria-labelledby="boundary-title"><div className="cc-boundary-heading cc-reveal"><div className="cc-section-index"><span>04</span><p>Honest coverage</p></div><div><p className="cc-kicker">Coverage must be explicit</p><h2 id="boundary-title">Know what Concord can prove.</h2></div><p>Each adapter states what it can observe, repair, and verify. Unsupported or unresolved scope stays visible—never folded into a reassuring total.</p></div><div className="cc-boundary-grid cc-reveal"><article className="cc-coverage-map"><header><span>Current adapter boundary</span><strong>Contracts, not production claims</strong></header><div>{currentIntegrations.map((integration, index) => <section key={integration.name}><span>{String(index + 1).padStart(2, "0")}</span><div><strong>{integration.name}</strong><small>{integration.role}</small></div><em>{integration.state}</em></section>)}</div><a href="/coverage">Inspect the complete coverage model <Icon name="arrow"/></a></article><article className="cc-readiness"><header><span>Current launch boundary</span><StateBadge state="Unresolved"/></header><strong>{readinessReport.verdict}</strong><p>Ready for controlled design-partner staging. Live connector credentials, customer-hosted validation, recovery testing, and operational evidence remain production gates.</p><details><summary>Review readiness and operating boundaries <span aria-hidden="true">+</span></summary><ol>{readinessReport.gates.map((gate) => <li key={gate}>{gate}</li>)}</ol></details><a href="/consistency-engine">Open the assurance control surface <Icon name="arrow"/></a><a href="/coverage">Inspect coverage and adapter roles <Icon name="arrow"/></a></article></div><div className="cc-state-legend" aria-label="Concord product states">{(["Verified", "Repairing", "Unresolved", "Unsupported", "Accepted risk"] as ProofState[]).map((state) => <StateBadge key={state} state={state}/>)}</div></section>;
+  return <section className="cc-boundary" id="boundary" aria-labelledby="boundary-title"><SectionIndex number="04" label="The honest boundary"/><div className="cc-boundary-copy"><p className="cc-kicker">Coverage is a contract, not a mood</p><h2 id="boundary-title">Know exactly what Concord can prove.</h2><p>Each adapter states what it can observe, repair, read back, and verify. Unsupported or unresolved scope stays visible—never folded into a reassuring total.</p></div><div className="cc-boundary-orbit" aria-hidden="true"><i/><i/><i/><span>Registered scope</span></div><article className="cc-readiness"><header><span>Current launch boundary</span><StateBadge state="Unresolved"/></header><strong>{readinessReport.verdict}</strong><p>Ready for controlled design-partner staging. Live credentials, customer-hosted validation, recovery testing, and operational evidence remain production gates.</p><details><summary>Review operating boundaries <span aria-hidden="true">+</span></summary><ol>{readinessReport.gates.map((gate) => <li key={gate}>{gate}</li>)}</ol></details><div><a href="/consistency-engine">Open the assurance control surface <Icon name="arrow"/></a><a href="/coverage">Inspect adapter coverage <Icon name="arrow"/></a></div></article><div className="cc-state-legend" aria-label="Concord product states">{(["Verified", "Repairing", "Unresolved", "Unsupported", "Accepted risk"] as ProofState[]).map((state) => <StateBadge key={state} state={state}/>)}</div></section>;
 }
 
 function FinalChapter() {
-  return <section className="cc-final" id="contact" aria-labelledby="final-title"><div className="cc-final-aperture" aria-hidden="true"><i/><i/><i/><i/><i/></div><div className="cc-section-index"><span>05</span><p>Start bounded</p></div><div className="cc-final-copy cc-reveal"><p className="cc-kicker">Start with one verified path</p><h2 id="final-title">Prove one loop. Then expand.</h2><p>Connect one application, register one validity-changing event, and measure the retrieval outcome before expanding coverage.</p><div><button type="button" data-contact-trigger>Talk to Ralph Team <Icon name="arrow"/></button><a href="/workspace">Connect your first application free <Icon name="arrow"/></a></div></div><address><span>Ralph Team</span><a href="tel:+972556669857">+972 55-666-9857</a><a href="mailto:nitai@ralphteam.ai">nitai@ralphteam.ai</a></address></section>;
+  return <section className="cc-final" id="contact" aria-labelledby="final-title"><SectionIndex number="05" label="Start bounded"/><motion.div className="cc-final-copy" initial={{ opacity: 0, y: 60 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ amount: .4 }} transition={{ duration: .85, ease: [.16, 1, .3, 1] }}><p className="cc-kicker">One source. One event. One measurable outcome.</p><h2 id="final-title">Prove one downstream loop. Then expand.</h2><p>Connect one application, register one validity-changing event, and measure the retrieval outcome before expanding coverage.</p><div><a href="#how-it-works">Explore the guided proof <Icon name="arrow"/></a><button type="button" data-contact-trigger>Request a conversation <Icon name="arrow"/></button></div></motion.div><div className="cc-final-horizon" aria-hidden="true"><i/><i/><i/><i/></div><address><span>Ralph Team</span><a href="tel:+972556669857">+972 55-666-9857</a><a href="mailto:nitai@ralphteam.ai">nitai@ralphteam.ai</a></address></section>;
 }
 
 function SiteFooter() {
@@ -141,10 +525,18 @@ function SiteFooter() {
 }
 
 export default function ConcordApp() {
+  const clientReady = useClientReady();
   return <main className="cc-site">
-    <EcosystemLineage/>
-    <section className="cc-hero" id="top" aria-labelledby="hero-title"><SiteHeader/><div className="cc-hero-grid"><div className="cc-hero-copy cc-reveal"><p className="cc-kicker">AI state assurance for security and platform teams</p><h1 id="hero-title">Keep AI answers<br/><em>aligned with the source.</em></h1><p>Concord detects authoritative access or content changes, traces every affected registered artifact, repairs supported destinations, and verifies the result through the real retrieval path.</p><div className="cc-hero-actions"><a href="#how-it-works">See how it works <Icon name="arrow"/></a><button type="button" data-contact-trigger>Talk to Ralph Team</button></div></div><HeroInstrument/></div><div className="cc-hero-rail" aria-label="Concord assurance control loop"><span>Detect</span><span>Trace</span><span>Repair</span><span>Read back</span><span>Prove</span></div></section>
+    <div className="cc-world" aria-hidden="true"><div className="cc-world-fallback"/>{clientReady && <Suspense fallback={null}><ValidityBiome/></Suspense>}<div className="cc-world-vignette"/></div>
+    <LineageFallback/>
+    <div className="cc-cursor" aria-hidden="true"><i/></div>
+    <HeroChapter/>
     <span id="problem" className="cc-anchor" aria-hidden="true"/>
-    <RiskChapter/><WorkflowChapter/><EvidenceChapter/><BoundaryChapter/><FinalChapter/><SiteFooter/>
+    <RiskChapter/>
+    <WorkflowChapter/>
+    <EvidenceChapter/>
+    <BoundaryChapter/>
+    <FinalChapter/>
+    <SiteFooter/>
   </main>;
 }

@@ -1,8 +1,9 @@
 import { writeFile } from "node:fs/promises";
 
-const [url, widthText, heightText, output, selector = "", reduced = "false"] = process.argv.slice(2);
+const [url, widthText, heightText, output, selector = "", reduced = "false", delayText = "2200"] = process.argv.slice(2);
 const width = Number(widthText);
 const height = Number(heightText);
+const delay = Number(delayText);
 
 if (!url || !width || !height || !output) {
   throw new Error("Usage: node scripts/capture-responsive.mjs <url> <width> <height> <output> [selector] [reduced]");
@@ -37,7 +38,7 @@ await send("Runtime.enable");
 await send("Emulation.setDeviceMetricsOverride", { width, height, deviceScaleFactor: 1, mobile: width <= 820 });
 await send("Emulation.setEmulatedMedia", { features: [{ name: "prefers-reduced-motion", value: reduced === "true" ? "reduce" : "no-preference" }] });
 await send("Page.navigate", { url });
-await new Promise((resolve) => setTimeout(resolve, 2200));
+await new Promise((resolve) => setTimeout(resolve, Number.isFinite(delay) ? delay : 2200));
 
 if (selector) {
   await send("Runtime.evaluate", { expression: `document.querySelector(${JSON.stringify(selector)})?.scrollIntoView({block:'start',behavior:'instant'})` });

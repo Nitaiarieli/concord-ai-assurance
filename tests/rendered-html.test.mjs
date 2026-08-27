@@ -29,15 +29,15 @@ test("renders the bounded launch verdict and product positioning", async () => {
   const response = await fetchFromWorker("/", { headers: { accept: "text/html" } });
   const html = await response.text();
   assert.equal(response.status, 200);
-  assert.match(html, /Keep AI answers/);
-  assert.match(html, /aligned with the source/i);
+  assert.match(html, /The source changed/i);
+  assert.match(html, /Concord finds what must change with it/i);
   assert.match(html, /Bounded consistency for registered artifacts/i);
-  assert.match(html, /A source can change\. Its AI copies may not/i);
-  assert.match(html, /How Concord works/);
+  assert.match(html, /An old answer can survive a new truth/i);
+  assert.match(html, /Watch assurance move through the system/i);
   assert.match(html, /Ready for controlled design-partner staging/i);
-  assert.match(html, /Demo data/i);
+  assert.match(html, /Demonstration data/i);
   assert.match(html, /href="\/pricing"/);
-  assert.match(html, /Connect your first application free/i);
+  assert.match(html, /Prove one downstream loop\. Then expand/i);
 });
 
 test("renders the compressed five-chapter landing story with progressive disclosure", async () => {
@@ -56,11 +56,11 @@ test("renders the compressed five-chapter landing story with progressive disclos
   assert.ok(chapterOrder.every((index) => index >= 0));
   assert.deepEqual([...chapterOrder].sort((a, b) => a - b), chapterOrder);
   assert.match(html, /Open the assurance control surface/i);
-  assert.match(html, /Inspect coverage and adapter roles/i);
-  assert.match(html, /Review readiness and operating boundaries/i);
-  assert.match(html, /One change\. Five controlled handoffs/i);
-  assert.match(html, /Open any object to inspect its risk/i);
-  assert.match(html, /Risk<\/button>.*Action<\/button>.*Proof<\/button>/is);
+  assert.match(html, /Inspect adapter coverage/i);
+  assert.match(html, /Review operating boundaries/i);
+  assert.match(html, /One event\. Five controlled transformations/i);
+  assert.match(html, /Registered assurance objects/i);
+  assert.match(html, /aria-haspopup="dialog"/i);
   assert.match(html, /Previous.*Run trace.*Next/is);
   assert.match(html, /Verified.*Repairing.*Unresolved.*Unsupported.*Accepted risk/is);
   assert.match(html, /Talk to Ralph Team/i);

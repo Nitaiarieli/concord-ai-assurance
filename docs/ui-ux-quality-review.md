@@ -1,70 +1,42 @@
-# Concord visual reset - UI/UX quality review
+# Concord radical overhaul — UI/UX quality review
 
 ## Direction
 
-**Living Verification Chamber**
+**The Validity Biome** turns Concord's assurance model into a continuous forest-to-desert landscape. The forest represents authoritative source systems; the desert represents AI-derived state that can outlive a changed truth. Registered roots carry validity events between them, while a moving assurance boundary follows Detect, Trace, Repair, Verify, and Prove. The metaphor is product architecture, not background decoration.
 
-Concord remains an architectural assurance instrument, but now lives inside one blended desert-rainforest ecosystem. The two environments represent authoritative documents and downstream applications living in different contexts. A code-native root system represents registered lineage between them; its path progressively draws as the visitor moves from Detect to Trace, Repair, Verify, and Prove. Restrained animal silhouettes orient the journey without interrupting reading or product interaction.
-
-The landing experience uses five chapters:
-
-1. Product promise and guided trace
-2. Source/derivative validity mismatch
-3. Interactive five-stage control loop
-4. Behavioral proof and evidence
-5. Honest coverage, readiness, and action
+The experience follows six clear beats: promise, validity gap, control loop, behavioral proof, honest operating boundary, and bounded action. Copy consistently distinguishes demonstration data, registered scope, unsupported state, unresolved state, and verified evidence.
 
 ## Scorecard
 
 | Dimension | Score | Tested evidence |
 | --- | ---: | --- |
-| Product clarity | 2/2 | The hero names security and platform teams, states the concrete outcome, explains registered scope, and shows authority to Concord to retrieval beside the promise. |
-| Narrative structure | 2/2 | Five distinct compositions move from promise to mismatch, mechanism, proof, operating boundary, and conversion. |
-| Original art direction | 2/2 | The generated hybrid ecosystem, technical chamber, scroll-drawn lineage roots, and original fauna silhouettes form one Concord-specific system. Roots mean registered data lineage rather than decorative nature. No reference-site asset or composition is reused. |
-| Visual hierarchy | 2/2 | Desktop and mobile captures show a refined display stack, 18-24px primary reading copy, decisive contrast, one focal object per chapter, and clear separation between story, interaction, and evidence. |
-| Purposeful motion | 2/2 | Scroll motion reveals registered lineage and moves environmental wayfinding; stage motion explains state change. Automated checks confirmed the root and fauna respond to scroll. Reduced motion shows the full root statically and removes fauna transforms. |
-| Interaction usability | 2/2 | Browser tests passed stage arrow keys, Run trace, evidence filters, native mobile navigation, object inspector, contact dialog, Escape handling, and focus return. |
-| Copy quality | 2/2 | Copy uses specific verbs - detect, trace, repair, read back, test, prove - and keeps demo, unsupported, unresolved, and launch boundaries explicit. |
-| Responsive design | 2/2 | Actual browser checks passed at 1440, 1024, 768, 390, and 360 CSS pixels with no root overflow. Mobile simplifies fauna, preserves large type, and uses an intentional disclosure menu, vertical chamber, horizontal stage rail, bottom sheet, and stacked evidence/coverage layouts. |
-| Accessibility | 2/2 | One H1, semantic section headings, roving-focus tabs, text-plus-symbol states, focus traps, focus restoration, visible focus, 40-58px controls, native disclosure/details, labels, decorative `aria-hidden` environmental art, and reduced-motion behavior were tested. |
-| Performance resilience | 2/2 | The environment was optimized from a 2.43 MB working PNG to a 274 KB JPEG. The refinement adds no dependency, WebGL, video, or remote font. Root and fauna motion use transform/opacity and SVG stroke only, with tested static fallbacks. |
-| Implementation integrity | 2/2 | Production build, ESLint, rendered-route/API tests, the complete 56-test suite, and browser QA pass; existing public, authenticated, commercial, API, and contact destinations remain available. |
+| Product clarity | 2/2 | The hero states the trigger, Concord's role, the affected registered scope, and the concrete Detect-to-Prove outcome beside an interactive assurance trace. |
+| Narrative structure | 2/2 | The page moves from source/derivative mismatch to mechanism, consumption-boundary proof, launch constraints, and a one-loop adoption action. |
+| Original art direction | 2/2 | The procedural validity biome, registered roots, moving assurance boundary, regrowth, fauna, grid, and instrument panels form one Concord-specific visual language. No reference assets or signature compositions are reused. |
+| Visual hierarchy | 2/2 | Large editorial headlines are paired with nearby explanation, controlled line measures, high contrast, section indices, and one dominant interaction per chapter. Desktop, tablet, and mobile captures were inspected. |
+| Purposeful motion | 2/2 | Scroll and pointer motion change the landscape, root signals, camera, fauna, and active assurance stage. Motion communicates lineage and verification progress; it never gates copy or navigation. |
+| Interaction usability | 2/2 | Automated browser QA passed roving stage tabs, playback, object inspection, focus trap/return, evidence filters, contact dialog, mobile disclosure, and touch-target checks. |
+| Copy quality | 2/2 | Copy uses precise verbs—detect, trace, repair, read back, test, preserve—and explicitly rejects API success as proof. Product and staging limits remain visible. |
+| Responsive design | 2/2 | No horizontal overflow at 1440, 1024, 768, 390, or 360 CSS pixels. The desktop sticky sequence becomes an intentional non-sticky mobile stack with horizontal controls where appropriate. |
+| Accessibility | 2/2 | One H1, semantic section headings, labeled tablists/dialogs, text-plus-symbol states, keyboard operation, focus management, visible focus, decorative `aria-hidden` art, WebGL fallback, and reduced-motion behavior were verified. |
+| Performance resilience | 1/2 | The 3D scene is justified, dynamically imported after hydration, isolated from route rendering, and backed by a CSS fallback. Its minified client chunk is about 890 KB before transfer compression, so a later geometry/engine budget pass remains worthwhile. |
+| Implementation integrity | 2/2 | ESLint, the production build, 56 route/API/domain tests, and the complete browser verifier pass. Existing routes, API contracts, auth boundaries, data structures, and deployment configuration are unchanged. |
 
-**Total: 22/22**
+**Total: 21/22.** No dimension scores zero; the redesign exceeds the 19/22 acceptance threshold.
 
-No category scores zero; the redesign exceeds the required 19/22 threshold.
+## Validation evidence
 
-## Validation completed
-
-- Production build completed with all page and API routes present.
+- Production Vinext build completed with all public, authenticated, commercial, deployment-agent, and 15 API routes present.
 - ESLint completed without findings.
-- Complete automated suite passed: 56/56 tests.
-- Live browser test passed with no runtime exceptions or `console.error` calls.
-- Root system contains seven progressive paths; automated scroll testing measured progress from its initial state to `0.578` at mid-page.
-- Three code-native fauna objects render; a scroll test measured a non-static transform, while reduced-motion testing returned `transform: none`.
-- Keyboard stage navigation moved Detect to Trace using ArrowRight.
-- Desktop inspector opened as a focus-managed dialog; Escape closed it and restored focus.
-- Contact dialog opened with focus on Close, closed with Escape, and restored its trigger.
-- Evidence `Proof` filter returned the two proof events and retained an explicit selected state.
-- Mobile disclosure exposes nine product/navigation links, meets the 40px touch-target threshold, and remains inside a 360px viewport.
-- Reduced-motion emulation changed scroll behavior to `auto`, set animation durations to effectively zero, completed the root path, and froze fauna.
-- Root overflow checks passed at 1440, 1024, 768, 390, and 360 CSS pixels.
-- New desktop, workflow, risk, coverage, and true 390px mobile screenshots were captured from the styled local runtime.
+- Automated suite passed: 56/56.
+- Browser verifier passed with no runtime exceptions or `console.error` calls.
+- Keyboard ArrowRight moved Detect to Trace; the object inspector trapped focus, closed with Escape, and restored its trigger.
+- Contact dialog focus, Escape close, and mobile navigation passed.
+- Evidence filtering returned the two proof events with explicit pressed state.
+- Scroll QA measured progressive roots and non-static fauna transforms.
+- Reduced-motion emulation used native scroll, effectively zeroed UI transitions, completed the root path, froze fauna, and made the WebGL scene static.
+- Final captures: `radical-hero-desktop-final.png`, `radical-workflow-tablet-final.png`, `radical-hero-mobile.png`, and focused risk/proof/boundary/final views.
 
-## Typography and copy follow-up
+## Remaining hardening
 
-The final editorial pass adopts the strongest shared pattern in the reference set: one concise headline block, one nearby explanatory paragraph, and enough empty space for both to read as a single chapter introduction. Concord now uses that pattern consistently across the risk, workflow, proof, coverage, and closing chapters.
-
-- The hero promise is shorter and outcome-led: "Keep AI answers aligned with the source."
-- Chapter headlines use short declarative statements instead of stacked fragments or abstract slogans.
-- Primary reading copy is 18-22px with 1.62-1.65 line height and a controlled 42-62 character measure.
-- Desktop chapter introductions use an editorial two-column hierarchy; mobile collapses them into one coherent reading block.
-- Forced line breaks were retained only where the phrase remains stable across breakpoints. The closing headline balances naturally by viewport.
-- Technical detail remains available in the interactive trace, object inspector, evidence record, and coverage model instead of overloading the opening copy.
-- Roots and fauna were checked against the revised text at desktop, tablet, and mobile sizes. A protected reading surface prevents the tablet lineage path from crossing the risk explanation.
-
-QA captures include `typography-hero-desktop.png`, `typography-risk-desktop-final.png`, `typography-workflow-desktop.png`, `typography-proof-desktop.png`, `typography-boundary-desktop.png`, `typography-final-desktop.png`, and corresponding tablet/mobile views in `docs/screenshots/`.
-
-## Remaining launch-hardening opportunity
-
-A hands-on VoiceOver/NVDA pass and Lighthouse/WebPageTest profile remain useful before a production launch. They are not represented as completed here.
+A hands-on VoiceOver/NVDA pass, Lighthouse/WebPageTest profile, low-end Android GPU profile, and a further Three.js chunk/geometry budget pass are valuable before a high-traffic campaign. They are not represented as completed.
