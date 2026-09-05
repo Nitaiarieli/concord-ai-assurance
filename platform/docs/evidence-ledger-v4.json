@@ -1,0 +1,276 @@
+{
+  "claims": [
+    {
+      "id": "S1",
+      "text": "Paragon documents scheduled incremental synchronization, periodic full reconciliation, notifications and on-premise endpoints.",
+      "classification": "Verified Fact",
+      "source_url": "https://docs.useparagon.com/managed-sync/sync-api",
+      "source_title": "Paragon Sync API",
+      "publisher": "Paragon",
+      "published_at": null,
+      "accessed_at": "2026-09-05",
+      "confidence": "high",
+      "research_note": "Primary documentation/product page; this review did not benchmark runtime performance."
+    },
+    {
+      "id": "S2",
+      "text": "Paragon documents source content synchronization and a separate permissions API.",
+      "classification": "Verified Fact",
+      "source_url": "https://docs.useparagon.com/managed-sync/overview",
+      "source_title": "Paragon Managed Sync",
+      "publisher": "Paragon",
+      "published_at": null,
+      "accessed_at": "2026-09-05",
+      "confidence": "high",
+      "research_note": "Primary documentation/product page; this review did not benchmark runtime performance."
+    },
+    {
+      "id": "S3",
+      "text": "Nango documents webhook and polling synchronization and conflict handling.",
+      "classification": "Verified Fact",
+      "source_url": "https://nango.dev/docs/guides/functions/syncs/realtime-syncs",
+      "source_title": "Nango real-time syncs",
+      "publisher": "Nango",
+      "published_at": null,
+      "accessed_at": "2026-09-05",
+      "confidence": "high",
+      "research_note": "Primary documentation/product page; this review did not benchmark runtime performance."
+    },
+    {
+      "id": "S4",
+      "text": "Nango documents Enterprise self-hosting with syncs; free self-hosting excludes syncs.",
+      "classification": "Verified Fact",
+      "source_url": "https://nango.dev/docs/guides/platform/self-hosting",
+      "source_title": "Nango self-hosting",
+      "publisher": "Nango",
+      "published_at": null,
+      "accessed_at": "2026-09-05",
+      "confidence": "high",
+      "research_note": "Primary documentation/product page; this review did not benchmark runtime performance."
+    },
+    {
+      "id": "S5",
+      "text": "Airbyte documents a Pinecone destination with processing, embeddings, incremental/deduplicated sync and primary-key metadata for older-version deletion.",
+      "classification": "Verified Fact",
+      "source_url": "https://docs.airbyte.com/integrations/destinations/pinecone",
+      "source_title": "Airbyte Pinecone connector",
+      "publisher": "Airbyte",
+      "published_at": null,
+      "accessed_at": "2026-09-05",
+      "confidence": "high",
+      "research_note": "Primary documentation/product page; this review did not benchmark runtime performance."
+    },
+    {
+      "id": "S6",
+      "text": "Ragie markets managed connectors with automatic synchronization and integrated RAG processing.",
+      "classification": "Vendor Claim",
+      "source_url": "https://www.ragie.ai/connectors",
+      "source_title": "Ragie Connect",
+      "publisher": "Ragie",
+      "published_at": null,
+      "accessed_at": "2026-09-05",
+      "confidence": "medium",
+      "research_note": "Primary documentation/product page; this review did not benchmark runtime performance."
+    },
+    {
+      "id": "S7",
+      "text": "Airweave describes an open-source context retrieval layer with continuous source synchronization and unified search for agents.",
+      "classification": "Vendor Claim",
+      "source_url": "https://docs.airweave.ai/welcome",
+      "source_title": "Airweave introduction",
+      "publisher": "Airweave",
+      "published_at": null,
+      "accessed_at": "2026-09-05",
+      "confidence": "medium",
+      "research_note": "Primary documentation/product page; this review did not benchmark runtime performance."
+    },
+    {
+      "id": "S8",
+      "text": "Airweave documents connector-specific extraction, entity mapping, incremental sync and collections queried through its interface.",
+      "classification": "Verified Fact",
+      "source_url": "https://docs.airweave.ai/concepts",
+      "source_title": "Airweave concepts",
+      "publisher": "Airweave",
+      "published_at": null,
+      "accessed_at": "2026-09-05",
+      "confidence": "high",
+      "research_note": "Primary documentation/product page; this review did not benchmark runtime performance."
+    },
+    {
+      "id": "S9",
+      "text": "Wonderful describes embedded deployment teams and several deployment models.",
+      "classification": "Vendor Claim",
+      "source_url": "https://www.wonderful.ai/deployment?scLang=en",
+      "source_title": "Wonderful deployment",
+      "publisher": "Wonderful",
+      "published_at": null,
+      "accessed_at": "2026-09-05",
+      "confidence": "medium",
+      "research_note": "Primary documentation/product page; this review did not benchmark runtime performance."
+    },
+    {
+      "id": "S10",
+      "text": "Wonderful describes direct access to systems of record and execution-time policies.",
+      "classification": "Vendor Claim",
+      "source_url": "https://www.wonderful.ai/blog-articles/wonderful-an-enterprise-platform-to-turn-ai-ambition-into-agents-in-production?scLang=en",
+      "source_title": "Wonderful architecture",
+      "publisher": "Wonderful",
+      "published_at": "2025-12-16",
+      "accessed_at": "2026-09-05",
+      "confidence": "medium",
+      "research_note": "Primary documentation/product page; this review did not benchmark runtime performance."
+    },
+    {
+      "id": "S11",
+      "text": "Azure documents scheduled indexer execution with a five-minute minimum interval.",
+      "classification": "Verified Fact",
+      "source_url": "https://learn.microsoft.com/en-us/azure/search/search-howto-schedule-indexers",
+      "source_title": "Azure indexer scheduling",
+      "publisher": "Microsoft",
+      "published_at": null,
+      "accessed_at": "2026-09-05",
+      "confidence": "high",
+      "research_note": "Primary documentation/product page; this review did not benchmark runtime performance."
+    },
+    {
+      "id": "S12",
+      "text": "AWS publishes an automatic synchronization solution for Bedrock Knowledge Bases.",
+      "classification": "Verified Fact",
+      "source_url": "https://aws.amazon.com/blogs/machine-learning/build-and-deploy-an-automatic-sync-solution-for-amazon-bedrock-knowledge-bases/",
+      "source_title": "Automatic Bedrock synchronization",
+      "publisher": "AWS",
+      "published_at": null,
+      "accessed_at": "2026-09-05",
+      "confidence": "high",
+      "research_note": "Primary documentation/product page; this review did not benchmark runtime performance."
+    },
+    {
+      "id": "S13",
+      "text": "Harmony.io markets an enterprise IT AI Agent Builder.",
+      "classification": "Vendor Claim",
+      "source_url": "https://harmony.io/platform/ai-agent-builder",
+      "source_title": "Harmony AI Agent Builder",
+      "publisher": "Harmony.io",
+      "published_at": null,
+      "accessed_at": "2026-09-05",
+      "confidence": "medium",
+      "research_note": "Primary documentation/product page; this review did not benchmark runtime performance."
+    },
+    {
+      "id": "S14",
+      "text": "Jitterbit markets a separate platform named Harmony for integration and automation.",
+      "classification": "Vendor Claim",
+      "source_url": "https://www.jitterbit.com/harmony/",
+      "source_title": "Jitterbit Harmony",
+      "publisher": "Jitterbit",
+      "published_at": null,
+      "accessed_at": "2026-09-05",
+      "confidence": "medium",
+      "research_note": "Primary documentation/product page; this review did not benchmark runtime performance."
+    },
+    {
+      "id": "S15",
+      "text": "Spice.ai markets change data capture into accelerated datasets.",
+      "classification": "Vendor Claim",
+      "source_url": "https://spice.ai/feature/real-time-change-data-capture",
+      "source_title": "Spice.ai change data capture",
+      "publisher": "Spice.ai",
+      "published_at": null,
+      "accessed_at": "2026-09-05",
+      "confidence": "medium",
+      "research_note": "Primary documentation/product page; this review did not benchmark runtime performance."
+    },
+    {
+      "id": "D1",
+      "text": "Automatic sync and self-hosting alone are not sufficient Concord differentiation.",
+      "classification": "Inference",
+      "source_url": null,
+      "accessed_at": "2026-09-05",
+      "confidence": "high",
+      "supporting_claim_ids": [
+        "S1",
+        "S3",
+        "S4",
+        "S5",
+        "S7"
+      ],
+      "research_note": "Several alternatives document these overlapping workflows; Concord must prove a customer-specific economic or workflow advantage."
+    },
+    {
+      "id": "A1",
+      "text": "First commercial cohort: B2B SaaS owning AI source, transform and real retrieval routes with a documented recurring freshness burden.",
+      "classification": "Assumption",
+      "source_url": null,
+      "accessed_at": "2026-09-05",
+      "confidence": "low",
+      "research_note": "Working ICP selected for control and repeatability, not validated demand. Compare against internal AI teams and implementers in paid discovery."
+    },
+    {
+      "id": "A2",
+      "text": "Pricing experiment: $10k evaluation after technical acceptance and $2k\u2013$4k/month recurring.",
+      "classification": "Assumption",
+      "source_url": null,
+      "accessed_at": "2026-09-05",
+      "confidence": "low",
+      "research_note": "Prior unvalidated commercial hypothesis retained. Require a signed priced scope and paid continuation; not an offer already sent."
+    },
+    {
+      "id": "A3",
+      "text": "Illustrative monthly saved time is 25 hours at $100 per hour.",
+      "classification": "Assumption",
+      "source_url": null,
+      "accessed_at": "2026-09-05",
+      "confidence": "low",
+      "research_note": "Illustrative arithmetic inputs, not measured customer cost or savings."
+    },
+    {
+      "id": "E1",
+      "text": "Illustrative labor value is $2,500/month before operating costs, below a $3k subscription.",
+      "classification": "Estimate",
+      "source_url": null,
+      "accessed_at": "2026-09-05",
+      "confidence": "high",
+      "research_note": "Shows why a price can exceed savings; replace all inputs with customer measurements.",
+      "formula": "25 hours/month * $100/hour = $2,500/month",
+      "input_claim_ids": [
+        "A3"
+      ]
+    },
+    {
+      "id": "U1",
+      "text": "The intended Harmony product is not uniquely identified by the supplied materials.",
+      "classification": "Unknown",
+      "source_url": null,
+      "accessed_at": "2026-09-05",
+      "cutoff_date": "2026-09-05",
+      "confidence": "high",
+      "research_note": "Two distinct official products exist; neither is attributed as the intended reference.",
+      "search_scope": [
+        {
+          "location": "User instructions and prior local autonomous-data-sync memo",
+          "result": "No exact Harmony URL supplied"
+        },
+        {
+          "location": "Harmony.io Agent Builder and Jitterbit Harmony official product pages",
+          "result": "Distinct products, no evidence connecting one to the intended analogy"
+        }
+      ]
+    },
+    {
+      "id": "U2",
+      "text": "Customer willingness to pay, recurring incident frequency and commercial installation effort remain unknown.",
+      "classification": "Unknown",
+      "source_url": null,
+      "accessed_at": "2026-09-05",
+      "cutoff_date": "2026-09-05",
+      "confidence": "high",
+      "research_note": "Public vendor documentation and a local runtime cannot establish customer-specific business need.",
+      "search_scope": [
+        {
+          "location": "Prior internal GTM review and current Product/R&D discussion",
+          "result": "No paid pilot/customer incident artifacts supplied in this review"
+        }
+      ]
+    }
+  ]
+}

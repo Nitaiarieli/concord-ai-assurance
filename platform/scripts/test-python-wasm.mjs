@@ -47,3 +47,24 @@ for (const kind of ["permission", "content", "deletion", "probe_failure"]) {
   );
 }
 console.log("Python WASM parity: all four scenarios passed");
+// Exercise the new automatic core in the same browser-compatible package.
+py.runPython("from concord.runtime.browser_demo import dispatch");
+const initial = send({action:"tick"});
+assert.equal(initial.status.status,"current");
+assert.equal(initial.status.metrics.verified_documents,2);
+const original = initial.documents.find(d=>d.id==="api-limits");
+const edited = send({action:"save_source",document:{...original,content:"Atlas API includes 417 requests per minute."}});
+assert.equal(edited.status.documents.find(d=>d.id==="api-limits").revision,original.revision,"Source edit must not synchronously update index");
+send({action:"tick"});
+for(const route of ["support","success"]) {
+  assert.match(send({action:"retrieve",query:"417",identity:"alex",route}).result.documents[0].content,/417/);
+}
+send({action:"save_source",document:{...edited.documents.find(d=>d.id==="api-limits"),acl:["jordan"]}});
+send({action:"tick"});
+assert.equal(send({action:"retrieve",query:"417",identity:"alex",route:"success"}).result.documents.length,0);
+assert.equal(send({action:"retrieve",query:"417",identity:"jordan",route:"success"}).result.documents.length,1);
+send({action:"availability",available:false});send({action:"tick"});
+assert.equal(send({action:"retrieve",query:"API",identity:"jordan"}).result.status,"blocked");
+send({action:"restore_source"});send({action:"tick"});
+assert.equal(send({action:"status"}).status.status,"current");
+console.log("Automatic WASM: separate source edit, update, direct/cached retrieval, revocation, outage and recovery passed");

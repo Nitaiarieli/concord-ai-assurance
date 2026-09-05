@@ -14,9 +14,10 @@ npm run prepare:python
 npm run dev:local
 ```
 
-Install Node.js 24 LTS and Python 3.11+ first. Open the localhost URL printed by Vite. The sample-data demo needs no API key or cloud account.
+Install Node.js 24 LTS and Python 3.11+ first. Open the localhost URL printed by Vite. The interactive product mockup needs no API key or cloud account.
 
-- [Autonomous operation: corrected product/engineering decision](platform/docs/autonomous-data-sync.md)
+- [Current Atlassian MVP and backend setup](platform/docs/atlassian-mvp.md)
+- [v5 decisions, validation and rollback](platform/docs/release-v5.md)
 - [Platform README and folder map](platform/README.md)
 - [Complete setup / Windows and macOS notes](platform/docs/developer-setup.md)
 - [התחלה מהירה בעברית](platform/docs/start-here.he.md)
@@ -24,7 +25,7 @@ Install Node.js 24 LTS and Python 3.11+ first. Open the localhost URL printed by
 - [Original artwork inventory](platform/docs/assets.md)
 - [Contribution guide](platform/CONTRIBUTING.md)
 
-The browser UI and standalone Python API have independent sample sessions. Live customer integrations are not yet verified. See the platform README for exact coverage.
+The main website is an Atlassian-first interactive mockup. The separate Python backend scans real supported files/folders and includes Confluence Cloud, Jira Cloud and generic API source adapters tested with local HTTP fixtures. Live Atlassian accounts, effective employee permissions, cloud enrollment and customer AI destinations still need implementation/validation. See the platform README for exact coverage.
 
 The earlier application remains at the repository root for continuity. Its code and documentation below describe that previous version; use `platform/` for the newly published experience. This handoff does not change the production site or activate automatic deployment.
 

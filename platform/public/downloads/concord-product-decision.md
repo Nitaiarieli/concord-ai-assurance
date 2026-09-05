@@ -1,3 +1,5 @@
+> Superseded scope: see the September 5 v4 automatic-runtime decision (`docs/release-v4.md` / download `concord-product-decisions.md`). This earlier document is historical.
+
 # Concord — החלטת מוצר והצעת שינוי לאישור
 
 תאריך החלטה ובדיקת מקורות: **5 בספטמבר 2026**. גרסה: **CP-01 / 1.0**.

@@ -1,0 +1,20 @@
+{
+  "schema_version": 1,
+  "tenant_id": "local",
+  "connection_id": "configured-bookstack-pages",
+  "database": "state/bookstack.sqlite3",
+  "credentials_file": "credentials.local.json",
+  "poll_interval_seconds": 10,
+  "port": 8080,
+  "source": {
+    "type": "bookstack",
+    "base_url": "https://your-bookstack.example",
+    "page_ids": [1, 2],
+    "token_id_env": "BOOKSTACK_TOKEN_ID",
+    "token_secret_env": "BOOKSTACK_TOKEN_SECRET",
+    "public_content": false,
+    "timeout_seconds": 3,
+    "max_scan_seconds": 30,
+    "max_pages": 100
+  }
+}

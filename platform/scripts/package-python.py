@@ -18,7 +18,17 @@ with ZipFile(root/'public/downloads/concord-python-source.zip', 'w', ZIP_DEFLATE
         if not file.is_file() or '__pycache__' in file.parts:
             continue
         relative = file.relative_to(root/'backend')
-        if relative.parts[0] in {'concord', 'tests'} and file.suffix == '.py':
+        if relative.parts[0] in {'concord', 'tests'} and (file.suffix == '.py' or str(relative) == 'concord/runtime/console.html'):
             archive.write(file, relative)
         elif str(relative) in {'README.md', 'pyproject.toml', '.env.example'}:
             archive.write(file, relative)
+    for name in ('atlassian-mvp.md', 'atlassian-source-contract.md', 'file-source-coverage.md',
+                 'local-runtime.md', 'harmony-deployment.md', 'security-review-v5.md'):
+        archive.write(root/'docs'/name, 'docs/'+name)
+
+# Keep public setup links self-contained and aligned with the bundled backend.
+for name in ('atlassian-mvp.md', 'atlassian-source-contract.md', 'file-source-coverage.md',
+             'local-runtime.md', 'harmony-deployment.md', 'security-review-v5.md'):
+    (root/'public/downloads'/name).write_bytes((root/'docs'/name).read_bytes())
+(root/'public/downloads/concord-atlassian-mvp.md').write_bytes((root/'docs/atlassian-mvp.md').read_bytes())
+(root/'public/downloads/concord-runtime-guide.md').write_bytes((root/'docs/local-runtime.md').read_bytes())

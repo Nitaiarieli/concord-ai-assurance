@@ -1,3 +1,42 @@
+# Concord Python — automatic local runtime
+
+The current runtime automatically watches a configured filesystem or complete-snapshot API, maintains a durable SQLite lexical index/cache, verifies registered retrieval, and serves an authenticated local console/API.
+
+Python 3.11+; Linux, macOS or WSL for filesystem sources. From this extracted package directory, no installation is required:
+
+```bash
+python -m concord.runtime init --directory ./concord-local
+python -m concord.runtime run --config ./concord-local/runtime.json
+```
+
+Open the printed localhost URL. Edit the initialized source JSON in your own editor; no per-change Concord action is needed. Generated operator and consumer credentials stay in `credentials.local.json`; use a trusted editor to view them, and do not commit/share them. Each employee should initialize their own workspace.
+
+The public website is a separate interactive product mockup. It does not run this backend or connect to accounts. This local runtime is single-tenant and loopback-only. Filesystem and local HTTP acceptance are tested; BookStack transport is prepared but has no live vendor validation or effective-ACL discovery. No external vector database or customer agent memory is connected.
+
+For complete source contracts, deployment, API, recovery and limits, read the runtime guide downloaded beside this package or the repository's `docs/local-runtime.md`. Optional editable installation: `python -m pip install -e .`; it includes the operational console as package data.
+
+## Enterprise applications and folder scanning (v5)
+
+```bash
+python -m concord.runtime catalog
+python -m concord.runtime scan --config ./concord-local/runtime.json
+```
+
+`catalog` lists supported contracts without opening a connection. `scan` performs an actual bounded source read and prints metadata, completeness and deletion authority; it does not create an index or print source content. Titles and metadata can themselves be sensitive.
+
+- **Confluence Cloud:** current page text within explicit space IDs or page IDs.
+- **Jira Cloud:** issues in explicit projects, with an optional JQL filter.
+- **Files/folders:** Markdown, Concord-contract JSON, text, CSV, HTML and DOCX main-body text. No PDF/OCR, arbitrary binary formats, symlinks or inferred OS permissions.
+- **Generic API:** producer implements Concord's bounded JSON snapshot contract. It is not a universal SaaS connector.
+
+Atlassian uses an existing authorized OAuth bearer credential referenced by environment-variable name and the fixed Atlassian OAuth gateway. Consent, refresh and effective per-user permissions are not implemented. ACL stays unknown by default. Missing API records are retained and blocked because absence does not prove deletion. The generic API requires explicit `deletion_authoritative:true` before a complete authoritative inventory may remove missing records.
+
+One source per worker; separate configuration, port and state for additional workers. The current destination is the local SQLite lexical index/cache, not an external VectorDB. Read the bundled `docs/atlassian-mvp.md`, `docs/atlassian-source-contract.md` and `docs/file-source-coverage.md` for exact setup and limits. There is no public file-upload service, cloud enrollment or outbound managed tunnel in this release.
+
+## Historical sandbox implementation
+
+The material below describes the older manually driven lab at `/lab` and `concord.api`. It is retained for compatibility and test history. Use `concord.runtime` above for automatic operation. Its legacy limitations do not describe the newly implemented runtime.
+
 # Concord Python reference MVP
 
 A working, deterministic assurance engine for **registered** AI derivatives. The hosted website executes this exact engine using a self-hosted Pyodide runtime in a browser worker. This package runs the same engine under CPython and exposes an independent local HTTP API.

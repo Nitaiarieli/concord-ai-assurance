@@ -4,8 +4,8 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "concord-assurance"
-version = "0.1.0"
-description = "Deterministic source-to-derivative assurance reference MVP"
+version = "0.5.0"
+description = "Automatic bounded synchronization for registered agent data routes"
 requires-python = ">=3.11"
 dependencies = []
 
@@ -17,3 +17,6 @@ concord-api = "concord.api.server:main"
 
 [tool.setuptools.packages.find]
 include = ["concord*"]
+
+[tool.setuptools.package-data]
+"concord.runtime" = ["console.html"]
