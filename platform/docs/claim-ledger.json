@@ -1,0 +1,424 @@
+{
+  "as_of": "2026-09-05",
+  "mode": "strategic opportunity test",
+  "claims": [
+    {
+      "id": "ms-acl",
+      "text": "Microsoft documents token-based document access filtering against synchronized permission metadata in Azure AI Search; native features are preview.",
+      "classification": "Verified Fact",
+      "source_url": "https://learn.microsoft.com/en-us/azure/search/search-document-level-access-overview",
+      "source_title": "Document-level access control in Azure AI Search",
+      "publisher": "Microsoft",
+      "published_at": "2026-08-12",
+      "accessed_at": "2026-09-05",
+      "confidence": "high",
+      "research_note": "The documented API is 2026-08-01-preview. This establishes supported behavior, not independent verification of a customer deployment."
+    },
+    {
+      "id": "ms-parent",
+      "text": "Microsoft documents that SharePoint parent-scope permission changes require explicit refresh, while supported unique item ACL changes can be picked up incrementally in recent previews.",
+      "classification": "Verified Fact",
+      "source_url": "https://learn.microsoft.com/en-us/azure/search/search-indexer-sharepoint-access-control-lists",
+      "source_title": "SharePoint indexer permission metadata",
+      "publisher": "Microsoft",
+      "published_at": null,
+      "accessed_at": "2026-09-05",
+      "confidence": "high",
+      "research_note": "Limitations and synchronization sections distinguish inheritance changes from item ACL changes. Undated page accessed at cutoff."
+    },
+    {
+      "id": "ms-remote",
+      "text": "Microsoft recommends its remote SharePoint knowledge source for the full SharePoint permission model; it calls the Copilot retrieval API with governance in SharePoint.",
+      "classification": "Verified Fact",
+      "source_url": "https://learn.microsoft.com/en-us/azure/search/search-indexer-sharepoint-access-control-lists",
+      "source_title": "SharePoint indexer permission metadata",
+      "publisher": "Microsoft",
+      "published_at": null,
+      "accessed_at": "2026-09-05",
+      "confidence": "high",
+      "research_note": "Important box describes an alternative architecture; no claim about universal downstream cache deletion."
+    },
+    {
+      "id": "ms-customer",
+      "text": "Microsoft describes an enterprise project that materialized SharePoint permissions into downstream search and retrieval and planned periodic re-ingestion.",
+      "classification": "Vendor Claim",
+      "source_url": "https://devblogs.microsoft.com/ise/sharepoint-doc-level-access/",
+      "source_title": "Propagating SharePoint Document Permissions to AI Systems",
+      "publisher": "Microsoft",
+      "published_at": "2026-04-30",
+      "accessed_at": "2026-09-05",
+      "confidence": "medium",
+      "research_note": "Primary engineering case narrative, unnamed customer; no customer incidence rate or Concord buying evidence."
+    },
+    {
+      "id": "glean-acl",
+      "text": "Glean documents permission mirroring and signed-in identity checks across search, AI answers, agents, MCP and embedded surfaces, plus exportable administration audit records.",
+      "classification": "Verified Fact",
+      "source_url": "https://docs.glean.com/security/security-principles",
+      "source_title": "Core security principles",
+      "publisher": "Glean",
+      "published_at": "2026-08-24",
+      "accessed_at": "2026-09-05",
+      "confidence": "high",
+      "research_note": "Product documentation supports current workflow. Universal no-leak language is not independently established."
+    },
+    {
+      "id": "glean-deploy",
+      "text": "Glean publicly documents SaaS and customer-hosted deployment models and security/architecture guidance.",
+      "classification": "Verified Fact",
+      "source_url": "https://docs.glean.com/security",
+      "source_title": "Security and Architecture",
+      "publisher": "Glean",
+      "published_at": "2026-08-24",
+      "accessed_at": "2026-09-05",
+      "confidence": "high",
+      "research_note": "Customer-hosted deployment is therefore not unique to Concord."
+    },
+    {
+      "id": "airbyte-agents",
+      "text": "Airbyte announced Airbyte Agents on May 4, 2026, describing a Context Store, live connectors, Python SDK and MCP access.",
+      "classification": "Vendor Claim",
+      "source_url": "https://airbyte.com/blog/airbyte-agents",
+      "source_title": "Airbyte Agents: A New Era for Airbyte",
+      "publisher": "Airbyte",
+      "published_at": "2026-05-04",
+      "accessed_at": "2026-09-05",
+      "confidence": "medium",
+      "research_note": "Vendor launch describes active expansion from replication toward agent context; performance claims not reused."
+    },
+    {
+      "id": "airbyte-governed",
+      "text": "Airbyte markets permission-aware context, query-time authorization and logged agent data access.",
+      "classification": "Vendor Claim",
+      "source_url": "https://airbyte.com/agentic-data/ai-agent-security",
+      "source_title": "What Is AI Agent Security and How Does It Work?",
+      "publisher": "Airbyte",
+      "published_at": "2025-12-22",
+      "accessed_at": "2026-09-05",
+      "confidence": "medium",
+      "research_note": "Marketing explanation, not an independently exercised authorization test or universal integration guarantee."
+    },
+    {
+      "id": "unstructured-core",
+      "text": "Unstructured documents partitioning, extraction, enrichment, chunking and embedding, with source-to-vector-database pipelines.",
+      "classification": "Verified Fact",
+      "source_url": "https://docs.unstructured.io/welcome",
+      "source_title": "Unstructured documentation",
+      "publisher": "Unstructured",
+      "published_at": null,
+      "accessed_at": "2026-09-05",
+      "confidence": "high",
+      "research_note": "Ingestion capability is documented; this claim makes no assertion of closed-loop identity verification."
+    },
+    {
+      "id": "oso-rag",
+      "text": "Oso publishes a Python/Postgres/pgvector RAG authorization example using local authorization to reduce application-data synchronization requirements.",
+      "classification": "Verified Fact",
+      "source_url": "https://www.osohq.com/post/right-approach-to-authorization-in-rag",
+      "source_title": "The Right Approach to Authorization in RAG",
+      "publisher": "Oso",
+      "published_at": "2025-07-10",
+      "accessed_at": "2026-09-05",
+      "confidence": "high",
+      "research_note": "Reference implementation is evidence that authorized RAG is an existing build pattern, not proof of production coverage at arbitrary customers."
+    },
+    {
+      "id": "authzed-rag",
+      "text": "AuthZed documents permission filtering for Pinecone retrieval using SpiceDB relationship checks, including pre-filter and post-filter approaches.",
+      "classification": "Verified Fact",
+      "source_url": "https://authzed.com/docs/spicedb/integrations/pinecone",
+      "source_title": "Access Control in RAG with Pinecone and SpiceDB",
+      "publisher": "AuthZed",
+      "published_at": null,
+      "accessed_at": "2026-09-05",
+      "confidence": "high",
+      "research_note": "Documentation includes executable integration patterns and explains tradeoffs."
+    },
+    {
+      "id": "authzed-langgraph",
+      "text": "AuthZed published an agentic RAG example with authorization embedded in a LangGraph pipeline.",
+      "classification": "Verified Fact",
+      "source_url": "https://authzed.com/blog/build-production-grade-agentic-rag-authzed-cloud",
+      "source_title": "Build a production-grade Agentic RAG system using AuthZed Cloud",
+      "publisher": "AuthZed",
+      "published_at": "2026-04-15",
+      "accessed_at": "2026-09-05",
+      "confidence": "high",
+      "research_note": "LangGraph plus authorization is already publicly documented and cannot be claimed as a moat."
+    },
+    {
+      "id": "langsmith-eval",
+      "text": "LangSmith documents offline dataset evaluations and online production evaluations, including code evaluators, traces and feedback loops.",
+      "classification": "Verified Fact",
+      "source_url": "https://docs.langchain.com/langsmith/evaluation",
+      "source_title": "LangSmith Evaluation",
+      "publisher": "LangChain",
+      "published_at": null,
+      "accessed_at": "2026-09-05",
+      "confidence": "high",
+      "research_note": "Evaluation substrate could support an in-house substitute; no implication that it is a cross-source remediation product."
+    },
+    {
+      "id": "langsmith-mask",
+      "text": "LangSmith documents controls for preventing sensitive inputs and outputs from being sent in traces.",
+      "classification": "Verified Fact",
+      "source_url": "https://docs.langchain.com/langsmith/mask-inputs-outputs",
+      "source_title": "Prevent logging of sensitive data in traces",
+      "publisher": "LangChain",
+      "published_at": null,
+      "accessed_at": "2026-09-05",
+      "confidence": "high",
+      "research_note": "Relevant to optional observability integration and customer-runtime boundary."
+    },
+    {
+      "id": "onyx-acl",
+      "text": "Onyx documents source ACL synchronization for selected Enterprise Edition connectors and separately configurable refresh and pruning.",
+      "classification": "Verified Fact",
+      "source_url": "https://docs.onyx.app/admins/connectors/overview",
+      "source_title": "Managing connectors and data sources in Onyx",
+      "publisher": "Onyx",
+      "published_at": null,
+      "accessed_at": "2026-09-05",
+      "confidence": "high",
+      "research_note": "Overview lists supported permission-sync sources and connector lifecycle. Do not assume all sources or all deployments have the same settings."
+    },
+    {
+      "id": "onyx-deploy",
+      "text": "Onyx documents local self-hosting, cloud availability, agents and internal search.",
+      "classification": "Verified Fact",
+      "source_url": "https://docs.onyx.app/welcome",
+      "source_title": "Welcome to Onyx",
+      "publisher": "Onyx",
+      "published_at": null,
+      "accessed_at": "2026-09-05",
+      "confidence": "high",
+      "research_note": "Cloud and self-hostable product are documented; specific enterprise entitlements require separate commercial verification."
+    },
+    {
+      "id": "paragon-sync",
+      "text": "Paragon documents incremental syncs, periodic full syncs and deletion events for records deleted or unshared from the connecting account.",
+      "classification": "Verified Fact",
+      "source_url": "https://docs.useparagon.com/managed-sync/sync-api",
+      "source_title": "Sync API",
+      "publisher": "Paragon",
+      "published_at": null,
+      "accessed_at": "2026-09-05",
+      "confidence": "high",
+      "research_note": "Default full refresh is documented as 24 hours; this is not necessarily per-user permission refresh latency."
+    },
+    {
+      "id": "paragon-acl",
+      "text": "Paragon documents permission synchronization into a fine-grained authorization server, with query-time pre/post/hybrid filtering for supported file integrations.",
+      "classification": "Verified Fact",
+      "source_url": "https://docs.useparagon.com/managed-sync/permissions-api",
+      "source_title": "Permissions API",
+      "publisher": "Paragon",
+      "published_at": null,
+      "accessed_at": "2026-09-05",
+      "confidence": "high",
+      "research_note": "Technical docs use a synchronized permission model; do not call it a guaranteed upstream live check."
+    },
+    {
+      "id": "nango-delete",
+      "text": "Nango documents explicit deletion handling for incremental syncs and automatic missing-record detection for full syncs.",
+      "classification": "Verified Fact",
+      "source_url": "https://nango.dev/docs/guides/functions/syncs/deletion-detection",
+      "source_title": "Deletion detection",
+      "publisher": "Nango",
+      "published_at": null,
+      "accessed_at": "2026-09-05",
+      "confidence": "high",
+      "research_note": "Provides useful connector primitives without proving final downstream user retrieval behavior."
+    },
+    {
+      "id": "ragie-connect",
+      "text": "Ragie describes embedded RAG connectors with authentication, permissions, automatic syncing and connection lifecycle webhooks.",
+      "classification": "Vendor Claim",
+      "source_url": "https://www.ragie.ai/blog/introducing-ragie-connect",
+      "source_title": "Introducing Ragie Connect",
+      "publisher": "Ragie",
+      "published_at": "2025-01-13",
+      "accessed_at": "2026-09-05",
+      "confidence": "medium",
+      "research_note": "Official launch verified; docs home returned HTTP 502, so exact source-ACL semantics were not established."
+    },
+    {
+      "id": "letta-memory",
+      "text": "Letta documents deleting a memory block removes it from all agents with that block attached.",
+      "classification": "Verified Fact",
+      "source_url": "https://docs.letta.com/v1-sdk/memory/memory-blocks/",
+      "source_title": "Memory blocks (core memory)",
+      "publisher": "Letta",
+      "published_at": null,
+      "accessed_at": "2026-09-05",
+      "confidence": "high",
+      "research_note": "Specific block semantics only; no claim that source-derived copies or conversation history are universally removed."
+    },
+    {
+      "id": "r2r-api",
+      "text": "The SciPhi-AI/R2R repository describes an agentic retrieval system exposed through a REST API.",
+      "classification": "Verified Fact",
+      "source_url": "https://github.com/SciPhi-AI/R2R",
+      "source_title": "SciPhi-AI/R2R",
+      "publisher": "SciPhi",
+      "published_at": null,
+      "accessed_at": "2026-09-05",
+      "confidence": "high",
+      "research_note": "Repository establishes project existence and declared interface; no enterprise-readiness or exact permission-propagation claim."
+    },
+    {
+      "id": "langgraph-core",
+      "text": "LangGraph documents durable orchestration for long-running stateful agents and can be used without LangChain.",
+      "classification": "Verified Fact",
+      "source_url": "https://docs.langchain.com/oss/python/langgraph/overview",
+      "source_title": "LangGraph overview",
+      "publisher": "LangChain",
+      "published_at": null,
+      "accessed_at": "2026-09-05",
+      "confidence": "high",
+      "research_note": "Framework role, not a Concord production-readiness claim."
+    },
+    {
+      "id": "langchain-core",
+      "text": "LangChain provides agent abstractions, tools and model integrations; its agents build on LangGraph.",
+      "classification": "Verified Fact",
+      "source_url": "https://docs.langchain.com/oss/python/langchain/overview",
+      "source_title": "LangChain overview",
+      "publisher": "LangChain",
+      "published_at": null,
+      "accessed_at": "2026-09-05",
+      "confidence": "high",
+      "research_note": "The frameworks are complementary, not interchangeable product builders."
+    },
+    {
+      "id": "workflow-gap",
+      "text": "No publicly documented support for the complete independently operated Concord workflow was found in this bounded source set as of 2026-09-05.",
+      "classification": "Not Publicly Documented",
+      "source_url": null,
+      "source_title": null,
+      "publisher": null,
+      "published_at": null,
+      "accessed_at": "2026-09-05",
+      "confidence": "low",
+      "research_note": "This is a scoped finding, not proof of market white space or competitor absence; private features, different terminology and unreviewed products may cover it.",
+      "cutoff_date": "2026-09-05",
+      "search_scope": [
+        {
+          "location": "Current Glean security, Azure AI Search ACL, Paragon sync/permissions, Oso/AuthZed RAG, LangSmith evaluation, Onyx connector and Unstructured core documentation",
+          "result": "Documented adjacent controls. No reviewed source establishes the entire independent cross-vendor source-change to derivative-repair to affected-identity evidence workflow."
+        }
+      ]
+    },
+    {
+      "id": "pmf-unknown",
+      "text": "Concord's incident frequency, reachable paying buyer, budget, paid adoption, retention and expansion are unverified in this research.",
+      "classification": "Unknown",
+      "source_url": null,
+      "source_title": null,
+      "publisher": null,
+      "published_at": null,
+      "accessed_at": "2026-09-05",
+      "confidence": "high",
+      "research_note": "No customer interviews, customer production access, commercial records or paid pilot results were available in the task materials.",
+      "cutoff_date": "2026-09-05",
+      "search_scope": [
+        {
+          "location": "User-provided project context and this public-source strategic opportunity study",
+          "result": "Product vision and technical hypotheses available; verified purchasing and production outcome evidence unavailable."
+        }
+      ]
+    },
+    {
+      "id": "crunchbase-limit",
+      "text": "Authorized Crunchbase database/API access was unavailable in this session.",
+      "classification": "Unknown",
+      "source_url": null,
+      "source_title": null,
+      "publisher": null,
+      "published_at": null,
+      "accessed_at": "2026-09-05",
+      "confidence": "high",
+      "research_note": "No Crunchbase connector/API tool was available; no authenticated database queries or subscription export was performed. Public primary-source fallback was used.",
+      "cutoff_date": "2026-09-05",
+      "search_scope": [
+        {
+          "location": "Available tool metadata filtered for Crunchbase",
+          "result": "No specialized authorized Crunchbase capability found."
+        }
+      ]
+    },
+    {
+      "id": "wedge-inference",
+      "text": "A measurable cross-destination revocation/deletion assurance wedge is worth testing for teams operating custom or mixed AI stacks, but secure RAG alone is insufficient differentiation.",
+      "classification": "Inference",
+      "source_url": null,
+      "source_title": null,
+      "publisher": null,
+      "published_at": null,
+      "accessed_at": "2026-09-05",
+      "confidence": "medium",
+      "research_note": "Existing authorization, ingestion and evaluation features narrow the unproven opportunity to cross-system operational proof.",
+      "supporting_claim_ids": [
+        "ms-parent",
+        "glean-acl",
+        "paragon-acl",
+        "authzed-rag",
+        "langsmith-eval",
+        "pmf-unknown"
+      ]
+    },
+    {
+      "id": "commercial-assumptions",
+      "text": "Illustrative annual contract tests use USD 15000, 30000 and 60000, with 1, 3 and 6 paid accounts by month 18. None is a quoted price, pipeline fact or forecast.",
+      "classification": "Assumption",
+      "source_url": null,
+      "source_title": null,
+      "publisher": null,
+      "published_at": null,
+      "accessed_at": "2026-09-05",
+      "confidence": "low",
+      "research_note": "Numbers are selected to test whether a narrow enterprise control can support implementation effort; customers must validate value and willingness to pay."
+    },
+    {
+      "id": "account-assumptions",
+      "text": "Market sensitivity examples use hypothetical target pools of 2500/10000/25000 organizations, relevant AI shares 20%/35%/50%, severe-pain shares 10%/20%/35% and serviceability 20%/30%/40%.",
+      "classification": "Assumption",
+      "source_url": null,
+      "source_title": null,
+      "publisher": null,
+      "published_at": null,
+      "accessed_at": "2026-09-05",
+      "confidence": "low",
+      "research_note": "These are deliberately unvalidated model inputs, not measured population or adoption estimates; no investment-deck TAM claim should use them."
+    },
+    {
+      "id": "scenario-estimate",
+      "text": "Assumption-only TAM sensitivity outputs are USD 0.75m / 21m / 262.5m; they are model arithmetic, not researched market estimates.",
+      "classification": "Estimate",
+      "source_url": null,
+      "source_title": null,
+      "publisher": null,
+      "published_at": null,
+      "accessed_at": "2026-09-05",
+      "confidence": "low",
+      "research_note": "Wide variation demonstrates missing evidence, especially target account counts, purchase-worthy pain and ACV.",
+      "formula": "Target organizations × relevant AI share × severe-pain share × assumed annual contract value",
+      "input_claim_ids": [
+        "account-assumptions",
+        "commercial-assumptions"
+      ]
+    },
+    {
+      "id": "pilot-targets",
+      "text": "Pilot targets are three design partners, under two engineer-days integration by the third installation, 1000 probe cases with zero restricted retrieval after containment, and three paid accounts by month 18.",
+      "classification": "Assumption",
+      "source_url": null,
+      "source_title": null,
+      "publisher": null,
+      "published_at": null,
+      "accessed_at": "2026-09-05",
+      "confidence": "low",
+      "research_note": "These are proposed acceptance thresholds and future goals, not achieved results. Probe coverage must be disclosed and does not establish universal safety."
+    }
+  ]
+}

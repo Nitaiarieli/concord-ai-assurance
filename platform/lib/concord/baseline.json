@@ -1,0 +1,204 @@
+{
+  "mode": "sandbox",
+  "engine": "python",
+  "epoch": 0,
+  "nodes": [
+    {
+      "id": "src-forecast",
+      "title": "Q4 revenue forecast",
+      "kind": "source",
+      "parents": [],
+      "revision": 1,
+      "acl": [
+        "alex",
+        "jordan"
+      ],
+      "deleted": false,
+      "status": "current",
+      "source_revisions": {},
+      "containment_epoch": 0
+    },
+    {
+      "id": "chunk-forecast",
+      "title": "Q4 revenue forecast \u00b7 Document chunk",
+      "kind": "chunk",
+      "parents": [
+        "src-forecast"
+      ],
+      "revision": 1,
+      "acl": null,
+      "deleted": false,
+      "status": "current",
+      "source_revisions": {
+        "src-forecast": 1
+      },
+      "containment_epoch": 0
+    },
+    {
+      "id": "index-forecast",
+      "title": "Q4 revenue forecast \u00b7 Retrieval record",
+      "kind": "index",
+      "parents": [
+        "chunk-forecast"
+      ],
+      "revision": 1,
+      "acl": null,
+      "deleted": false,
+      "status": "current",
+      "source_revisions": {
+        "src-forecast": 1
+      },
+      "containment_epoch": 0
+    },
+    {
+      "id": "memory-forecast",
+      "title": "Q4 revenue forecast \u00b7 Agent memory",
+      "kind": "memory",
+      "parents": [
+        "index-forecast"
+      ],
+      "revision": 1,
+      "acl": null,
+      "deleted": false,
+      "status": "current",
+      "source_revisions": {
+        "src-forecast": 1
+      },
+      "containment_epoch": 0
+    },
+    {
+      "id": "src-policy",
+      "title": "Customer data policy",
+      "kind": "source",
+      "parents": [],
+      "revision": 1,
+      "acl": [
+        "alex",
+        "jordan"
+      ],
+      "deleted": false,
+      "status": "current",
+      "source_revisions": {},
+      "containment_epoch": 0
+    },
+    {
+      "id": "chunk-policy",
+      "title": "Customer data policy \u00b7 Document chunk",
+      "kind": "chunk",
+      "parents": [
+        "src-policy"
+      ],
+      "revision": 1,
+      "acl": null,
+      "deleted": false,
+      "status": "current",
+      "source_revisions": {
+        "src-policy": 1
+      },
+      "containment_epoch": 0
+    },
+    {
+      "id": "index-policy",
+      "title": "Customer data policy \u00b7 Retrieval record",
+      "kind": "index",
+      "parents": [
+        "chunk-policy"
+      ],
+      "revision": 1,
+      "acl": null,
+      "deleted": false,
+      "status": "current",
+      "source_revisions": {
+        "src-policy": 1
+      },
+      "containment_epoch": 0
+    },
+    {
+      "id": "memory-policy",
+      "title": "Customer data policy \u00b7 Agent memory",
+      "kind": "memory",
+      "parents": [
+        "index-policy"
+      ],
+      "revision": 1,
+      "acl": null,
+      "deleted": false,
+      "status": "current",
+      "source_revisions": {
+        "src-policy": 1
+      },
+      "containment_epoch": 0
+    },
+    {
+      "id": "src-onboarding",
+      "title": "Engineering handbook",
+      "kind": "source",
+      "parents": [],
+      "revision": 1,
+      "acl": [
+        "alex",
+        "jordan"
+      ],
+      "deleted": false,
+      "status": "current",
+      "source_revisions": {},
+      "containment_epoch": 0
+    },
+    {
+      "id": "chunk-onboarding",
+      "title": "Engineering handbook \u00b7 Document chunk",
+      "kind": "chunk",
+      "parents": [
+        "src-onboarding"
+      ],
+      "revision": 1,
+      "acl": null,
+      "deleted": false,
+      "status": "current",
+      "source_revisions": {
+        "src-onboarding": 1
+      },
+      "containment_epoch": 0
+    },
+    {
+      "id": "index-onboarding",
+      "title": "Engineering handbook \u00b7 Retrieval record",
+      "kind": "index",
+      "parents": [
+        "chunk-onboarding"
+      ],
+      "revision": 1,
+      "acl": null,
+      "deleted": false,
+      "status": "current",
+      "source_revisions": {
+        "src-onboarding": 1
+      },
+      "containment_epoch": 0
+    },
+    {
+      "id": "memory-onboarding",
+      "title": "Engineering handbook \u00b7 Agent memory",
+      "kind": "memory",
+      "parents": [
+        "index-onboarding"
+      ],
+      "revision": 1,
+      "acl": null,
+      "deleted": false,
+      "status": "current",
+      "source_revisions": {
+        "src-onboarding": 1
+      },
+      "containment_epoch": 0
+    }
+  ],
+  "events": [],
+  "proofs": [],
+  "counts": {
+    "sources": 3,
+    "derivatives": 9,
+    "blocked": 0,
+    "verified": 0
+  }
+}
