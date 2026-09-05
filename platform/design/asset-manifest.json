@@ -1,0 +1,28 @@
+{
+  "assets": [
+    {
+      "name": "concord-review-stone-ferns",
+      "source": "design/source-images/concord-review-stone-ferns.png",
+      "website_asset": "public/assets/concord-review-stone-ferns.webp",
+      "placement": "Change review",
+      "provenance": "Original AI-generated artwork created for Concord, September 2026",
+      "sha256": "55d38e31e83ec1d232281e5b4fa2bc7ec03d77fce79fabb517ee5f030581fd54"
+    },
+    {
+      "name": "concord-coverage-stone-arch",
+      "source": "design/source-images/concord-coverage-stone-arch.png",
+      "website_asset": "public/assets/concord-coverage-stone-arch.webp",
+      "placement": "Coverage and product brief",
+      "provenance": "Original AI-generated artwork created for Concord, September 2026",
+      "sha256": "6fcb450ef118cf8a026bf6af7cffbdcb8aeee393bf82e18139ef7dbba3062c62"
+    },
+    {
+      "name": "concord-evidence-balanced-stones",
+      "source": "design/source-images/concord-evidence-balanced-stones.png",
+      "website_asset": "public/assets/concord-evidence-balanced-stones.webp",
+      "placement": "Evidence and sidebar",
+      "provenance": "Original AI-generated artwork created for Concord, September 2026",
+      "sha256": "8e00988102052c1d59a67bc53e91b310043bbfba815ba53d7c280087b1b255c0"
+    }
+  ]
+}

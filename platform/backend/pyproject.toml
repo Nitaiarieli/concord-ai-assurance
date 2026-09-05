@@ -1,0 +1,19 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "concord-assurance"
+version = "0.1.0"
+description = "Deterministic source-to-derivative assurance reference MVP"
+requires-python = ">=3.11"
+dependencies = []
+
+[project.optional-dependencies]
+agent = ["langchain>=1,<2", "langgraph>=1,<2", "langsmith>=0.4,<1", "langchain-google-genai>=4,<5"]
+
+[project.scripts]
+concord-api = "concord.api.server:main"
+
+[tool.setuptools.packages.find]
+include = ["concord*"]

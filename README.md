@@ -1,3 +1,36 @@
+# Concord — developer handoff
+
+**The current September 2026 platform is in [`platform/`](platform/). Start there.**
+
+This handoff is published on `chore/concord-platform-handoff`, pending review into `main`. The command below checks out the working branch. After merge, a regular main-branch clone will also contain `platform/`.
+
+It contains the Python engine, stone-and-plant UI, tests, original PNG artwork, optimized website images, dependency manifests, and developer documentation.
+
+```bash
+git clone --branch chore/concord-platform-handoff https://github.com/Nitaiarieli/concord-ai-assurance.git
+cd concord-ai-assurance/platform
+npm ci
+npm run prepare:python
+npm run dev:local
+```
+
+Install Node.js 24 LTS and Python 3.11+ first. Open the localhost URL printed by Vite. The sample-data demo needs no API key or cloud account.
+
+- [Autonomous operation: corrected product/engineering decision](platform/docs/autonomous-data-sync.md)
+- [Platform README and folder map](platform/README.md)
+- [Complete setup / Windows and macOS notes](platform/docs/developer-setup.md)
+- [התחלה מהירה בעברית](platform/docs/start-here.he.md)
+- [Python API](platform/backend/README.md)
+- [Original artwork inventory](platform/docs/assets.md)
+- [Contribution guide](platform/CONTRIBUTING.md)
+
+The browser UI and standalone Python API have independent sample sessions. Live customer integrations are not yet verified. See the platform README for exact coverage.
+
+The earlier application remains at the repository root for continuity. Its code and documentation below describe that previous version; use `platform/` for the newly published experience. This handoff does not change the production site or activate automatic deployment.
+
+<details>
+<summary>Previous implementation README (retained for reference)</summary>
+
 # Concord AI Assurance
 
 Concord is an independent assurance and reconciliation plane for registered
@@ -171,3 +204,6 @@ The timeout defaults can be overridden for a controlled canary with `SITES_INSTA
 
 - [vinext Documentation](https://github.com/cloudflare/vinext)
 - [Drizzle D1 Guide](https://orm.drizzle.team/docs/get-started/d1-new)
+
+</details>
+
