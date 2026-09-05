@@ -4,7 +4,9 @@
 
 This is the September 2026 Concord platform: the stone-and-plant workspace, Python engine, local API, tests, original artwork, and implementation/research documentation.
 
-**Current status:** working automatic local runtime plus a browser demonstration. The installable Python process watches real local files or a supported complete-snapshot API and updates a durable SQLite lexical index and registered cache. The public UI runs the same core on sample data; the local runtime has its own authenticated operational console. Customer enterprise integrations and willingness to pay remain unverified.
+**Current status (v5):** an interactive **Atlassian-first product mockup** plus a separately runnable Python backend. The main website uses illustrative data and performs no OAuth or live source connections. The backend scans real supported files/folders and implements Confluence Cloud, Jira Cloud, generic JSON snapshot and BookStack API adapters. API adapters have local HTTP contract tests, not live vendor validation. Automatic updates currently reach the runtime's own durable SQLite lexical index and registered cache; external customer RAG/VectorDB routes still require adapters.
+
+Start with [the Atlassian MVP and setup guide](docs/atlassian-mvp.md). The deployment concept takes inspiration from Harmony.io's customer-side outbound proxy; Concord's managed cloud enrollment/tunnel is not implemented.
 
 The GitHub handoff is on `chore/concord-platform-handoff` pending review into `main`. Clone that branch until the PR is merged.
 
@@ -48,14 +50,13 @@ Read [runtime setup, API and coverage](docs/local-runtime.md), [v4 decisions, ar
 
 ## What a teammate should see in the browser
 
-1. Overview shows automatic observer health, discovered documents and registered coverage.
-2. Open **Sample source application**, edit product content and save in that source.
-3. The independent timer discovers the change and updates/verifies data automatically.
-4. **Search sample data** optionally inspects the direct or cached result. It is not the verification trigger.
-5. Test unknown ACL, unsupported schema or source outage; affected reads stay blocked until a successful reconciliation.
-6. Connections states implemented vs prepared/unconnected integrations; Install downloads the actual local runtime.
+1. **Overview** illustrates organizational apps feeding the data used by agents.
+2. **Applications** starts with Confluence and Jira Cloud. Choose example spaces/projects once; saving changes only the current mockup session and resets on refresh.
+3. **Sync activity** explains a content update, issue update and a record that is no longer API-visible. No manual per-change selector or repair button exists here.
+4. **Deployment** separates the proposed customer-worker/cloud model from the currently downloadable local backend.
+5. **Show example response** displays a labeled illustrative answer, with no model call.
 
-The browser contains sample identities/data only. Its SQLite state lives in the browser worker and resets on reload. The older manual demonstration remains at `/lab` as a historical lab, not the production operating model.
+The previous automatic Python browser demonstration is retained at `/runtime-lab`; its sample SQLite state resets on reload. The older manual lab remains at `/lab`. Neither is a live customer connection. The real local runtime has its own authenticated console.
 
 ## Commands (inside this folder)
 
@@ -65,7 +66,8 @@ The browser contains sample identities/data only. Its SQLite state lives in the 
 | `npm run prepare:python` | Copy pinned Pyodide and rebuild browser/source Python ZIPs and baseline |
 | `npm run dev:local` | Run the UI on loopback with a portable local command |
 | `npm run build:local` | Compile the Worker/frontend without Linux-only wrappers |
-| `npm run test:python` | Run the 82 CPython behavior/transport/HTTP tests |
+| `npm run test:python` | Run the 129 CPython behavior/transport/HTTP tests |
+| `npm run test:console` | Verify the shipped console against the actual HTTP envelope |
 | `npm run test:wasm` | Run legacy scenarios and automatic-source/update/retrieval parity in WebAssembly |
 | `npm run build` | Existing Linux Sites build with bounded execution |
 
@@ -76,7 +78,7 @@ The browser contains sample identities/data only. Its SQLite state lives in the 
 | Path | Contents / owner |
 |---|---|
 | `app/` | Page, layout, metadata and global styles |
-| `components/concord/` | Automatic overview, connections, evidence and install UX; historical lab |
+| `components/concord/` | Enterprise application mockup; retained runtime and historical labs |
 | `components/ui/`, `hooks/`, `lib/utils.ts` | Shared UI components and helpers |
 | `backend/concord/domain/` | Models, graph rules and invariants |
 | `backend/concord/application/` | Deterministic workflow and interfaces |
@@ -98,6 +100,6 @@ Dependencies are represented by `package-lock.json` and `backend/pyproject.toml`
 
 The engine acts on explicitly registered derivatives. It cannot discover or erase unknown copies, invalidate already-delivered answers, or unlearn model weights. BookStack and Qdrant are transport boundaries with synthetic contract tests; they are not turnkey live connectors. Optional LangChain, LangGraph and Gemini examples are not required or live-verified.
 
-The deployed demonstration is [Concord](https://concord-renewal.nitai-arieli1.chatgpt.site). GitHub is the team handoff; pushing here does not automatically update that site. The existing `.openai/hosting.json` identifies the owner’s Site and is not a credential. Local setup does not require access to it. Do not deploy against that identity without the project owner’s authorization.
+The deployed product mockup is [Concord](https://concord-renewal.nitai-arieli1.chatgpt.site). GitHub is the team handoff; pushing here does not automatically update that site. The existing `.openai/hosting.json` identifies the owner’s Site and is not a credential. Local setup does not require access to it. Do not deploy against that identity without the project owner’s authorization.
 
-Release v4 adds the real automatic local runtime and workspace. The old Site source `ae2b903d0e8e66ae9ca0faf5434b3fc16732752e` is retained as rollback reference; see `docs/release-v4.md`.
+Release v5 adds the Atlassian-first mockup, API adapters, bounded file extractors and non-authoritative disappearance handling. See [v5 decisions, validation and rollback](docs/release-v5.md). Earlier research and release records are historical; v5 is the current implementation scope.

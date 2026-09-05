@@ -2,6 +2,8 @@
 
 **Implemented scope, reviewed 2026-09-05:** a single-tenant Python process automatically observes one configured source, updates a durable SQLite text/chunk index, invalidates a registered local response cache, verifies readback and exercises two registered local retrieval routes. This is a working local runtime with actual HTTP endpoints. It is not a hosted enterprise connector, vector database, embedding service, customer IAM integration or universal agent-memory synchronizer.
 
+**v5 source guide:** [Atlassian setup and expanded file coverage](atlassian-mvp.md). The main website is now a product mockup; the automatic browser lab is at `/runtime-lab`.
+
 ## Start from a source checkout
 
 Requirements: Python 3.11+ and Linux, macOS or WSL for the filesystem source's POSIX no-follow traversal. No `pip install` or model API key is required. Windows users should use WSL; native Windows filesystem observation is explicitly unsupported. From the repository's `platform/backend` directory (or `backend` in a standalone platform checkout):
@@ -39,7 +41,9 @@ The CLI acceptance test runs this flow as a subprocess, checks both nonempty HTT
 
 | Source | Automatically observed | Initial configuration | Explicit limits |
 | --- | --- | --- | --- |
-| `filesystem` | Supported `.json` and `.md` documents within the configured root; content changes; explicit JSON ACL changes; metadata/title changes; additions; disappearance in a complete scan | Root directory; explicit operator ACL list for Markdown, or per-document ACL for JSON | Hidden files and unsupported extensions are outside scope. Symlinks, invalid schemas, size/count limits and unreadable paths make the scan incomplete. No OS ACL inference. Markdown rename means deletion plus addition. |
+| `confluence_cloud` | Current API-visible page text in configured spaces or page IDs | Fixed OAuth gateway, existing bearer token via environment, explicit scope | No OAuth consent/refresh or effective ACL resolver. Missing records are quarantined. See `atlassian-source-contract.md`. |
+| `jira_cloud` | API-visible issues in configured projects, optional JQL | Fixed OAuth gateway, existing bearer token via environment, project keys | Search is eventually consistent. No comments/attachments or effective ACL resolver. Missing records are quarantined. |
+| `filesystem` | Supported `.json`, `.md`, `.txt`, `.csv`, `.html`, `.htm` and `.docx` documents within the configured root; content changes; explicit JSON ACL changes; metadata/title changes; additions; disappearance in a complete scan | Root directory; explicit operator ACL list for extracted text formats, or per-document ACL for JSON | Hidden files and unsupported extensions are outside scope. Symlinks, invalid schemas, size/count limits and unreadable paths make the scan incomplete. No OS ACL inference. Extracted-file rename means deletion plus addition. DOCX covers main-body text only; no PDF/OCR. See `file-source-coverage.md`. |
 | `json_http` | The fixed API endpoint's explicitly complete snapshot, including document content, revision, ACL and metadata | HTTPS endpoint; optional bearer-token environment-variable name; producer must implement the snapshot contract | This is a tested transport contract, not an off-the-shelf connector to arbitrary SaaS APIs. No pagination, event subscriptions, redirect following or inferred producer completeness. `complete:true` is the producer's scope assertion. |
 | `bookstack` | Current contents of explicitly configured page IDs via BookStack's page-read API | Base URL; page IDs; token ID/secret environment-variable names; optional explicit declaration of public content | No automatic inventory, effective per-user ACL resolution, attachment sync or deletion detection. A missing/unreadable configured page makes the scan incomplete. Without independently resolved ACL or explicit public-content configuration, its documents remain blocked. Transport fixture tests do not establish live customer validation. |
 
@@ -64,6 +68,7 @@ JSON API snapshot contract:
 {
   "schema_version": 1,
   "complete": true,
+  "deletion_authoritative": false,
   "cursor": "producer-owned-opaque-revision",
   "documents": [
     {
@@ -76,6 +81,8 @@ JSON API snapshot contract:
   ]
 }
 ```
+
+**Deletion semantics:** `deletion_authoritative` defaults to `false`; missing prior records remain stored but blocked as `source_missing_or_no_longer_visible`. Set it to `true` only when the producer can assert a complete authoritative inventory of the configured scope. Two confirming authoritative scans are required before removal. Incomplete scans never justify deletion.
 
 Example runtime configurations are adjacent to this guide. Replace environment-variable names and endpoints in a private local configuration; never put secret values in it. HTTP requires HTTPS except when the operator explicitly enables literal loopback HTTP for a local test. Queries, URL-embedded credentials and redirects are rejected. BookStack's total scan deadline is configurable through `max_scan_seconds` (default CLI value 30 seconds, maximum 120); each request also has a bounded timeout.
 

@@ -179,6 +179,8 @@ class SyncRuntime:
             raise ValueError("Adapter must return Snapshot")
         if snapshot.error or snapshot.complete is not True:
             raise ValueError("Source scan incomplete; prior index retained")
+        if type(snapshot.deletion_authoritative) is not bool:
+            raise ValueError("Source deletion authority must be explicit boolean")
         if not isinstance(snapshot.documents, list) or len(snapshot.documents) > self.LIMITS["max_documents"]:
             raise ValueError("Source document count exceeds supported snapshot scope")
         if snapshot.cursor is not None and (not isinstance(snapshot.cursor, str) or len(snapshot.cursor) > 4096):
@@ -234,10 +236,12 @@ class SyncRuntime:
         return snapshot, self._validate(snapshot)
 
     def tick(self) -> dict[str, Any]:
-        """Poll an authoritative snapshot and reconcile without per-change input.
+        """Poll a bounded snapshot and reconcile without per-change input.
 
         Changed snapshots are re-read before commit. A mismatch keeps the prior
         index blocked, and the next tick observes/retries the latest snapshot.
+        Missing objects are deleted only for authoritative inventories; complete
+        visibility-filtered snapshots retain and quarantine missing objects.
         """
         with self._lock:
             self._check_open()
@@ -276,17 +280,26 @@ class SyncRuntime:
             "SELECT * FROM sync_documents WHERE namespace=?", (self._namespace,))}
         changed = [key for key, (document, fingerprint) in observed.items()
                    if key not in rows or not self._destination_matches(rows[key], document, fingerprint)]
-        deleted = [key for key in rows if key not in observed]
+        absent = [key for key in rows if key not in observed]
+        deleted = absent if snapshot.deletion_authoritative else []
+        missing = [] if snapshot.deletion_authoritative else absent
+        newly_missing = [key for key in missing
+                         if rows[key]["verified"] or rows[key]["blocked_reason"] != "source_missing_or_no_longer_visible"]
         job_ids: list[str] = []
         now = self._timestamp()
         # Persist planned work and a read barrier BEFORE touching derivatives.
         self._db.execute("BEGIN IMMEDIATE")
         try:
             self._ensure_worker()
-            for key in changed + deleted:
-                operation = "delete" if key in deleted else self._operation(rows.get(key), observed[key][0])
-                fingerprint = "deleted" if key in deleted else observed[key][1]
-                revision = None if key in deleted else observed[key][0].revision
+            for key in changed + deleted + newly_missing:
+                if key in deleted:
+                    operation, fingerprint, revision = "delete", "deleted", None
+                elif key in newly_missing:
+                    operation = "visibility_lost"
+                    fingerprint, revision = rows[key]["fingerprint"], rows[key]["revision"]
+                else:
+                    operation = self._operation(rows.get(key), observed[key][0])
+                    fingerprint, revision = observed[key][1], observed[key][0].revision
                 job_id = _hash(_json([self._namespace, key, operation, fingerprint]))
                 self._db.execute("UPDATE sync_jobs SET state='superseded',updated_at=? WHERE namespace=? AND document_id=? AND id<>? AND state IN ('planned','failed')",
                                  (now, self._namespace, key, job_id))
@@ -310,6 +323,11 @@ class SyncRuntime:
                 self._apply_document(*observed[key])
             for key in deleted:
                 self._db.execute("DELETE FROM sync_documents WHERE namespace=? AND document_id=?", (self._namespace, key))
+            for key in missing:
+                self._db.execute("UPDATE sync_documents SET verified=0,blocked_reason='source_missing_or_no_longer_visible' WHERE namespace=? AND document_id=?",
+                                 (self._namespace, key))
+                self._db.execute("DELETE FROM sync_response_cache WHERE namespace=? AND document_id=?",
+                                 (self._namespace, key))
             # Provisional metadata is inside an uncommitted transaction, allowing
             # the real retrieval implementation to be exercised before publish.
             self._set_source(complete=1, last_complete_at=self._timestamp(), error=None)
@@ -319,20 +337,31 @@ class SyncRuntime:
                                  (self._timestamp(), self._namespace, key))
             for key in deleted:
                 self._verify_deleted(key, json.loads(rows[key]["acl_json"]) if rows[key]["acl_json"] else [])
+            for key in missing:
+                self._verify_missing(key, rows[key])
             confirmed_snapshot, confirmed = self._scan()
-            if {key: value[1] for key, value in confirmed.items()} != {key: value[1] for key, value in observed.items()}:
+            if (confirmed_snapshot.deletion_authoritative != snapshot.deletion_authoritative
+                    or {key: value[1] for key, value in confirmed.items()} != {key: value[1] for key, value in observed.items()}):
                 raise RuntimeError("Source changed during verification; waiting for next observation")
             snapshot = confirmed_snapshot
             self._ensure_worker()
             for job_id in job_ids:
                 self._db.execute("UPDATE sync_jobs SET state='verified',updated_at=?,error=NULL WHERE id=?",
                                  (self._timestamp(), job_id))
+            # Resolve historical visibility quarantine only after the replacement
+            # observation or authoritative removal has passed verification.
+            for key in changed + deleted:
+                self._db.execute("UPDATE sync_jobs SET state='superseded',updated_at=? WHERE namespace=? AND document_id=? AND operation='visibility_lost' AND state='blocked'",
+                                 (self._timestamp(), self._namespace, key))
             for key, (document, _) in observed.items():
                 if document.acl is None:
                     self._db.execute("UPDATE sync_jobs SET state='blocked',error='ACL is unknown; retrieval remains denied' WHERE namespace=? AND document_id=? AND state='verified'",
                                      (self._namespace, key))
+            for key in missing:
+                self._db.execute("UPDATE sync_jobs SET state='blocked',error='Source missing or no longer visible; retained evidence is not retrievable' WHERE namespace=? AND document_id=? AND operation='visibility_lost' AND state='verified'",
+                                 (self._namespace, key))
             self._set_source(complete=1, last_complete_at=self._timestamp(), cursor=snapshot.cursor,
-                             observed_changes=state["observed_changes"] + len(changed) + len(deleted), error=None)
+                             observed_changes=state["observed_changes"] + len(changed) + len(deleted) + len(newly_missing), error=None)
             self._db.execute("COMMIT")
         except Exception as error:
             if self._db.in_transaction:
@@ -457,6 +486,23 @@ class SyncRuntime:
             if self.retrieve("", identity, route, document_id=document_id)["documents"]:
                 raise RuntimeError("Deleted source remains retrievable")
 
+    def _verify_missing(self, document_id: str, previous: sqlite3.Row) -> None:
+        """Confirm retained evidence is quarantined on every registered route."""
+        row = self._db.execute("SELECT * FROM sync_documents WHERE namespace=? AND document_id=?",
+                               (self._namespace, document_id)).fetchone()
+        if (row is None or row["verified"] or row["blocked_reason"] != "source_missing_or_no_longer_visible"
+                or any(row[key] != previous[key] for key in
+                       ("title", "revision", "content_hash", "fingerprint", "acl_json", "metadata_json", "schema_version"))):
+            raise RuntimeError("Missing source evidence was not retained and quarantined")
+        if self._db.execute("SELECT COUNT(*) FROM sync_response_cache WHERE namespace=? AND document_id=?",
+                            (self._namespace, document_id)).fetchone()[0]:
+            raise RuntimeError("Missing source cache was not invalidated")
+        prior_identities = json.loads(previous["acl_json"]) if previous["acl_json"] else []
+        identity = prior_identities[0] if prior_identities else "concord-visibility-probe"
+        for route in self.ROUTES:
+            if self.retrieve("", identity, route, document_id=document_id)["documents"]:
+                raise RuntimeError("Missing source remains retrievable")
+
     def _read_barrier(self) -> str | None:
         source = self._source_row()
         if source["complete"] != 1 or source["last_complete_at"] is None:
@@ -577,6 +623,7 @@ class SyncRuntime:
                     "error": source["error"], "generation": source["generation"]},
                 "metrics": {"documents": len(documents), "chunks": sum(document["chunk_count"] for document in documents),
                     "verified_documents": verified, "blocked_documents": len(documents) - verified,
+                    "missing_documents": sum(document["blocked_reason"] == "source_missing_or_no_longer_visible" for document in documents),
                     "pending_jobs": counts.get("planned", 0), "failed_jobs": counts.get("failed", 0),
                     "cached_documents": self._db.execute("SELECT COUNT(DISTINCT document_id) FROM sync_response_cache WHERE namespace=?",
                                                           (self._namespace,)).fetchone()[0],

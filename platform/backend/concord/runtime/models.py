@@ -20,7 +20,14 @@ class SourceDocument:
 
 @dataclass(frozen=True)
 class Snapshot:
+    """A fully traversed visible scope need not be an authoritative inventory.
+
+    Set deletion_authoritative=False when a missing object may mean the
+    connector lost visibility. The runtime retains and quarantines such objects.
+    """
+
     documents: list[SourceDocument]
     complete: bool = True
     cursor: str | None = None
     error: str | None = None
+    deletion_authoritative: bool = True

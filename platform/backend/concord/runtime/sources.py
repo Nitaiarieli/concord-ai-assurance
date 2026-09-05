@@ -12,15 +12,18 @@ import ipaddress
 import json
 import os
 import re
+import socket
 import ssl
 import stat
 import time
+from threading import Event, Timer
 from html.parser import HTMLParser
 from pathlib import Path
 from typing import Any
 from urllib.parse import urlsplit
 
 from .models import Snapshot, SourceDocument
+from .file_extractors import ExtractionError, SUPPORTED_FILE_EXTENSIONS, extract_text
 
 
 class SourceError(ValueError):
@@ -103,9 +106,11 @@ def _document(value: Any, *, path: str | None = None) -> SourceDocument:
 class FilesystemSource:
     """Poll one operator-selected directory; POSIX no-follow descriptor traversal.
 
-    Markdown IDs are `file:<relative/path.md>`; a rename is delete plus add.
+    Text, Markdown, CSV, HTML and DOCX IDs are `file:<relative/path>`;
+    a rename is delete plus add. DOCX covers the main document body only.
     JSON IDs are explicit and may not collide with any other discovered document.
-    Hidden directories/files and other extensions are outside this source's scope.
+    Hidden directories/files and other extensions (including PDF) are outside
+    this source's scope. Supported extraction failure makes the scan incomplete.
     """
 
     def __init__(self, root: str | Path, identities: list[str] | None = None, *,
@@ -124,7 +129,7 @@ class FilesystemSource:
         documents: list[SourceDocument] = []
         identities: set[str] = set()
         errors: list[str] = []
-        counts = {"entries": 0, "files": 0, "bytes": 0}
+        counts = {"entries": 0, "files": 0, "bytes": 0, "text_bytes": 0}
         if not hasattr(os, "O_NOFOLLOW") or os.open not in os.supports_dir_fd:
             return Snapshot(documents=[], complete=False,
                             error="Filesystem source requires POSIX no-follow directory descriptors; use Linux or Docker")
@@ -152,7 +157,8 @@ class FilesystemSource:
                         finally:
                             os.close(child_fd)
                         continue
-                    if Path(entry.name).suffix.lower() not in {".md", ".json"}:
+                    suffix = Path(entry.name).suffix.lower()
+                    if suffix not in SUPPORTED_FILE_EXTENSIONS:
                         continue
                     if not stat.S_ISREG(info.st_mode):
                         raise SourceError("Source document is not a regular file")
@@ -181,20 +187,26 @@ class FilesystemSource:
                     counts["bytes"] += len(raw)
                     if len(raw) > self.max_bytes or counts["bytes"] > self.max_total_bytes:
                         raise SourceError("Source byte limit exceeded")
-                    if Path(entry.name).suffix.lower() == ".json":
+                    if suffix == ".json":
                         document = _document(_strict_json(raw), path=path)
                     else:
                         try:
-                            content = raw.decode("utf-8")
-                        except UnicodeDecodeError as exc:
-                            raise SourceError("Markdown must be UTF-8") from exc
-                        heading = next((line.lstrip("# ").strip() for line in content.splitlines()
-                                        if line.startswith("# ") and line.lstrip("# ").strip()),
-                                       Path(entry.name).stem)
-                        document = SourceDocument(id="file:" + path, title=heading[:2048],
-                                                  content=content, revision=_digest([content, self.identities]),
+                            extracted = extract_text(raw, suffix, Path(entry.name).stem)
+                        except ExtractionError as exc:
+                            raise SourceError(str(exc)) from exc
+                        raw_hash = hashlib.sha256(raw).hexdigest()
+                        revision = (_digest([extracted.content, self.identities]) if suffix == ".md"
+                                    else _digest([raw_hash, self.identities, extracted.format]))
+                        document = SourceDocument(id="file:" + path, title=extracted.title,
+                                                  content=extracted.content, revision=revision,
                                                   acl=self.identities, schema_version=1,
-                                                  metadata={"relative_path": path, "acl_basis": "operator_configuration"})
+                                                  metadata={"relative_path": path, "acl_basis": "operator_configuration",
+                                                            "file_format": extracted.format,
+                                                            "extraction_scope": extracted.scope,
+                                                            "source_bytes_sha256": raw_hash})
+                    counts["text_bytes"] += len(document.content.encode("utf-8"))
+                    if counts["text_bytes"] > self.max_total_bytes:
+                        raise SourceError("Total extracted text byte limit exceeded")
                     if document.id in identities:
                         raise SourceError("Duplicate document ID; source scan is incomplete")
                     identities.add(document.id)
@@ -269,9 +281,38 @@ class _JsonEndpoint:
         if authorization is not None:
             headers["Authorization"] = authorization
         deadline = time.monotonic() + timeout
+        expired = Event()
+        active_socket: socket.socket | None = None
+
+        def interrupt_request() -> None:
+            # Socket inactivity timeouts do not bound a peer that trickles header
+            # bytes. Keep the established socket even when HTTPConnection detaches
+            # it for Connection: close, so headers and body share one deadline.
+            expired.set()
+            current = active_socket or connection.sock
+            if current is not None:
+                try:
+                    current.shutdown(socket.SHUT_RDWR)
+                except OSError:
+                    pass
+
+        watchdog = Timer(timeout, interrupt_request)
+        watchdog.daemon = True
+        watchdog.start()
         try:
+            # DNS resolution remains dependent on the host resolver. A request
+            # whose budget expired during connect cannot proceed to send secrets.
+            connection.connect()
+            active_socket = connection.sock
+            remaining = deadline - time.monotonic()
+            if expired.is_set() or remaining <= 0:
+                raise SourceError("Source request deadline exceeded")
+            if active_socket is not None:
+                active_socket.settimeout(remaining)
             connection.request("GET", target, headers=headers)
             with connection.getresponse() as response:
+                if expired.is_set():
+                    raise SourceError("Source request deadline exceeded")
                 # http.client does not follow redirects; no credential is sent to Location.
                 if response.status != 200:
                     raise SourceError(f"Source returned HTTP {response.status}; no deletion inferred")
@@ -303,12 +344,17 @@ class _JsonEndpoint:
                         raise SourceError("Source response byte limit exceeded")
                 if length is not None and size != int(length):
                     raise SourceError("Source response was truncated; no deletion inferred")
-                return _strict_json(b"".join(parts))
+                value = _strict_json(b"".join(parts))
+                if expired.is_set() or time.monotonic() > deadline:
+                    raise SourceError("Source request deadline exceeded")
+                return value
         except SourceError:
             raise
         except (OSError, http.client.HTTPException, UnicodeError, ValueError) as exc:
             raise SourceError("Source request failed or timed out; no deletion inferred") from exc
         finally:
+            watchdog.cancel()
+            watchdog.join()
             connection.close()
 
 
@@ -328,9 +374,13 @@ def _env_value(name: str | None) -> str | None:
 class JsonHttpSnapshotSource:
     """Read the fixed operator-configured complete snapshot endpoint.
 
-    Contract: {schema_version:1, complete:true|false, documents:[...], cursor?:str}.
+    Contract: {schema_version:1, complete:true|false, documents:[...], cursor?:str,
+               deletion_authoritative?:bool}.
     `complete:true` is a producer assertion about configured scope, not discovery
-    of systems outside that endpoint. This adapter does not follow pagination.
+    of systems outside that endpoint. Deletion authority defaults to False: an
+    omitted object is quarantined because it may no longer be API-visible. A
+    producer may set True only for a complete authoritative inventory of the
+    configured scope. This adapter does not follow pagination.
     """
 
     def __init__(self, url: str, *, token_env: str | None = None,
@@ -347,6 +397,9 @@ class JsonHttpSnapshotSource:
                 raise SourceError("Unsupported snapshot schema_version; expected 1")
             if type(payload.get("complete")) is not bool:
                 raise SourceError("Snapshot must explicitly declare complete true or false")
+            deletion_authoritative = payload.get("deletion_authoritative", False)
+            if type(deletion_authoritative) is not bool:
+                raise SourceError("Snapshot deletion_authoritative must be a boolean when provided")
             if not isinstance(payload.get("documents"), list) or len(payload["documents"]) > self.max_documents:
                 raise SourceError("Snapshot documents missing, invalid or over limit")
             if payload.get("error"):
@@ -359,7 +412,8 @@ class JsonHttpSnapshotSource:
                 raise SourceError("Duplicate document ID in source snapshot")
             complete = payload["complete"]
             return Snapshot(documents=documents, complete=complete, cursor=cursor if complete else None,
-                            error=None if complete else "Source producer reported a partial snapshot")
+                            error=None if complete else "Source producer reported a partial snapshot",
+                            deletion_authoritative=deletion_authoritative)
         except SourceError as exc:
             return Snapshot(documents=[], complete=False, error=str(exc))
 

@@ -79,7 +79,7 @@ class FilesystemSourceTests(unittest.TestCase):
     def test_discovers_nested_markdown_and_json_without_manual_event(self):
         self.write("nested/guide.md", "# Guide\nFirst content")
         self.write("terms.json", document())
-        self.write("ignored.csv", "not in scope")
+        self.write("ignored.pdf", "not in scope")
         self.write(".hidden/secret.md", "hidden is excluded")
         source = FilesystemSource(self.root, identities=["alex", "jordan"])
         first = source.scan()

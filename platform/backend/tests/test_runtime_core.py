@@ -15,12 +15,14 @@ class FileSource:
         self.path = path
         self.complete = True
         self.fail = False
+        self.deletion_authoritative = True
 
     def scan(self):
         if self.fail:
             raise ValueError("Bearer SECRET-DO-NOT-EXPOSE")
         data = json.loads(self.path.read_text())
-        return Snapshot([SourceDocument(**item) for item in data], complete=self.complete)
+        return Snapshot([SourceDocument(**item) for item in data], complete=self.complete,
+                        deletion_authoritative=self.deletion_authoritative)
 
 
 class RuntimeTests(unittest.TestCase):
@@ -103,6 +105,145 @@ class RuntimeTests(unittest.TestCase):
         self.assertEqual(self.contents("success"), [])
         self.source.fail = False
         self.assertEqual(self.runtime.tick()["status"], "current")
+
+    def test_visibility_filtered_snapshot_updates_visible_and_quarantines_missing(self):
+        other = {**self.doc, "id": "policy-2", "title": "Second policy"}
+        self.write(self.doc, other)
+        self.source.deletion_authoritative = False
+        self.runtime.tick()
+        self.contents("success")
+        with sqlite3.connect(self.database) as db:
+            prior_chunks = db.execute("SELECT * FROM sync_chunks WHERE document_id='policy-1'").fetchall()
+        self.write({**other, "revision": "two", "content": "Second policy now allows 45 days."})
+        state = self.runtime.tick()
+        self.assertEqual(state["status"], "blocked")
+        self.assertTrue(state["source"]["complete"])
+        self.assertEqual(state["metrics"]["documents"], 2)
+        self.assertEqual(state["metrics"]["verified_documents"], 1)
+        self.assertEqual(state["metrics"]["missing_documents"], 1)
+        self.assertEqual(state["metrics"]["observed_changes"], 4)
+        missing = next(row for row in state["documents"] if row["id"] == "policy-1")
+        self.assertEqual(missing["revision"], "one")
+        self.assertEqual(missing["blocked_reason"], "source_missing_or_no_longer_visible")
+        self.assertNotIn("delete", [job["operation"] for job in state["jobs"]])
+        self.assertIn("visibility_lost", [job["operation"] for job in state["jobs"]])
+        for route in self.runtime.ROUTES:
+            self.assertEqual(self.runtime.retrieve("", "alex", route, document_id="policy-1")["documents"], [])
+            found = self.runtime.retrieve("", "alex", route, document_id="policy-2")["documents"]
+            self.assertEqual(found[0]["revision"], "two")
+        with sqlite3.connect(self.database) as db:
+            self.assertEqual(db.execute("SELECT * FROM sync_chunks WHERE document_id='policy-1'").fetchall(), prior_chunks)
+            self.assertEqual(db.execute("SELECT COUNT(*) FROM sync_response_cache WHERE document_id='policy-1'").fetchone()[0], 0)
+
+    def test_missing_visibility_quarantine_is_idempotent_and_survives_restart(self):
+        self.source.deletion_authoritative = False
+        self.runtime.tick()
+        self.write()
+        first = self.runtime.tick()
+        first_job = next(job for job in first["jobs"] if job["operation"] == "visibility_lost")
+        self.assertEqual(first_job["state"], "blocked")
+        self.runtime.close()
+        self.runtime = self.make_runtime()
+        for _ in range(3):
+            self.clock += 2
+            state = self.runtime.tick()
+            self.assertEqual(state["metrics"]["observed_changes"], 2)
+            self.assertEqual(state["metrics"]["missing_documents"], 1)
+            job = next(job for job in state["jobs"] if job["operation"] == "visibility_lost")
+            self.assertEqual(job, first_job)
+            self.assertEqual(self.contents("success"), [])
+
+    def test_reappearing_source_must_verify_before_visibility_quarantine_clears(self):
+        self.source.deletion_authoritative = False
+        self.runtime.tick()
+        self.write()
+        self.runtime.tick()
+        self.write(self.doc)  # Same fingerprint must still trigger re-verification.
+        original_verify = self.runtime._verify_document
+        self.runtime._verify_document = lambda *_: (_ for _ in ()).throw(RuntimeError("probe unavailable"))
+        self.assertEqual(self.runtime.tick()["status"], "degraded")
+        self.assertEqual(self.contents("success"), [])
+        self.assertEqual(next(job["state"] for job in self.runtime.status()["jobs"]
+                              if job["operation"] == "visibility_lost"), "blocked")
+        self.runtime._verify_document = original_verify
+        state = self.runtime.tick()
+        self.assertEqual(state["status"], "current")
+        self.assertEqual(state["metrics"]["missing_documents"], 0)
+        self.assertEqual(next(job["state"] for job in state["jobs"]
+                              if job["operation"] == "visibility_lost"), "superseded")
+        for route in self.runtime.ROUTES:
+            self.assertEqual(self.contents(route)[0]["revision"], "one")
+
+    def test_incomplete_visibility_scan_blocks_all_reads_without_updating_or_removing(self):
+        other = {**self.doc, "id": "policy-2"}
+        self.source.deletion_authoritative = False
+        self.write(self.doc, other)
+        self.runtime.tick()
+        self.source.complete = False
+        self.write({**other, "content": "new policy", "revision": "two"})
+        state = self.runtime.tick()
+        self.assertEqual(state["status"], "degraded")
+        self.assertEqual(state["metrics"]["documents"], 2)
+        self.assertEqual(state["metrics"]["missing_documents"], 0)
+        self.assertEqual({document["revision"] for document in state["documents"]}, {"one"})
+        self.assertEqual(self.contents("success"), [])
+        self.source.complete = True
+        self.source.fail = True
+        self.assertEqual(self.runtime.tick()["status"], "degraded")
+        self.assertEqual(self.contents(), [])
+
+    def test_malformed_visibility_scan_keeps_global_barrier(self):
+        self.source.deletion_authoritative = False
+        self.runtime.tick()
+        self.write({**self.doc, "schema_version": 2})
+        state = self.runtime.tick()
+        self.assertEqual(state["status"], "degraded")
+        self.assertEqual(state["metrics"]["documents"], 1)
+        self.assertEqual(state["metrics"]["missing_documents"], 0)
+        self.assertEqual(self.contents(), [])
+
+    def test_source_confirmation_must_agree_on_deletion_authority(self):
+        self.runtime.tick()
+        self.write()
+        original_scan = self.source.scan
+        calls = 0
+
+        def changing_authority():
+            nonlocal calls
+            calls += 1
+            return replace(original_scan(), deletion_authoritative=calls == 1)
+
+        self.source.scan = changing_authority
+        state = self.runtime.tick()
+        self.assertEqual(state["status"], "degraded")
+        self.assertEqual(state["metrics"]["documents"], 1)
+        self.assertEqual(state["metrics"]["chunks"], 1)
+        self.assertEqual(self.contents(), [])
+        self.source.scan = original_scan
+        self.source.deletion_authoritative = False
+        state = self.runtime.tick()
+        self.assertEqual(state["metrics"]["missing_documents"], 1)
+        self.assertEqual(state["metrics"]["failed_jobs"], 0)
+
+    def test_authoritative_snapshot_can_remove_a_previously_missing_object(self):
+        self.source.deletion_authoritative = False
+        self.runtime.tick()
+        self.write()
+        self.runtime.tick()
+        self.source.deletion_authoritative = True
+        state = self.runtime.tick()
+        self.assertEqual(state["status"], "current")
+        self.assertEqual(state["metrics"]["documents"], 0)
+        self.assertEqual(state["metrics"]["chunks"], 0)
+
+    def test_invalid_deletion_authority_is_not_treated_as_inventory_proof(self):
+        self.runtime.tick()
+        self.write()
+        self.source.deletion_authoritative = "false"
+        state = self.runtime.tick()
+        self.assertEqual(state["status"], "degraded")
+        self.assertEqual(state["metrics"]["documents"], 1)
+        self.assertEqual(self.contents(), [])
 
     def test_acl_revoke_denies_cached_identity_but_preserves_other_identity(self):
         self.runtime.tick()

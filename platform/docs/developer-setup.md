@@ -45,11 +45,11 @@ An activated virtual environment is also supported. No Python pip install is nee
 
 | Process | Data and persistence |
 |---|---|
-| Vite + React UI | Presents the workspace and serves local assets |
-| Browser Web Worker + Pyodide | Runs `backend/concord`’s packaged fixture engine; reload creates a fresh sample session |
+| Vite + React UI | Main enterprise mockup: illustrative data, no API calls; serves local assets |
+| Browser Web Worker + Pyodide at `/runtime-lab` and `/lab` | Runs `backend/concord`’s packaged fixture engine; reload creates a fresh sample session |
 | Optional Python HTTP API | Independent sample session persisted in the chosen SQLite file |
 
-Starting the Python API does not switch the UI to server mode. There is no environment variable that currently makes it a live customer UI. Synthetic identity names in commands are not real employee authentication.
+Use [the current Atlassian guide](atlassian-mvp.md) for real source scanning. Starting the Python API does not switch the UI to server mode. There is no environment variable that currently makes it a live customer UI. Synthetic identity names in commands are not real employee authentication.
 
 ## 3. Verify the installation
 
@@ -59,7 +59,7 @@ npm run test:wasm
 npm run build:local
 ```
 
-Expected: 82 CPython tests pass; the WebAssembly harness runs the automatic source-edit/update/retrieval/revocation/outage path plus four historical scenarios. Permission/content/deletion should verify; `probe_failure` deliberately remains unverified (11/12 measured checks), and that failure behavior is the expected test outcome.
+Expected: 129 CPython tests pass; the WebAssembly harness runs the automatic source-edit/update/retrieval/revocation/outage path plus four historical scenarios. Permission/content/deletion should verify; `probe_failure` deliberately remains unverified (11/12 measured checks), and that failure behavior is the expected test outcome.
 
 The existing `npm test` additionally invokes the Linux build wrapper and scaffold UI tests. The current whole-project `tsc --noEmit` has pre-existing Cloudflare ambient-type gaps (`cloudflare:workers`, `Fetcher`, `D1Database`); a successful build does not claim that separate type-check command passed. The supported browser API did not expose viewport resizing; mobile layout remains a documented visual QA limitation.
 

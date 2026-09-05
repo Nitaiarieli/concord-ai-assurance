@@ -1,5 +1,7 @@
 # Concord v4 — automatic data freshness
 
+**Historical v4 record. Current scope and clarified Harmony.io deployment: [release v5](release-v5.md).**
+
 Decision and research date: **2026-09-05**. This document supersedes the earlier permission-first product scope. The customer-installed runtime is a technical release; the public Site is a clearly labeled browser demonstration and download surface.
 
 ## CPO decision

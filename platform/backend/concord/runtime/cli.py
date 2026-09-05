@@ -108,6 +108,12 @@ def _identities(value: Any) -> list[str] | None:
 
 
 def normalize_source(source: Any, base: Path) -> dict[str, Any]:
+    if isinstance(source, dict) and source.get("type") in {"confluence_cloud", "jira_cloud"}:
+        from .atlassian_config import normalize_atlassian_source
+        try:
+            return normalize_atlassian_source(source)
+        except (ValueError, TypeError) as exc:
+            raise ConfigurationError("Invalid Atlassian source configuration; check source contract and bounds") from exc
     _keys(source, {
         "type", "directory", "identities", "max_files", "max_bytes", "max_total_bytes", "max_entries", "max_depth",
         "url", "token_env", "max_documents", "allow_loopback_http", "timeout_seconds",
@@ -153,13 +159,16 @@ def normalize_source(source: Any, base: Path) -> dict[str, Any]:
             if "public_identities" in source:
                 normalized["public_identities"] = _identities(source["public_identities"])
     else:
-        raise ConfigurationError("Supported source types are filesystem, json_http and bookstack")
+        raise ConfigurationError("Supported sources are filesystem, json_http, confluence_cloud, jira_cloud and bookstack")
     for key in bounds.keys() & source.keys():
         normalized[key] = _number(source[key], key, 1, bounds[key], integer=True)
     return normalized
 
 
 def create_source(config: dict[str, Any]) -> Any:
+    if config.get("type") in {"confluence_cloud", "jira_cloud"}:
+        from .atlassian_config import create_atlassian_source
+        return create_atlassian_source(config)
     from .sources import BookStackSource, FilesystemSource, JsonHttpSnapshotSource
     source = dict(config)
     kind = source.pop("type")
@@ -365,9 +374,25 @@ def main(argv: list[str] | None = None) -> int:
     init_parser.add_argument("--directory", required=True, help="New or empty deployment directory")
     run_parser = commands.add_parser("run", help="Run a configured loopback API and automatic source observer")
     run_parser.add_argument("--config", required=True, help="Path to runtime.json")
+    commands.add_parser("catalog", help="Show source capabilities and setup boundaries without connecting")
+    scan_parser = commands.add_parser("scan", help="Scan configured source once; report inventory metadata without indexing")
+    scan_parser.add_argument("--config", required=True, help="Path to runtime.json")
     args = parser.parse_args(argv)
     try:
-        if args.command == "init":
+        if args.command == "catalog":
+            from .catalog import source_catalog
+            print(json.dumps(source_catalog(), indent=2))
+        elif args.command == "scan":
+            config, _policy = load_config(args.config)
+            observation = create_source(config["source"]).scan()
+            print(json.dumps({"kind": "source_inventory", "complete": observation.complete,
+                "deletion_authoritative": observation.deletion_authoritative,
+                "error": observation.error, "documents": [
+                    {"id": d.id, "title": d.title, "revision": d.revision,
+                     "content_bytes": len(d.content.encode("utf-8")), "acl_known": d.acl is not None,
+                     "metadata": d.metadata} for d in observation.documents]}, indent=2))
+            return 0 if observation.complete else 2
+        elif args.command == "init":
             path = initialize(args.directory)
             print(f"Created local runtime configuration: {path}")
             print("Example source data is ready. No credentials were printed; keep the local credential file private.")
