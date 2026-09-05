@@ -14,7 +14,7 @@ Linux was tested with Node 24.19.0 and Python 3.12.13. macOS and native Windows 
 ## 2. Clone, install and launch the browser demo
 
 ```bash
-git clone https://github.com/Nitaiarieli/concord-ai-assurance.git
+git clone --branch chore/concord-platform-handoff https://github.com/Nitaiarieli/concord-ai-assurance.git
 cd concord-ai-assurance/platform
 npm ci
 npm run prepare:python

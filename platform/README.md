@@ -6,6 +6,8 @@ This is the September 2026 Concord platform: the stone-and-plant workspace, Pyth
 
 **Current status:** working sample-data prototype. The UI runs Python inside the browser. Starting the separate Python API does not connect the UI to it. Live customer integrations and willingness to pay remain unverified.
 
+The GitHub handoff is on `chore/concord-platform-handoff` pending review into `main`. Clone that branch until the PR is merged.
+
 ## Start here
 
 From a clone of `Nitaiarieli/concord-ai-assurance`:
@@ -23,6 +25,7 @@ Requirements: Git, Node.js 24 LTS with npm, Python 3.11+. The lockfile requires 
 
 **No API keys, cloud account, BookStack instance, vector database or paid model are needed to run the demo.**
 
+- [Autonomous operation: product and engineering decision](docs/autonomous-data-sync.md)
 - [Full developer setup and troubleshooting](docs/developer-setup.md)
 - [התחלה מהירה בעברית](docs/start-here.he.md)
 - [Python API and commands](backend/README.md)

@@ -5,7 +5,7 @@
 נדרשים Git, Node.js 24 ו־Python 3.11 ומעלה.
 
 ```bash
-git clone https://github.com/Nitaiarieli/concord-ai-assurance.git
+git clone --branch chore/concord-platform-handoff https://github.com/Nitaiarieli/concord-ai-assurance.git
 cd concord-ai-assurance/platform
 npm ci
 npm run prepare:python

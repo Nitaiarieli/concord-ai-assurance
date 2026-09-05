@@ -2,6 +2,8 @@
 
 The current application is `platform/` in the GitHub repository. Earlier root-level code is retained for reference and is not part of this platform’s local build.
 
+While the developer-handoff PR is pending, branch from `chore/concord-platform-handoff`. After it is merged, use `main` as described below.
+
 1. Pull `main` and create a short feature branch.
 2. Work inside `platform/`; keep changes focused on one user outcome or engine behavior.
 3. If Python changes, run `npm run test:python`, then `npm run prepare:python` and `npm run test:wasm`.
