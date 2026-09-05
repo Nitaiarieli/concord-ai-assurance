@@ -13,7 +13,7 @@ import ProductBrief from "./product-brief";
 
 export type View = "overview" | "review" | "coverage" | "evidence" | "brief";
 const titles: Record<View, string> = { overview: "Overview", review: "Change review", coverage: "Coverage", evidence: "Evidence", brief: "Product brief" };
-const scenarios = [{ id: "permission", label: "Revoke Alex’s document access" }, { id: "probe_failure", label: "Revoke access · verification unavailable" }, { id: "content", label: "Lab: update content" }, { id: "deletion", label: "Lab: delete document" }];
+const scenarios = [{ id: "content", label: "Update sample content" }, { id: "permission", label: "Revoke sample access" }, { id: "probe_failure", label: "Verification unavailable" }, { id: "deletion", label: "Delete sample document" }];
 const kindLabels: Record<string, string> = { source: "Source fixture", chunk: "Document chunk", index: "Retrieval record", memory: "Memory fixture" };
 type ProbeResult = { allowed: boolean; reason: string; artifact_id: string; content?: string };
 type Control = { identity: string; artifact_id: string; result: ProbeResult };
@@ -29,7 +29,7 @@ export default function ConcordWorkspace() {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [source, setSource] = useState("src-forecast");
-  const [scenario, setScenario] = useState("permission");
+  const [scenario, setScenario] = useState("content");
   const [eventId, setEventId] = useState<string | null>(null);
   const [contexts, setContexts] = useState<Record<string, CaseContext>>({});
   const [proofContexts, setProofContexts] = useState<Record<string, CaseContext>>({});
@@ -89,7 +89,7 @@ export default function ConcordWorkspace() {
     <Nav view={view} onView={navigate} />
     <div className="main-shell c-workspace">
       <header className="topbar"><div className="breadcrumbs"><SidebarTrigger className="mobile-menu" /><span>Workspace</span><ChevronRight size={14} /><strong>{titles[view]}</strong></div><button className="reset-button" onClick={() => setResetOpen(true)} disabled={locked}><RotateCcw size={15} /><span>Reset demo</span></button></header>
-      <div className="c-prototype"><span><Leaf size={14} /> Interactive prototype · Sample data</span><span className="c-runtime">{engineStatus === "ready" ? "Python runtime ready" : engineStatus === "loading" ? "Starting Python runtime…" : "Runtime unavailable"}</span></div>
+      <div className="c-prototype"><span><Leaf size={14} /> Historical step-by-step lab · Sample data</span><a href="/" className="sync-text-button">Back to automatic workspace</a><span className="c-runtime">{engineStatus === "ready" ? "Python runtime ready" : engineStatus === "loading" ? "Starting Python runtime…" : "Runtime unavailable"}</span></div>
       <main id="main-content" className={`main-content c-main view-${view}`}>
         {error && <div className="c-error" role="alert"><TriangleAlert size={18} /><div><strong>Action could not complete</strong><p>{error}</p></div></div>}
         {view === "overview" && <>

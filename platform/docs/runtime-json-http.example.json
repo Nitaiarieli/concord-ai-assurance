@@ -1,0 +1,17 @@
+{
+  "schema_version": 1,
+  "tenant_id": "local",
+  "connection_id": "configured-snapshot",
+  "database": "state/snapshot.sqlite3",
+  "credentials_file": "credentials.local.json",
+  "poll_interval_seconds": 2,
+  "port": 8080,
+  "source": {
+    "type": "json_http",
+    "url": "https://your-source.example/api/concord-snapshot",
+    "token_env": "CONCORD_SOURCE_TOKEN",
+    "timeout_seconds": 3,
+    "max_documents": 1000,
+    "max_bytes": 4000000
+  }
+}

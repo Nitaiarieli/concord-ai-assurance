@@ -1,3 +1,5 @@
+> Superseded scope: see the September 5 v4 automatic-runtime decision (`docs/release-v4.md` / download `concord-product-decisions.md`). This earlier document is historical.
+
 # Concord: autonomous agent-data updates
 
 Decision date and research check: **2026-09-05**. Status: **product and engineering proposal; not implemented live functionality**. This addendum supersedes any earlier interpretation that a customer manually identifies each change or that permission checking defines the whole product. The earlier permission-first commercial recommendation was an unvalidated hypothesis.

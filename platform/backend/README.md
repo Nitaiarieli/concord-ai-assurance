@@ -1,3 +1,24 @@
+# Concord Python — automatic local runtime
+
+The current runtime automatically watches a configured filesystem or complete-snapshot API, maintains a durable SQLite lexical index/cache, verifies registered retrieval, and serves an authenticated local console/API.
+
+Python 3.11+; Linux, macOS or WSL for filesystem sources. From this extracted package directory, no installation is required:
+
+```bash
+python -m concord.runtime init --directory ./concord-local
+python -m concord.runtime run --config ./concord-local/runtime.json
+```
+
+Open the printed localhost URL. Edit the initialized source JSON in your own editor; no per-change Concord action is needed. Generated operator and consumer credentials stay in `credentials.local.json`; use a trusted editor to view them, and do not commit/share them. Each employee should initialize their own workspace.
+
+The public website is a separate sample browser demonstration. This local runtime is single-tenant and loopback-only. Filesystem and local HTTP acceptance are tested; BookStack transport is prepared but has no live vendor validation or effective-ACL discovery. No external vector database or customer agent memory is connected.
+
+For complete source contracts, deployment, API, recovery and limits, read the runtime guide downloaded beside this package or the repository's `docs/local-runtime.md`. Optional editable installation: `python -m pip install -e .`; it includes the operational console as package data.
+
+## Historical sandbox implementation
+
+The material below describes the older manually driven lab at `/lab` and `concord.api`. It is retained for compatibility and test history. Use `concord.runtime` above for automatic operation. Its legacy limitations do not describe the newly implemented runtime.
+
 # Concord Python reference MVP
 
 A working, deterministic assurance engine for **registered** AI derivatives. The hosted website executes this exact engine using a self-hosted Pyodide runtime in a browser worker. This package runs the same engine under CPython and exposes an independent local HTTP API.

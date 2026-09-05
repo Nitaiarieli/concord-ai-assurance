@@ -27,4 +27,5 @@ jobs:
       - run: npm run prepare:python
       - run: npm run test:python
       - run: npm run test:wasm
+      - run: npm run test:console
       - run: npm run build:local

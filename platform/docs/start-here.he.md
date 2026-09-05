@@ -19,3 +19,7 @@ npm run dev:local
 הקוד העסקי נמצא ב־`backend/concord`, הממשק ב־`components/concord`, תמונות האתר ב־`public/assets`, ותמונות המקור הנוספות ב־`design/source-images`.
 
 אחרי שינוי ב־Python מריצים `npm run test:python` ואז `npm run prepare:python`. בדיקות נוספות: `npm run test:wasm` ו־`npm run build:local`.
+
+## הרכיב האוטומטי החדש
+
+מתיקיית `platform/backend` הריצו `python -m concord.runtime init --directory ../../concord-local`, ואחריו `python -m concord.runtime run --config ../../concord-local/runtime.json`. ערכו קובץ מקור בעורך חיצוני; הזיהוי, העדכון והאימות מתבצעים אוטומטית. מדריך מלא: `docs/local-runtime.md`. נדרש Python 3.11 ומעלה עם Linux, macOS או WSL. האתר הציבורי הוא הדגמה על נתוני דוגמה; הרכיב המקומי עובד על קבצים אמיתיים.

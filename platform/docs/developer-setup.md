@@ -59,9 +59,9 @@ npm run test:wasm
 npm run build:local
 ```
 
-Expected: 21 CPython tests pass; the WebAssembly harness runs four scenarios. Permission/content/deletion should verify; `probe_failure` deliberately remains unverified (11/12 measured checks), and that failure behavior is the expected test outcome.
+Expected: 82 CPython tests pass; the WebAssembly harness runs the automatic source-edit/update/retrieval/revocation/outage path plus four historical scenarios. Permission/content/deletion should verify; `probe_failure` deliberately remains unverified (11/12 measured checks), and that failure behavior is the expected test outcome.
 
-The existing `npm test` additionally invokes the Linux build wrapper and scaffold UI tests. The current whole-project `tsc --noEmit` has pre-existing Cloudflare ambient-type gaps (`cloudflare:workers`, `Fetcher`, `D1Database`); a successful build does not claim that separate type-check command passed. Mobile visual behavior was not verified here.
+The existing `npm test` additionally invokes the Linux build wrapper and scaffold UI tests. The current whole-project `tsc --noEmit` has pre-existing Cloudflare ambient-type gaps (`cloudflare:workers`, `Fetcher`, `D1Database`); a successful build does not claim that separate type-check command passed. The supported browser API did not expose viewport resizing; mobile layout remains a documented visual QA limitation.
 
 ## 4. Run the independent local Python API (optional)
 

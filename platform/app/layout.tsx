@@ -1,8 +1,9 @@
 import type { Metadata } from "next";
 import "./globals.css";
+import "./automatic.css";
 
 export const metadata: Metadata = {
-  title: "Concord — Change, carried through.",
+  title: "Concord — Keep your agent data up to date.",
   description:
     "Keep your AI agents’ data up to date. Explore source changes, connected data updates and verified results in Concord’s local Python demo.",
   other: {

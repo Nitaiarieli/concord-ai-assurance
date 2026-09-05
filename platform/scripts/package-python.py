@@ -18,7 +18,7 @@ with ZipFile(root/'public/downloads/concord-python-source.zip', 'w', ZIP_DEFLATE
         if not file.is_file() or '__pycache__' in file.parts:
             continue
         relative = file.relative_to(root/'backend')
-        if relative.parts[0] in {'concord', 'tests'} and file.suffix == '.py':
+        if relative.parts[0] in {'concord', 'tests'} and (file.suffix == '.py' or str(relative) == 'concord/runtime/console.html'):
             archive.write(file, relative)
         elif str(relative) in {'README.md', 'pyproject.toml', '.env.example'}:
             archive.write(file, relative)
